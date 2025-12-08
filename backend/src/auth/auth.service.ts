@@ -5,6 +5,9 @@ import * as bcrypt from 'bcrypt';
 import { Repository } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
 import { User } from '../users/entities/user.entity';
+import { EmailVerification } from './entities/email-verification.entity';
+import { EmailService } from '../common/email.service';
+import * as crypto from 'crypto';
 
 @Injectable()
 export class AuthService {
@@ -12,6 +15,8 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly config: ConfigService,
     @InjectRepository(User) private readonly userRepository: Repository<User>,
+    @InjectRepository(EmailVerification) private readonly evRepository: Repository<EmailVerification>,
+    private readonly emailService: EmailService,
   ) {}
 
   private async signAccessToken(user: User): Promise<string> {
@@ -74,5 +79,40 @@ export class AuthService {
       throw new BadRequestException('Invalid refresh token');
     }
     await this.userRepository.update({ id: payload.sub }, { refresh_token_hash: null as any });
+  }
+
+  async sendVerification(email: string): Promise<void> {
+    const user = await this.userRepository.findOne({ where: { email } });
+    if (!user) throw new BadRequestException('User not found');
+    if (user.is_verified) throw new BadRequestException('Already verified');
+
+    const token = crypto.randomBytes(32).toString('hex');
+    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+    const ttl = Number(this.config.get<string>('EMAIL_VERIFICATION_EXPIRES_IN') ?? '86400');
+    const expires_at = new Date(Date.now() + ttl * 1000);
+
+    const record = this.evRepository.create({ user_id: user.id, token_hash: tokenHash, expires_at, used: false });
+    await this.evRepository.save(record);
+
+    const baseUrl = this.config.get<string>('APP_BASE_URL') || 'http://localhost:3000';
+    const verifyLink = `${baseUrl}/auth/verify?token=${token}`;
+    console.log(`Verification link: ${verifyLink}`);
+    await this.emailService.sendMail(email, 'Verify your account', `Click this link to verify: ${verifyLink}`);
+  }
+
+  async verify(token: string): Promise<void> {
+    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+    const record = await this.evRepository.findOne({ where: { token_hash: tokenHash, used: false } });
+    if (!record) throw new BadRequestException('Invalid token');
+    if (record.expires_at.getTime() < Date.now()) throw new BadRequestException('Token expired');
+
+    const user = await this.userRepository.findOne({ where: { id: record.user_id } });
+    if (!user) throw new BadRequestException('User not found');
+
+    user.is_verified = true;
+    await this.userRepository.save(user);
+
+    record.used = true;
+    await this.evRepository.save(record);
   }
 }

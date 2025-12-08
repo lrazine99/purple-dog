@@ -1,10 +1,11 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, Post, Query, Req, UseGuards } from '@nestjs/common';
 import { ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { LoginDto } from '../users/dto/login.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { TokensDto } from './dto/tokens.dto';
 import { AuthGuard } from '@nestjs/passport';
+import { SendVerificationDto } from './dto/send-verification.dto';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -39,6 +40,24 @@ export class AuthController {
   @ApiResponse({ status: 204, description: 'Logged out' })
   async logout(@Body() dto: RefreshTokenDto): Promise<void> {
     await this.authService.logout(dto.refresh_token);
+  }
+
+  @Post('send-verification')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Send email verification token' })
+  @ApiBody({ type: SendVerificationDto })
+  @ApiResponse({ status: 204, description: 'Verification email sent' })
+  async sendVerification(@Body() dto: SendVerificationDto): Promise<void> {
+    await this.authService.sendVerification(dto.email);
+  }
+
+  @Get('verify')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Verify account using token' })
+  @ApiResponse({ status: 200, description: 'Account verified' })
+  async verify(@Query('token') token: string): Promise<{ message: string }> {
+    await this.authService.verify(token);
+    return { message: 'Account verified' };
   }
 
   @Get('me')
