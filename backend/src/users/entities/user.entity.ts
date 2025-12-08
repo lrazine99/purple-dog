@@ -163,6 +163,13 @@ export class User {
   })
   is_verified: boolean;
 
+  @Column({
+    type: 'varchar',
+    length: 255,
+    nullable: true,
+  })
+  refresh_token_hash: string;
+
   @CreateDateColumn()
   created_at: Date;
 
