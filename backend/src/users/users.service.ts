@@ -1,7 +1,9 @@
 import {
+  BadRequestException,
   ConflictException,
   Injectable,
   NotFoundException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
@@ -26,6 +28,47 @@ export class UsersService {
 
     if (existingUser) {
       throw new ConflictException('User with this email already exists');
+    }
+
+    const role = createUserDto.role || 'particular';
+
+    if (role === 'particular') {
+      if (!createUserDto.rgpd_accepted) {
+        throw new BadRequestException('RGPD must be accepted');
+      }
+      if (!createUserDto.address_line) {
+        throw new BadRequestException('Postal address is required');
+      }
+      if (typeof createUserDto.age === 'number' && createUserDto.age < 18) {
+        throw new BadRequestException('Age must be 18 or older');
+      }
+    } else if (role === 'professional') {
+      if (!createUserDto.company_name) {
+        throw new BadRequestException('Company name is required');
+      }
+      if (!createUserDto.siret) {
+        throw new BadRequestException('SIRET number is required');
+      }
+      if (!createUserDto.official_document_url) {
+        throw new BadRequestException('Official document URL is required');
+      }
+      if (!createUserDto.address_line) {
+        throw new BadRequestException('Postal address is required');
+      }
+      if (!createUserDto.speciality) {
+        throw new BadRequestException('Speciality is required');
+      }
+      if (!createUserDto.items_preference) {
+        throw new BadRequestException('Items preference is required');
+      }
+      if (!createUserDto.cgv_accepted) {
+        throw new BadRequestException('CGV must be accepted');
+      }
+      if (!createUserDto.rgpd_accepted) {
+        throw new BadRequestException('RGPD must be accepted');
+      }
+    } else {
+      throw new BadRequestException('Invalid role');
     }
 
     // Hash password
@@ -96,6 +139,21 @@ export class UsersService {
     }
 
     await this.userRepository.remove(user);
+  }
+
+  async login(email: string, password: string): Promise<UserResponseDto> {
+    const user = await this.findByEmail(email);
+    if (!user) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+    const match = await bcrypt.compare(password, user.password_hash);
+    if (!match) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+    if (!user.is_verified) {
+      throw new UnauthorizedException('Account not verified');
+    }
+    return this.toResponseDto(user);
   }
 
   private toResponseDto(user: User): UserResponseDto {
