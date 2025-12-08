@@ -8,10 +8,10 @@ do_token = "your_digitalocean_api_token_here"
 ssh_public_key_path = "~/.ssh/id_rsa.pub"
 
 # Your GitHub repository URL (HTTPS)
-github_repo = "https://github.com/YOUR_USERNAME/purple-dog.git"
+github_repo = "https://github.com/lrazine99/purple-dog.git"
 
 # PostgreSQL password (use a strong password!)
-postgres_password = "change_this_to_a_strong_password"
+postgres_password = "Purple_dog460815"
 
 # Optional: Change these if needed
 # region       = "nyc1"
