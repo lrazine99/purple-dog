@@ -1,0 +1,44 @@
+#cloud-config
+
+package_update: true
+package_upgrade: true
+
+packages:
+  - git
+  - curl
+
+write_files:
+  - path: /opt/purple-dog/.env
+    content: |
+      POSTGRES_USER=${postgres_user}
+      POSTGRES_PASSWORD=${postgres_password}
+      POSTGRES_DB=${postgres_db}
+      NEXT_PUBLIC_API_URL=http://$(curl -s ifconfig.me):3001
+    permissions: '0600'
+
+runcmd:
+  # Install docker-compose
+  - curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+  - chmod +x /usr/local/bin/docker-compose
+  
+  # Clone the repository
+  - git clone ${github_repo} /opt/purple-dog
+  
+  # Get server IP and update .env
+  - export SERVER_IP=$(curl -s ifconfig.me)
+  - |
+    cat > /opt/purple-dog/.env << EOF
+    POSTGRES_USER=${postgres_user}
+    POSTGRES_PASSWORD=${postgres_password}
+    POSTGRES_DB=${postgres_db}
+    NEXT_PUBLIC_API_URL=http://$SERVER_IP:3001
+    EOF
+  
+  # Start the application
+  - cd /opt/purple-dog && docker-compose up -d --build
+  
+  # Enable auto-start on reboot
+  - systemctl enable docker
+
+final_message: "Purple Dog deployment complete! Server ready in $UPTIME seconds."
+
