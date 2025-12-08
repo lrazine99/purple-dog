@@ -20,6 +20,7 @@ import {
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserResponseDto } from './dto/user-response.dto';
+import { LoginDto } from './dto/login.dto';
 import { UsersService } from './users.service';
 
 @ApiTags('users')
@@ -96,5 +97,15 @@ export class UsersController {
   @ApiResponse({ status: 404, description: 'User not found' })
   async remove(@Param('id', ParseIntPipe) id: number): Promise<void> {
     return this.usersService.remove(id);
+  }
+
+  @Post('login')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Login with email and password' })
+  @ApiBody({ type: LoginDto })
+  @ApiResponse({ status: 200, description: 'Login successful', type: UserResponseDto })
+  @ApiResponse({ status: 401, description: 'Invalid credentials' })
+  async login(@Body() loginDto: LoginDto): Promise<UserResponseDto> {
+    return this.usersService.login(loginDto.email, loginDto.password);
   }
 }

@@ -3,6 +3,7 @@ import {
   IsBoolean,
   IsEmail,
   IsEnum,
+  IsInt,
   IsOptional,
   IsString,
   MinLength,
@@ -71,6 +72,16 @@ export class CreateUserDto {
   @IsString()
   @IsOptional()
   profile_picture?: string;
+
+  @ApiProperty({ required: false })
+  @IsInt()
+  @IsOptional()
+  age?: number;
+
+  @ApiProperty({ required: false })
+  @IsString()
+  @IsOptional()
+  social_links?: string;
 
   @ApiProperty({ required: false, default: false })
   @IsBoolean()
