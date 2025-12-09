@@ -1,0 +1,21 @@
+# Copy this file to terraform.tfvars and fill in your values
+# NEVER commit terraform.tfvars to git!
+
+# Your DigitalOcean API Token (get from https://cloud.digitalocean.com/account/api/tokens)
+do_token = "your_digitalocean_api_token_here"
+
+# Path to your SSH public key
+ssh_public_key_path = "~/.ssh/id_rsa.pub"
+
+# Your GitHub repository URL (HTTPS)
+github_repo = "https://github.com/lrazine99/purple-dog.git"
+
+# PostgreSQL password (use a strong password!)
+postgres_password = "Purple_dog460815"
+
+# Optional: Change these if needed
+# region       = "nyc1"
+# droplet_size = "s-2vcpu-4gb"
+# postgres_user = "purple_dog_user"
+# postgres_db   = "purple_dog_db"
+
