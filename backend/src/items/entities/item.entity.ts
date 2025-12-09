@@ -4,11 +4,13 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { Category } from '../../categories/entities/category.entity';
+import { ItemPhoto } from './item-photo.entity';
 
 export enum SaleMode {
   AUCTION = 'auction',
@@ -120,6 +122,9 @@ export class Item {
     nullable: true,
   })
   auction_end_date: Date;
+
+  @OneToMany(() => ItemPhoto, (photo) => photo.item, { cascade: true, eager: true })
+  photos: ItemPhoto[];
 
   @CreateDateColumn({ name: 'created_at' })
   created_at: Date;

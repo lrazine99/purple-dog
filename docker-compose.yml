@@ -41,6 +41,7 @@ services:
       JWT_PUBLIC_KEY_PATH: /app/secrets/jwt_public.pem
     volumes:
       - ./backend/secrets:/app/secrets:ro
+      - backend_uploads:/app/uploads
     ports:
       - "${BACKEND_PORT:-3001}:3001"
     depends_on:
@@ -81,6 +82,8 @@ services:
 
 volumes:
   postgres_data:
+    driver: local
+  backend_uploads:
     driver: local
 
 networks:

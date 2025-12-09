@@ -92,5 +92,49 @@ export class ItemsController {
   async remove(@Param('id', ParseIntPipe) id: number): Promise<void> {
     return this.itemsService.remove(id);
   }
-}
 
+  // Photo endpoints
+  @Post(':id/photos')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ summary: 'Add a photo to an item' })
+  @ApiParam({ name: 'id', type: 'number', description: 'Item ID' })
+  async addPhoto(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body: { url: string; is_primary?: boolean },
+  ) {
+    return this.itemsService.addPhoto(id, body.url, body.is_primary);
+  }
+
+  @Delete(':id/photos/:photoId')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Remove a photo from an item' })
+  @ApiParam({ name: 'id', type: 'number', description: 'Item ID' })
+  @ApiParam({ name: 'photoId', type: 'number', description: 'Photo ID' })
+  async removePhoto(
+    @Param('id', ParseIntPipe) id: number,
+    @Param('photoId', ParseIntPipe) photoId: number,
+  ): Promise<void> {
+    return this.itemsService.removePhoto(id, photoId);
+  }
+
+  @Patch(':id/photos/:photoId/primary')
+  @ApiOperation({ summary: 'Set a photo as primary' })
+  @ApiParam({ name: 'id', type: 'number', description: 'Item ID' })
+  @ApiParam({ name: 'photoId', type: 'number', description: 'Photo ID' })
+  async setPrimaryPhoto(
+    @Param('id', ParseIntPipe) id: number,
+    @Param('photoId', ParseIntPipe) photoId: number,
+  ) {
+    return this.itemsService.setPrimaryPhoto(id, photoId);
+  }
+
+  @Patch(':id/photos/reorder')
+  @ApiOperation({ summary: 'Reorder photos' })
+  @ApiParam({ name: 'id', type: 'number', description: 'Item ID' })
+  async reorderPhotos(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body: { photoIds: number[] },
+  ) {
+    return this.itemsService.reorderPhotos(id, body.photoIds);
+  }
+}
