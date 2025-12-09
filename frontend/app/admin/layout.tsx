@@ -14,6 +14,7 @@ import {
   Shield,
   ChevronRight,
   AlertTriangle,
+  ShoppingCart,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -22,6 +23,7 @@ const navItems = [
   { href: "/admin/users", label: "Utilisateurs", icon: Users },
   { href: "/admin/items", label: "Articles", icon: Package },
   { href: "/admin/categories", label: "Catégories", icon: FolderTree },
+  { href: "/admin/orders", label: "Commandes", icon: ShoppingCart },
 ];
 
 interface User {
