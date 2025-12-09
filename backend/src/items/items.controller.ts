@@ -9,6 +9,7 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  Put,
 } from '@nestjs/common';
 import {
   ApiBody,
@@ -91,6 +92,40 @@ export class ItemsController {
   @ApiResponse({ status: 404, description: 'Item not found' })
   async remove(@Param('id', ParseIntPipe) id: number): Promise<void> {
     return this.itemsService.remove(id);
+  }
+
+  // Category management endpoints
+  @Post(':id/categories')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Add categories to an item' })
+  @ApiParam({ name: 'id', type: 'number', description: 'Item ID' })
+  async addCategories(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body: { category_ids: number[] },
+  ): Promise<ItemResponseDto> {
+    return this.itemsService.addCategories(id, body.category_ids);
+  }
+
+  @Put(':id/categories')
+  @ApiOperation({ summary: 'Set categories for an item (replaces all)' })
+  @ApiParam({ name: 'id', type: 'number', description: 'Item ID' })
+  async setCategories(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body: { category_ids: number[] },
+  ): Promise<ItemResponseDto> {
+    return this.itemsService.setCategories(id, body.category_ids);
+  }
+
+  @Delete(':id/categories/:categoryId')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Remove a category from an item' })
+  @ApiParam({ name: 'id', type: 'number', description: 'Item ID' })
+  @ApiParam({ name: 'categoryId', type: 'number', description: 'Category ID' })
+  async removeCategory(
+    @Param('id', ParseIntPipe) id: number,
+    @Param('categoryId', ParseIntPipe) categoryId: number,
+  ): Promise<ItemResponseDto> {
+    return this.itemsService.removeCategory(id, categoryId);
   }
 
   // Photo endpoints

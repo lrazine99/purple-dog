@@ -19,7 +19,11 @@ import {
   Upload,
   Star,
   Loader2,
+  Check,
+  ChevronDown,
+  Eye,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -30,12 +34,19 @@ interface ItemPhoto {
   is_primary: boolean;
 }
 
+interface ItemCategory {
+  id: number;
+  category_id: number;
+  category?: Category;
+}
+
 interface Item {
   id: number;
   name: string;
   description: string;
   seller_id: number;
   category_id: number;
+  itemCategories?: ItemCategory[];
   width_cm: number;
   height_cm: number;
   depth_cm: number;
@@ -54,6 +65,8 @@ interface Item {
 interface Category {
   id: number;
   name: string;
+  parent_id?: number | null;
+  is_default?: boolean;
 }
 
 interface UserType {
@@ -107,10 +120,235 @@ const STATUSES = [
   { value: "draft", label: "Brouillon" },
   { value: "published", label: "Publié" },
   { value: "sold", label: "Vendu" },
-  { value: "archived", label: "Archivé" },
+  { value: "pending_expertise", label: "Attend expertise" },
 ];
 
+// Autocomplete component for user/seller search
+function UserAutocomplete({
+  users,
+  selectedUserId,
+  onSelect,
+  placeholder,
+}: {
+  users: UserType[];
+  selectedUserId: number | null;
+  onSelect: (user: UserType) => void;
+  placeholder: string;
+}) {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [isOpen, setIsOpen] = useState(false);
+  const [highlightedIndex, setHighlightedIndex] = useState(0);
+
+  const selectedUser = users.find((u) => u.id === selectedUserId);
+
+  const filteredUsers = users.filter((user) => {
+    const search = searchTerm.toLowerCase();
+    return (
+      user.first_name.toLowerCase().includes(search) ||
+      user.last_name.toLowerCase().includes(search) ||
+      user.email.toLowerCase().includes(search) ||
+      `${user.first_name} ${user.last_name}`.toLowerCase().includes(search)
+    );
+  });
+
+  const handleSelect = (user: UserType) => {
+    onSelect(user);
+    setSearchTerm("");
+    setIsOpen(false);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setHighlightedIndex((prev) => Math.min(prev + 1, filteredUsers.length - 1));
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setHighlightedIndex((prev) => Math.max(prev - 1, 0));
+    } else if (e.key === "Enter" && filteredUsers[highlightedIndex]) {
+      e.preventDefault();
+      handleSelect(filteredUsers[highlightedIndex]);
+    } else if (e.key === "Escape") {
+      setIsOpen(false);
+    }
+  };
+
+  return (
+    <div className="relative">
+      <div className="relative">
+        <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-purple-400" />
+        <input
+          type="text"
+          value={searchTerm || (selectedUser ? `${selectedUser.first_name} ${selectedUser.last_name}` : "")}
+          onChange={(e) => {
+            setSearchTerm(e.target.value);
+            setIsOpen(true);
+            setHighlightedIndex(0);
+          }}
+          onFocus={() => {
+            setIsOpen(true);
+            if (selectedUser) setSearchTerm("");
+          }}
+          onBlur={() => setTimeout(() => setIsOpen(false), 200)}
+          onKeyDown={handleKeyDown}
+          placeholder={placeholder}
+          className="w-full h-10 pl-10 pr-4 bg-slate-900/50 border border-slate-700 rounded-lg text-white placeholder:text-slate-500 focus:border-purple-500 focus:outline-none"
+        />
+      </div>
+
+      {isOpen && filteredUsers.length > 0 && (
+        <div className="absolute z-50 w-full mt-1 bg-slate-800 border border-slate-700 rounded-lg shadow-xl max-h-60 overflow-y-auto">
+          {filteredUsers.map((user, index) => (
+            <button
+              key={user.id}
+              type="button"
+              onClick={() => handleSelect(user)}
+              className={`w-full px-4 py-3 text-left hover:bg-slate-700/50 transition-colors ${
+                index === highlightedIndex ? "bg-slate-700/50" : ""
+              } ${selectedUserId === user.id ? "bg-purple-500/20" : ""}`}
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center">
+                  <span className="text-sm font-medium text-purple-400">
+                    {user.first_name[0]}{user.last_name[0]}
+                  </span>
+                </div>
+                <div>
+                  <p className="text-white font-medium">{user.first_name} {user.last_name}</p>
+                  <p className="text-slate-400 text-sm">{user.email}</p>
+                </div>
+              </div>
+            </button>
+          ))}
+        </div>
+      )}
+
+      {isOpen && searchTerm && filteredUsers.length === 0 && (
+        <div className="absolute z-50 w-full mt-1 bg-slate-800 border border-slate-700 rounded-lg shadow-xl p-4 text-center text-slate-400">
+          Aucun vendeur trouvé pour "{searchTerm}"
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Autocomplete component for category search
+function CategoryAutocomplete({
+  categories,
+  selectedCategoryId,
+  onSelect,
+  placeholder,
+}: {
+  categories: Category[];
+  selectedCategoryId: number | null;
+  onSelect: (category: Category) => void;
+  placeholder: string;
+}) {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [isOpen, setIsOpen] = useState(false);
+  const [highlightedIndex, setHighlightedIndex] = useState(0);
+
+  const selectedCategory = categories.find((c) => c.id === selectedCategoryId);
+
+  const filteredCategories = categories.filter((category) =>
+    category.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const handleSelect = (category: Category) => {
+    onSelect(category);
+    setSearchTerm("");
+    setIsOpen(false);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setHighlightedIndex((prev) => Math.min(prev + 1, filteredCategories.length - 1));
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setHighlightedIndex((prev) => Math.max(prev - 1, 0));
+    } else if (e.key === "Enter" && filteredCategories[highlightedIndex]) {
+      e.preventDefault();
+      handleSelect(filteredCategories[highlightedIndex]);
+    } else if (e.key === "Escape") {
+      setIsOpen(false);
+    }
+  };
+
+  // Get parent category name for display
+  const getParentName = (parentId: number | null | undefined) => {
+    if (!parentId) return null;
+    const parent = categories.find((c) => c.id === parentId);
+    return parent?.name;
+  };
+
+  return (
+    <div className="relative">
+      <div className="relative">
+        <FolderTree className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-orange-400" />
+        <input
+          type="text"
+          value={searchTerm || (selectedCategory ? selectedCategory.name : "")}
+          onChange={(e) => {
+            setSearchTerm(e.target.value);
+            setIsOpen(true);
+            setHighlightedIndex(0);
+          }}
+          onFocus={() => {
+            setIsOpen(true);
+            if (selectedCategory) setSearchTerm("");
+          }}
+          onBlur={() => setTimeout(() => setIsOpen(false), 200)}
+          onKeyDown={handleKeyDown}
+          placeholder={placeholder}
+          className="w-full h-10 pl-10 pr-4 bg-slate-900/50 border border-slate-700 rounded-lg text-white placeholder:text-slate-500 focus:border-orange-500 focus:outline-none"
+        />
+      </div>
+
+      {isOpen && filteredCategories.length > 0 && (
+        <div className="absolute z-50 w-full mt-1 bg-slate-800 border border-slate-700 rounded-lg shadow-xl max-h-60 overflow-y-auto">
+          {filteredCategories.map((category, index) => {
+            const parentName = getParentName(category.parent_id);
+            return (
+              <button
+                key={category.id}
+                type="button"
+                onClick={() => handleSelect(category)}
+                className={`w-full px-4 py-3 text-left hover:bg-slate-700/50 transition-colors ${
+                  index === highlightedIndex ? "bg-slate-700/50" : ""
+                } ${selectedCategoryId === category.id ? "bg-orange-500/20" : ""}`}
+              >
+                <div className="flex items-center gap-3">
+                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                    category.parent_id ? "bg-purple-500/20" : "bg-orange-500/20"
+                  }`}>
+                    <FolderTree className={`w-4 h-4 ${
+                      category.parent_id ? "text-purple-400" : "text-orange-400"
+                    }`} />
+                  </div>
+                  <div>
+                    <p className="text-white font-medium">{category.name}</p>
+                    {parentName && (
+                      <p className="text-slate-400 text-sm">dans {parentName}</p>
+                    )}
+                  </div>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {isOpen && searchTerm && filteredCategories.length === 0 && (
+        <div className="absolute z-50 w-full mt-1 bg-slate-800 border border-slate-700 rounded-lg shadow-xl p-4 text-center text-slate-400">
+          Aucune catégorie trouvée pour "{searchTerm}"
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function ItemsPage() {
+  const router = useRouter();
   const [items, setItems] = useState<Item[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [users, setUsers] = useState<UserType[]>([]);
@@ -125,6 +363,9 @@ export default function ItemsPage() {
   // Photos state
   const [photos, setPhotos] = useState<ItemPhoto[]>([]);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  
+  // Multiple categories state
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     fetchItems();
@@ -184,6 +425,7 @@ export default function ItemsPage() {
     setEditingItem(null);
     setForm(initialForm);
     setPhotos([]);
+    setSelectedCategoryIds(new Set());
     setError("");
     setShowModal(true);
   };
@@ -207,8 +449,34 @@ export default function ItemsPage() {
       auction_end_date: item.auction_end_date ? item.auction_end_date.slice(0, 16) : "",
     });
     setPhotos(item.photos || []);
+    // Load multiple categories from itemCategories
+    const categoryIds = new Set<number>();
+    if (item.category_id) categoryIds.add(item.category_id);
+    if (item.itemCategories) {
+      item.itemCategories.forEach((ic) => categoryIds.add(ic.category_id));
+    }
+    setSelectedCategoryIds(categoryIds);
     setError("");
     setShowModal(true);
+  };
+
+  const toggleCategory = (categoryId: number) => {
+    const newSelected = new Set(selectedCategoryIds);
+    if (newSelected.has(categoryId)) {
+      newSelected.delete(categoryId);
+      // Update form.category_id if needed
+      if (form.category_id === categoryId.toString()) {
+        const remaining = Array.from(newSelected);
+        setForm({ ...form, category_id: remaining.length > 0 ? remaining[0].toString() : "" });
+      }
+    } else {
+      newSelected.add(categoryId);
+      // If no primary category set, set this one
+      if (!form.category_id) {
+        setForm({ ...form, category_id: categoryId.toString() });
+      }
+    }
+    setSelectedCategoryIds(newSelected);
   };
 
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -382,6 +650,22 @@ export default function ItemsPage() {
         }
       }
 
+      // Save multiple categories
+      const itemId = isEdit ? editingItem.id : data.id;
+      if (selectedCategoryIds.size > 0) {
+        // Use PUT to replace all categories
+        await fetch(`http://localhost:3001/items/${itemId}/categories`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            category_ids: Array.from(selectedCategoryIds),
+          }),
+        });
+      }
+
       setShowModal(false);
       fetchItems();
     } catch (err: any) {
@@ -420,8 +704,8 @@ export default function ItemsPage() {
         return "bg-amber-500/20 text-amber-400";
       case "sold":
         return "bg-blue-500/20 text-blue-400";
-      case "archived":
-        return "bg-slate-500/20 text-slate-400";
+      case "pending_expertise":
+        return "bg-orange-500/20 text-orange-400";
       default:
         return "bg-slate-500/20 text-slate-400";
     }
@@ -574,6 +858,15 @@ export default function ItemsPage() {
 
                   {/* Actions */}
                   <div className="pt-4 border-t border-slate-700/50 flex justify-end gap-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => router.push(`/admin/items/${item.id}`)}
+                      className="text-blue-400 hover:text-blue-300 hover:bg-blue-500/10"
+                    >
+                      <Eye className="w-4 h-4 mr-1" />
+                      Voir
+                    </Button>
                     <Button
                       variant="ghost"
                       size="sm"
@@ -730,35 +1023,130 @@ export default function ItemsPage() {
                     <label className="block text-sm font-medium text-slate-400 mb-2">
                       Vendeur
                     </label>
-                    <select
-                      value={form.seller_id}
-                      onChange={(e) => setForm({ ...form, seller_id: e.target.value })}
-                      className="w-full h-10 px-3 bg-slate-900/50 border border-slate-700 rounded-lg text-white focus:border-purple-500 focus:outline-none"
-                    >
-                      <option value="">Sélectionner un vendeur</option>
-                      {users.map((user) => (
-                        <option key={user.id} value={user.id}>
-                          {user.first_name} {user.last_name} ({user.email})
-                        </option>
-                      ))}
-                    </select>
+                    <UserAutocomplete
+                      users={users}
+                      selectedUserId={form.seller_id ? parseInt(form.seller_id) : null}
+                      onSelect={(user) => setForm({ ...form, seller_id: user.id.toString() })}
+                      placeholder="Rechercher un vendeur..."
+                    />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-slate-400 mb-2">
-                      Catégorie
+                      Catégories <span className="text-purple-400 text-xs">(plusieurs possibles)</span>
                     </label>
-                    <select
-                      value={form.category_id}
-                      onChange={(e) => setForm({ ...form, category_id: e.target.value })}
-                      className="w-full h-10 px-3 bg-slate-900/50 border border-slate-700 rounded-lg text-white focus:border-purple-500 focus:outline-none"
-                    >
-                      <option value="">Sélectionner une catégorie</option>
-                      {categories.map((cat) => (
-                        <option key={cat.id} value={cat.id}>
-                          {cat.name}
-                        </option>
-                      ))}
-                    </select>
+                    <div className="bg-slate-900/50 border border-slate-700 rounded-lg p-3 max-h-48 overflow-y-auto">
+                      {/* Selected categories badges */}
+                      {selectedCategoryIds.size > 0 && (
+                        <div className="flex flex-wrap gap-2 mb-3 pb-3 border-b border-slate-700">
+                          {Array.from(selectedCategoryIds).map((catId) => {
+                            const cat = categories.find((c) => c.id === catId);
+                            const isPrimary = form.category_id === catId.toString();
+                            return cat ? (
+                              <span
+                                key={catId}
+                                className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
+                                  isPrimary
+                                    ? "bg-purple-500/30 text-purple-300 border border-purple-500"
+                                    : "bg-slate-700 text-slate-300"
+                                }`}
+                              >
+                                {cat.parent_id ? "↳ " : ""}{cat.name}
+                                {isPrimary && <Star className="w-3 h-3 fill-current" />}
+                                <button
+                                  type="button"
+                                  onClick={() => toggleCategory(catId)}
+                                  className="ml-1 hover:text-red-400"
+                                >
+                                  <X className="w-3 h-3" />
+                                </button>
+                              </span>
+                            ) : null;
+                          })}
+                        </div>
+                      )}
+                      
+                      {/* Category list */}
+                      <div className="space-y-1">
+                        {categories
+                          .filter((c) => !c.parent_id) // Root categories first
+                          .map((rootCat) => {
+                            const subcats = categories.filter((c) => c.parent_id === rootCat.id);
+                            const isRootSelected = selectedCategoryIds.has(rootCat.id);
+                            
+                            return (
+                              <div key={rootCat.id}>
+                                {/* Root category */}
+                                <button
+                                  type="button"
+                                  onClick={() => toggleCategory(rootCat.id)}
+                                  className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-left transition-colors ${
+                                    isRootSelected
+                                      ? "bg-purple-500/20 text-purple-300"
+                                      : "hover:bg-slate-700/50 text-slate-300"
+                                  }`}
+                                >
+                                  <div
+                                    className={`w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 ${
+                                      isRootSelected
+                                        ? "bg-purple-500 border-purple-500"
+                                        : "border-slate-600"
+                                    }`}
+                                  >
+                                    {isRootSelected && <Check className="w-3 h-3 text-white" />}
+                                  </div>
+                                  <FolderTree className="w-4 h-4 text-orange-400" />
+                                  <span className="flex-1">{rootCat.name}</span>
+                                  {rootCat.is_default && (
+                                    <span className="text-xs bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded">
+                                      Défaut
+                                    </span>
+                                  )}
+                                </button>
+                                
+                                {/* Subcategories */}
+                                {subcats.map((subCat) => {
+                                  const isSubSelected = selectedCategoryIds.has(subCat.id);
+                                  return (
+                                    <button
+                                      key={subCat.id}
+                                      type="button"
+                                      onClick={() => toggleCategory(subCat.id)}
+                                      className={`w-full flex items-center gap-2 px-2 py-1.5 pl-8 rounded-lg text-left transition-colors ${
+                                        isSubSelected
+                                          ? "bg-purple-500/20 text-purple-300"
+                                          : "hover:bg-slate-700/50 text-slate-400"
+                                      }`}
+                                    >
+                                      <div
+                                        className={`w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 ${
+                                          isSubSelected
+                                            ? "bg-purple-500 border-purple-500"
+                                            : "border-slate-600"
+                                        }`}
+                                      >
+                                        {isSubSelected && <Check className="w-3 h-3 text-white" />}
+                                      </div>
+                                      <FolderTree className="w-4 h-4 text-purple-400" />
+                                      <span className="flex-1 text-sm">{subCat.name}</span>
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            );
+                          })}
+                      </div>
+                      
+                      {selectedCategoryIds.size === 0 && (
+                        <p className="text-slate-500 text-sm text-center py-2">
+                          Sélectionnez au moins une catégorie
+                        </p>
+                      )}
+                    </div>
+                    {selectedCategoryIds.size > 0 && (
+                      <p className="text-xs text-slate-500 mt-1">
+                        <Star className="w-3 h-3 inline text-purple-400" /> = Catégorie principale
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -851,7 +1239,20 @@ export default function ItemsPage() {
                       type="number"
                       step="0.01"
                       value={form.price_min}
-                      onChange={(e) => setForm({ ...form, price_min: e.target.value })}
+                      onChange={(e) => {
+                        const newPriceMin = e.target.value;
+                        const updates: any = { price_min: newPriceMin };
+                        
+                        // Auto-update auction start price if in auction mode (-10%)
+                        if (form.sale_mode === "auction" && newPriceMin) {
+                          const priceMinNum = parseFloat(newPriceMin.replace(",", "."));
+                          if (!isNaN(priceMinNum) && priceMinNum > 0) {
+                            updates.auction_start_price = (Math.round(priceMinNum * 0.9 * 100) / 100).toString();
+                          }
+                        }
+                        
+                        setForm({ ...form, ...updates });
+                      }}
                       className="bg-slate-900/50 border-slate-700 text-white"
                       placeholder="0.00"
                     />
@@ -862,7 +1263,20 @@ export default function ItemsPage() {
                     </label>
                     <select
                       value={form.sale_mode}
-                      onChange={(e) => setForm({ ...form, sale_mode: e.target.value })}
+                      onChange={(e) => {
+                        const newMode = e.target.value;
+                        const updates: any = { sale_mode: newMode };
+                        
+                        // Auto-fill auction start price as -10% of price_min when switching to auction
+                        if (newMode === "auction" && form.price_min) {
+                          const priceMinNum = parseFloat(form.price_min.replace(",", "."));
+                          if (!isNaN(priceMinNum) && priceMinNum > 0) {
+                            updates.auction_start_price = (Math.round(priceMinNum * 0.9 * 100) / 100).toString();
+                          }
+                        }
+                        
+                        setForm({ ...form, ...updates });
+                      }}
                       className="w-full h-10 px-3 bg-slate-900/50 border border-slate-700 rounded-lg text-white focus:border-purple-500 focus:outline-none"
                     >
                       {SALE_MODES.map((mode) => (
@@ -879,7 +1293,7 @@ export default function ItemsPage() {
                   <div className="grid grid-cols-2 gap-4 p-4 bg-purple-500/10 border border-purple-500/30 rounded-xl">
                     <div>
                       <label className="block text-sm font-medium text-purple-300 mb-2">
-                        Prix de départ enchère (€)
+                        Prix de départ enchère (€) <span className="text-slate-500 text-xs">(auto: -10% du prix min)</span>
                       </label>
                       <Input
                         type="number"
