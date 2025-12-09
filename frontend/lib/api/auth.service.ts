@@ -101,4 +101,27 @@ export async function registerParticular(
     return parseResult.data;
 }
 
+export interface LoginResponse {
+    access_token: string;
+    refresh_token: string;
+}
+
+export async function login(email: string, password: string): Promise<LoginResponse> {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password }),
+    });
+
+    if (!response.ok) {
+        const error = await response.json().catch(() => ({ message: "Erreur lors de la connexion" }));
+        throw new Error(error.message || "Erreur lors de la connexion");
+    }
+
+    const data = await response.json();
+    return data;
+}
+
 export type { UserResponse };
