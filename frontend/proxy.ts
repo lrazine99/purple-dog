@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { PROTECTED_ROUTES, AUTH_ROUTES, ROUTES } from "@/helper/routes";
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const token = request.cookies.get("access_token")?.value;
 
   const isProtectedRoute = PROTECTED_ROUTES.some((route) =>
