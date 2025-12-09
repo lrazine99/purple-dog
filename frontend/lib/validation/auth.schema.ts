@@ -9,7 +9,7 @@ const baseRegisterFields = z.object({
     .string()
     .min(2, "Le nom doit contenir au moins 2 caractères")
     .max(100),
-  email: z.string().email("Email invalide").max(150),
+  email: z.email("Email invalide").max(150),
   password: z
     .string()
     .min(8, "Le mot de passe doit contenir au moins 8 caractères")
@@ -68,3 +68,10 @@ export const professionalRegisterSchema = baseRegisterFields
     message: "Vous devez accepter les conditions générales de vente",
     path: ["cgv_accepted"],
   });
+
+export const loginSchema = z.object({
+  email: z.email("Email invalide"),
+  password: z.string().min(1, "Le mot de passe est requis"),
+});
+
+export type LoginForm = z.infer<typeof loginSchema>;
