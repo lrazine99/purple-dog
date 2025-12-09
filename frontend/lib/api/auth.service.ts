@@ -67,9 +67,12 @@ export async function registerProfessional(
   });
 
   if (!response.ok) {
-    const error = await response
-      .json()
-      .catch(() => ({ message: "Erreur lors de l'inscription" }));
+    let error;
+    try {
+      error = await response.json();
+    } catch {
+      error = { message: "Erreur lors de l'inscription" };
+    }
     throw new Error(error.message || "Erreur lors de l'inscription");
   }
 
@@ -89,8 +92,6 @@ export async function registerParticular(
 ): Promise<UserResponse> {
   const { confirmPassword, ...payload } = data;
 
-  console.log("payload", payload);
-
   const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users`, {
     method: "POST",
     headers: {
@@ -100,9 +101,12 @@ export async function registerParticular(
   });
   console.log("response", response);
   if (!response.ok) {
-    const error = await response
-      .json()
-      .catch(() => ({ message: "Erreur lors de l'inscription" }));
+    let error;
+    try {
+      error = await response.json();
+    } catch {
+      error = { message: "Erreur lors de l'inscription" };
+    }
     throw new Error(error.message || "Erreur lors de l'inscription");
   }
 
@@ -138,14 +142,42 @@ export async function login(
   );
 
   if (!response.ok) {
-    const error = await response
-      .json()
-      .catch(() => ({ message: "Erreur lors de la connexion" }));
+    let error;
+    try {
+      error = await response.json();
+    } catch {
+      error = { message: "Erreur lors de la connexion" };
+    }
     throw new Error(error.message || "Erreur lors de la connexion");
   }
 
   const data = await response.json();
   return data;
+}
+
+export async function loginWithCookies(
+  email: string,
+  password: string
+): Promise<{ success: boolean }> {
+  const response = await fetch("/api/auth/login", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ email, password }),
+  });
+
+  if (!response.ok) {
+    let error;
+    try {
+      error = await response.json();
+    } catch {
+      error = { error: "Erreur lors de la connexion" };
+    }
+    throw new Error(error.error || "Erreur lors de la connexion");
+  }
+
+  return response.json();
 }
 
 export async function verifyEmail(token: string): Promise<{ message: string }> {
@@ -157,9 +189,12 @@ export async function verifyEmail(token: string): Promise<{ message: string }> {
   );
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({
-      message: "Erreur lors de la vérification",
-    }));
+    let error;
+    try {
+      error = await response.json();
+    } catch {
+      error = { message: "Erreur lors de la vérification" };
+    }
     throw new Error(error.message || "Token invalide ou expiré");
   }
 

@@ -4,7 +4,7 @@ import { LoginForm } from "@/components/auth/LoginForm";
 import { CustomLogo } from "@/components/ui/custom-logo";
 import { ROUTES } from "@/helper/routes";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 export default function ConnexionPage() {
   return (

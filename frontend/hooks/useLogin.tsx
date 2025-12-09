@@ -1,9 +1,9 @@
 import { useMutation } from "@tanstack/react-query";
-import { login, LoginResponse } from "@/lib/api/auth.service";
 import { LoginForm } from "@/lib/type/auth.type";
+import { loginWithCookies } from "@/lib/api/auth.service";
 
 export function useLogin() {
-    return useMutation<LoginResponse, Error, LoginForm>({
-        mutationFn: (data) => login(data.email, data.password),
-    });
+  return useMutation<{ success: boolean }, Error, LoginForm>({
+    mutationFn: (data) => loginWithCookies(data.email, data.password),
+  });
 }
