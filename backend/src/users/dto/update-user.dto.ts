@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsString, IsOptional, IsBoolean, IsEnum } from 'class-validator';
+import { IsEmail, IsString, IsOptional, IsBoolean, IsEnum, IsInt } from 'class-validator';
 import { UserRole } from '../entities/user.entity';
 
 export class UpdateUserDto {
@@ -64,6 +64,16 @@ export class UpdateUserDto {
   profile_picture?: string;
 
   @ApiProperty({ required: false })
+  @IsInt()
+  @IsOptional()
+  age?: number;
+
+  @ApiProperty({ required: false })
+  @IsString()
+  @IsOptional()
+  social_links?: string;
+
+  @ApiProperty({ required: false })
   @IsBoolean()
   @IsOptional()
   newsletter?: boolean;
@@ -98,4 +108,3 @@ export class UpdateUserDto {
   @IsOptional()
   is_verified?: boolean;
 }
-
