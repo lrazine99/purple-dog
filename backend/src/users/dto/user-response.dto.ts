@@ -40,6 +40,12 @@ export class UserResponseDto {
   @ApiProperty({ required: false })
   profile_picture?: string;
 
+  @ApiProperty({ required: false })
+  age?: number;
+
+  @ApiProperty({ required: false })
+  social_links?: string;
+
   @ApiProperty()
   newsletter: boolean;
 
