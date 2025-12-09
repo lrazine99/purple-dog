@@ -35,6 +35,10 @@ export function ParticularRegisterForm() {
       email: "",
       password: "",
       confirmPassword: "",
+      address_line: "",
+      city: "",
+      postal_code: "",
+      country: "",
       rgpd_accepted: false,
       newsletter: false,
     },
@@ -46,16 +50,18 @@ export function ParticularRegisterForm() {
         toast({
           variant: "success",
           message: "Inscription réussie",
-          description: "Votre compte a été créé avec succès. Vous pouvez maintenant vous connecter.",
+          description:
+            "Votre compte a été créé avec succès. Vous pouvez maintenant vous connecter.",
         });
         router.push("/connexion");
       },
       onError: (error: Error) => {
-        console.log("erreor", error)
+        console.log("erreor", error);
         toast({
           variant: "error",
           message: "Erreur lors de l'inscription",
-          description: error.message || "Une erreur est survenue lors de l'inscription.",
+          description:
+            error.message || "Une erreur est survenue lors de l'inscription.",
         });
       },
     });
@@ -104,6 +110,36 @@ export function ParticularRegisterForm() {
           />
         </div>
 
+        <div className="space-y-4 border-t pt-4">
+          <FormInput
+            control={form.control}
+            name="address_line"
+            label="Adresse"
+            placeholder="123 rue de la Paix"
+          />
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <FormInput
+              control={form.control}
+              name="postal_code"
+              label="Code postal"
+              placeholder="75001"
+            />
+            <FormInput
+              control={form.control}
+              name="city"
+              label="Ville"
+              placeholder="Paris"
+            />
+            <FormInput
+              control={form.control}
+              name="country"
+              label="Pays"
+              placeholder="France"
+            />
+          </div>
+        </div>
+
         <div className="space-y-4">
           <FormField
             control={form.control}
@@ -145,7 +181,11 @@ export function ParticularRegisterForm() {
           />
         </div>
 
-        <Button type="submit" className="w-full h-12" disabled={registerMutation.isPending}>
+        <Button
+          type="submit"
+          className="w-full h-12"
+          disabled={registerMutation.isPending}
+        >
           {registerMutation.isPending ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
