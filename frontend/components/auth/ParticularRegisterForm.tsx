@@ -19,6 +19,7 @@ import { ParticularRegisterForm as ParticularRegisterFormType } from "@/lib/type
 export function ParticularRegisterForm() {
   const form = useForm<ParticularRegisterFormType>({
     resolver: zodResolver(particularRegisterSchema),
+    mode: "onBlur",
     defaultValues: {
       role: "particular",
       first_name: "",
