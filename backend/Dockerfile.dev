@@ -1,0 +1,21 @@
+# Development Dockerfile
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Install dependencies (including devDependencies)
+COPY package*.json ./
+RUN npm ci
+
+# Copy source code
+COPY . .
+
+# Set NODE_ENV to development
+ENV NODE_ENV=development
+
+# Expose port
+EXPOSE 3001
+
+# Start the NestJS development server
+CMD ["npm", "run", "start:dev"]
+
