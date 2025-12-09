@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { useVerifyEmail } from "@/hooks/useVerifyEmail";
 import { useToast } from "@/hooks/useToast";
 import { ROUTES } from "@/helper/routes";
@@ -10,13 +9,21 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
 export default function VerifyEmailPage() {
-  const searchParams = useSearchParams();
   const { toast } = useToast();
   const verifyMutation = useVerifyEmail();
+  const [token, setToken] = useState<string | null>(null);
+  const [isReady, setIsReady] = useState(false);
 
-  const token = searchParams.get("token");
+  // Récupérer le token depuis les paramètres d'URL côté client
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    setToken(params.get("token"));
+    setIsReady(true);
+  }, []);
 
   useEffect(() => {
+    if (!isReady) return;
+
     if (!token) {
       toast({
         variant: "error",
@@ -42,13 +49,21 @@ export default function VerifyEmailPage() {
         });
       },
     });
-  }, [token]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isReady, token]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-blue-50 p-4">
       <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8">
         <div className="text-center">
-          {verifyMutation.isPending && (
+          {!isReady && (
+            <>
+              <Loader2 className="h-16 w-16 animate-spin text-primary mx-auto mb-4" />
+              <p className="text-muted-foreground">Chargement...</p>
+            </>
+          )}
+
+          {isReady && verifyMutation.isPending && (
             <>
               <Loader2 className="h-16 w-16 animate-spin text-primary mx-auto mb-4" />
               <h1 className="text-2xl font-bold mb-2">
@@ -60,7 +75,7 @@ export default function VerifyEmailPage() {
             </>
           )}
 
-          {verifyMutation.isSuccess && (
+          {isReady && verifyMutation.isSuccess && (
             <>
               <CheckCircle2 className="h-16 w-16 text-green-500 mx-auto mb-4" />
               <h1 className="text-2xl font-bold mb-2 text-green-700">
@@ -76,7 +91,7 @@ export default function VerifyEmailPage() {
             </>
           )}
 
-          {verifyMutation.isError && (
+          {isReady && verifyMutation.isError && (
             <>
               <XCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
               <h1 className="text-2xl font-bold mb-2 text-red-700">
@@ -101,7 +116,7 @@ export default function VerifyEmailPage() {
             </>
           )}
 
-          {!token && (
+          {isReady && !token && (
             <>
               <XCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
               <h1 className="text-2xl font-bold mb-2 text-red-700">
@@ -111,7 +126,7 @@ export default function VerifyEmailPage() {
                 Le lien de vérification est invalide ou incomplet
               </p>
               <Link href={ROUTES.INSCRIPTION}>
-                <Button className="w-full">Retour à l'inscription</Button>
+                <Button className="w-full">Retour à &apos;inscription</Button>
               </Link>
             </>
           )}
