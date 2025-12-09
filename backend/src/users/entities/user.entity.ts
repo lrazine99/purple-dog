@@ -106,6 +106,19 @@ export class User {
   profile_picture: string;
 
   @Column({
+    type: 'int',
+    nullable: true,
+  })
+  age: number;
+
+  @Column({
+    type: 'varchar',
+    length: 255,
+    nullable: true,
+  })
+  social_links: string;
+
+  @Column({
     type: 'boolean',
     default: false,
   })
@@ -149,6 +162,13 @@ export class User {
     default: false,
   })
   is_verified: boolean;
+
+  @Column({
+    type: 'varchar',
+    length: 255,
+    nullable: true,
+  })
+  refresh_token_hash: string;
 
   @CreateDateColumn()
   created_at: Date;
