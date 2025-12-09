@@ -17,6 +17,9 @@ export const ROUTES = {
 
   // Product pages
   PRODUITS: "/produits",
+
+  // User pages
+  MON_COMPTE: "/mon-compte",
 } as const;
 
 /**
