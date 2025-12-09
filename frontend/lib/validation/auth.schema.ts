@@ -22,6 +22,10 @@ const baseRegisterFields = z.object({
 export const particularRegisterSchema = baseRegisterFields
   .extend({
     role: z.literal("particular"),
+    address_line: z.string().min(5, "L'adresse est requise").max(255),
+    city: z.string().min(2, "La ville est requise").max(100),
+    postal_code: z.string().min(5, "Le code postal est requis").max(20),
+    country: z.string().min(2, "Le pays est requis").max(100),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Les mots de passe ne correspondent pas",
