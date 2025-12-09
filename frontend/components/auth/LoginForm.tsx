@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form } from "@/components/ui/form";
@@ -11,9 +13,12 @@ import {
 import { useToast } from "@/hooks/useToast";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { Loader2 } from "lucide-react";
 
 export function LoginForm() {
   const { toast } = useToast();
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
 
   const form = useForm<LoginFormType>({
     resolver: zodResolver(loginSchema),
@@ -25,13 +30,42 @@ export function LoginForm() {
   });
 
   async function onSubmit(data: LoginFormType) {
-    console.log("Connexion:", data);
+    setLoading(true);
+    
+    try {
+      const response = await fetch("http://localhost:3001/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
 
-    toast({
-      variant: "success",
-      message: "Connexion réussie !",
-      description: "Vous êtes maintenant connecté",
-    });
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message || "Échec de la connexion");
+      }
+
+      // Store tokens
+      localStorage.setItem("access_token", result.access_token);
+      localStorage.setItem("refresh_token", result.refresh_token);
+
+      toast({
+        variant: "success",
+        message: "Connexion réussie !",
+        description: "Vous êtes maintenant connecté",
+      });
+
+      // Redirect to admin dashboard
+      router.push("/admin");
+    } catch (error: any) {
+      toast({
+        variant: "error",
+        message: "Erreur de connexion",
+        description: error.message || "Une erreur est survenue",
+      });
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -55,8 +89,15 @@ export function LoginForm() {
           autoComplete="current-password"
         />
 
-        <Button type="submit" className="w-full h-12">
-          Se connecter
+        <Button type="submit" disabled={loading} className="w-full h-12">
+          {loading ? (
+            <>
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              Connexion...
+            </>
+          ) : (
+            "Se connecter"
+          )}
         </Button>
 
         <div className="text-center text-sm">
