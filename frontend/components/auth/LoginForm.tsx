@@ -14,6 +14,7 @@ import { useToast } from "@/hooks/useToast";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { Loader2 } from "lucide-react";
+import { ROUTES } from "@/helper/routes";
 
 export function LoginForm() {
   const { toast } = useToast();
@@ -102,7 +103,7 @@ export function LoginForm() {
 
         <div className="text-center text-sm">
           <span className="text-muted-foreground">Pas encore de compte ? </span>
-          <Link href="/inscription" className="underline hover:text-primary">
+          <Link href={ROUTES.INSCRIPTION} className="underline hover:text-primary">
             Créer un compte
           </Link>
         </div>

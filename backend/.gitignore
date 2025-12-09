@@ -11,6 +11,15 @@ yarn-debug.log*
 yarn-error.log*
 lerna-debug.log*
 
+//pem
+jwt_private.pem
+jwt_public.pem
+
+# env
+.env
+.env.local
+.env.*.local
+
 # OS
 .DS_Store
 
