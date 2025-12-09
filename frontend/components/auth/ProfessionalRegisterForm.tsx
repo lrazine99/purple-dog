@@ -19,6 +19,7 @@ import { ProfessionalRegisterForm as ProfessionalRegisterFormType } from "@/lib/
 export function ProfessionalRegisterForm() {
   const form = useForm<ProfessionalRegisterFormType>({
     resolver: zodResolver(professionalRegisterSchema),
+    mode: "onBlur",
     defaultValues: {
       role: "professional",
       first_name: "",
