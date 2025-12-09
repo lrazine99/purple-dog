@@ -31,4 +31,3 @@ export class Category {
   @OneToMany(() => Category, (category) => category.parent)
   children: Category[];
 }
-
