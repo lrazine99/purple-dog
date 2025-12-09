@@ -4,14 +4,12 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form } from "@/components/ui/form";
 import { FormInput } from "@/components/design-system/inputs/FormInput";
-import {
-  loginSchema,
-  type LoginForm as LoginFormType,
-} from "@/lib/validation/auth.schema";
 import { useToast } from "@/hooks/useToast";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { ROUTES } from "@/helper/routes";
+import { LoginForm as LoginFormType } from "@/lib/type/auth.type";
+import { loginSchema } from "@/lib/validation/auth.schema";
 
 export function LoginForm() {
   const { toast } = useToast();
@@ -62,7 +60,10 @@ export function LoginForm() {
 
         <div className="text-center text-sm">
           <span className="text-muted-foreground">Pas encore de compte ? </span>
-          <Link href={ROUTES.INSCRIPTION} className="underline hover:text-primary">
+          <Link
+            href={ROUTES.INSCRIPTION}
+            className="underline hover:text-primary"
+          >
             Créer un compte
           </Link>
         </div>

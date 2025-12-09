@@ -3,6 +3,7 @@
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { FormInput } from "@/components/design-system/inputs/FormInput";
+import { FormFileInput } from "@/components/design-system/inputs/FormFileInput";
 import {
   Form,
   FormField,
@@ -16,12 +17,11 @@ import { Button } from "@/components/ui/button";
 import { professionalRegisterSchema } from "@/lib/validation/auth.schema";
 import { ProfessionalRegisterForm as ProfessionalRegisterFormType } from "@/lib/type/auth.type";
 import { useSiretLookup } from "@/hooks/useSiretLookup";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { Loader2 } from "lucide-react";
 import { useRegisterProfessional } from "@/hooks/useRegister";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/useToast";
-
 
 export function ProfessionalRegisterForm() {
   const router = useRouter();
@@ -46,6 +46,8 @@ export function ProfessionalRegisterForm() {
       country: "",
       website_company: "",
       speciality: "",
+      items_preference: "",
+      official_document: undefined,
       rgpd_accepted: false,
       cgv_accepted: false,
       newsletter: false,
@@ -57,24 +59,12 @@ export function ProfessionalRegisterForm() {
     name: "siret",
   });
 
-  const [siretError, setSiretError] = useState<string>("");
+  const { data: siretData, isLoading, isError } = useSiretLookup(siret || "");
 
-  const {
-    data: siretData,
-    isLoading,
-    isError,
-    error,
-  } = useSiretLookup(siret || "");
-
-  useEffect(() => {
-    const shouldShowError = isError && siret && siret.length === 14;
-
-    if (shouldShowError) {
-      setSiretError("Erreur lors de la recherche");
-    } else {
-      setSiretError("");
-    }
-  }, [isError, error, siret]);
+  const siretError =
+    isError && siret && siret.length === 14
+      ? "Erreur lors de la recherche"
+      : "";
 
   useEffect(() => {
     if (siretData) {
@@ -83,8 +73,6 @@ export function ProfessionalRegisterForm() {
       form.setValue("city", siretData.city);
       form.setValue("postal_code", siretData.postal_code);
       form.setValue("country", "France");
-
-      setSiretError("");
     } else {
       form.setValue("company_name", "");
       form.setValue("address_line", "");
@@ -100,7 +88,8 @@ export function ProfessionalRegisterForm() {
         toast({
           variant: "success",
           message: "Inscription réussie",
-          description: "Votre compte a été créé avec succès. Vous pouvez maintenant vous connecter.",
+          description:
+            "Votre compte a été créé avec succès. Vous pouvez maintenant vous connecter.",
         });
         router.push("/connexion");
       },
@@ -108,7 +97,8 @@ export function ProfessionalRegisterForm() {
         toast({
           variant: "error",
           message: "Erreur lors de l'inscription",
-          description: error.message || "Une erreur est survenue lors de l'inscription.",
+          description:
+            error.message || "Une erreur est survenue lors de l'inscription.",
         });
       },
     });
@@ -248,17 +238,33 @@ export function ProfessionalRegisterForm() {
 
             <FormInput
               control={form.control}
-              name="website_company"
-              label="Site web (optionnel)"
-              type="url"
-              placeholder="https://www.monsite.com"
+              name="speciality"
+              label="Spécialité"
+              placeholder="Ex: Brocanteur, Antiquaire..."
             />
 
             <FormInput
               control={form.control}
-              name="speciality"
-              label="Spécialité (optionnel)"
-              placeholder="Ex: Brocanteur, Antiquaire..."
+              name="items_preference"
+              label="Préférence d'articles"
+              placeholder="Ex: Meubles anciens, Objets de décoration..."
+            />
+
+            <FormFileInput
+              control={form.control}
+              name="official_document"
+              label="Document officiel"
+              helper="Kbis, extrait d'immatriculation ou autre document justificatif (PDF, JPG, PNG - max 5MB)"
+              accept=".pdf,.jpg,.jpeg,.png"
+              maxSize={5}
+            />
+
+            <FormInput
+              control={form.control}
+              name="website_company"
+              label="Site web (optionnel)"
+              type="url"
+              placeholder="https://www.monsite.com"
             />
           </div>
         )}
@@ -327,7 +333,11 @@ export function ProfessionalRegisterForm() {
               />
             </div>
 
-            <Button type="submit" className="w-full h-12" disabled={registerMutation.isPending}>
+            <Button
+              type="submit"
+              className="w-full h-12"
+              disabled={registerMutation.isPending}
+            >
               {registerMutation.isPending ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
