@@ -1,3 +1,19 @@
-export default function Home() {
-  return <div>Homepage</div>;
+import Header from "@/components/homepage/header"
+import HeroBanner from "@/components/homepage/hero-banner"
+import CategoryGrid from "@/components/homepage/category-grid"
+import AboutSection from "@/components/homepage/about-section"
+import Newsletter from "@/components/homepage/newsletter"
+import Footer from "@/components/homepage/footer"
+
+export default function HomePage() {
+  return (
+    <main className="min-h-screen">
+      <Header />
+      <HeroBanner />
+      <CategoryGrid />
+      <AboutSection />
+      <Newsletter />
+      <Footer />
+    </main>
+  )
 }

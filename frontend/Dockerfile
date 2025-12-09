@@ -34,8 +34,7 @@ RUN npm ci --only=production && npm cache clean --force
 
 # Copy built application from builder stage
 COPY --from=builder /app/.next ./.next
-COPY --from=builder /app/next.config.ts ./
-COPY --from=builder /app/tsconfig.json ./
+COPY --from=builder /app/next.config.js ./
 # Copy public directory (will be empty if it didn't exist, which is fine)
 COPY --from=builder /app/public ./public
 
