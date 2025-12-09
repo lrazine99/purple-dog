@@ -51,3 +51,4 @@ jwt_public.pem
 # TypeScript
 *.tsbuildinfo
 
+uploads

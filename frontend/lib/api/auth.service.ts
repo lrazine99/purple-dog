@@ -23,17 +23,35 @@ export interface RegisterPayload {
     cgv_accepted?: boolean;
 }
 
+function buildFormData(data: Record<string, any>, file?: File | null, fileFieldName?: string): FormData {
+    const formData = new FormData();
+
+    Object.entries(data).forEach(([key, value]) => {
+        if (key === 'confirmPassword') return;
+        if (key === fileFieldName) return;
+
+        if (value !== undefined && value !== null) {
+            formData.append(key, String(value));
+        }
+    });
+
+    if (file && fileFieldName) {
+        formData.append(fileFieldName, file);
+    }
+
+    return formData;
+}
+
 export async function registerProfessional(
     data: ProfessionalRegisterForm
 ): Promise<UserResponse> {
-    const { confirmPassword, ...payload } = data;
+    const { confirmPassword, official_document, ...payload } = data;
+
+    const formData = buildFormData(payload, official_document, 'official_document');
 
     const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users`, {
         method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
+        body: formData,
     });
 
     if (!response.ok) {
@@ -43,7 +61,6 @@ export async function registerProfessional(
 
     const rawData = await response.json();
 
-    // Valider la réponse avec le schéma Zod
     const parseResult = userResponseSchema.safeParse(rawData);
 
     if (!parseResult.success) {

@@ -32,6 +32,18 @@ export const particularRegisterSchema = baseRegisterFields
     path: ["rgpd_accepted"],
   });
 
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const ACCEPTED_FILE_TYPES = ["application/pdf", "image/jpeg", "image/png"];
+
+const fileSchema = z
+  .instanceof(File, { message: "Le document officiel est requis" })
+  .refine((file) => file.size <= MAX_FILE_SIZE, {
+    message: "Le fichier ne doit pas dépasser 5MB",
+  })
+  .refine((file) => ACCEPTED_FILE_TYPES.includes(file.type), {
+    message: "Format de fichier invalide. Formats acceptés: PDF, JPG, PNG",
+  });
+
 export const professionalRegisterSchema = baseRegisterFields
   .extend({
     role: z.literal("professional"),
@@ -53,7 +65,12 @@ export const professionalRegisterSchema = baseRegisterFields
       .max(255)
       .optional()
       .or(z.literal("")),
-    speciality: z.string().max(255).optional(),
+    speciality: z.string().max(255).min(1),
+    items_preference: z
+      .string()
+      .min(1, "La préférence d'articles est requise")
+      .max(255),
+    official_document: fileSchema,
     cgv_accepted: z.boolean(),
   })
   .refine((data) => data.password === data.confirmPassword, {
@@ -74,26 +91,27 @@ export const loginSchema = z.object({
   password: z.string().min(1, "Le mot de passe est requis"),
 });
 
-
 export const userResponseSchema = z.object({
   id: z.number(),
   role: z.string(),
   first_name: z.string(),
   last_name: z.string(),
   email: z.email(),
-  address_line: z.string().optional(),
-  city: z.string().optional(),
-  postal_code: z.string().optional(),
-  country: z.string().optional(),
-  website_company: z.string().optional(),
-  items_preference: z.string().optional(),
-  speciality: z.string().optional(),
-  profile_picture: z.string().optional(),
+  address_line: z.string().nullish(),
+  city: z.string().nullish(),
+  postal_code: z.string().nullish(),
+  country: z.string().nullish(),
+  website_company: z.string().nullish(),
+  items_preference: z.string().nullish(),
+  speciality: z.string().nullish(),
+  profile_picture: z.string().nullish(),
+  age: z.number().nullish(),
+  social_links: z.string().nullish(),
   newsletter: z.boolean(),
   rgpd_accepted: z.boolean(),
-  company_name: z.string().optional(),
-  siret: z.string().optional(),
-  official_document_url: z.string().optional(),
+  company_name: z.string().nullish(),
+  siret: z.string().nullish(),
+  official_document_url: z.string().nullish(),
   cgv_accepted: z.boolean(),
   is_verified: z.boolean(),
   created_at: z.coerce.date(),
