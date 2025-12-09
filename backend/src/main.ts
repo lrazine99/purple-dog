@@ -15,6 +15,11 @@ async function bootstrap() {
     }),
   );
 
+  app.enableCors({
+    origin: process.env.FRONTEND_URL || "http://localhost:3000",
+    credentials: true,
+  });
+
   // Swagger configuration
   const config = new DocumentBuilder()
     .setTitle('Purple Dog API')
@@ -22,7 +27,7 @@ async function bootstrap() {
     .setVersion('1.0')
     .addTag('users')
     .build();
-  
+
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
 

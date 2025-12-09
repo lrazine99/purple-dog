@@ -74,4 +74,28 @@ export const loginSchema = z.object({
   password: z.string().min(1, "Le mot de passe est requis"),
 });
 
-export type LoginForm = z.infer<typeof loginSchema>;
+
+export const userResponseSchema = z.object({
+  id: z.number(),
+  role: z.string(),
+  first_name: z.string(),
+  last_name: z.string(),
+  email: z.email(),
+  address_line: z.string().optional(),
+  city: z.string().optional(),
+  postal_code: z.string().optional(),
+  country: z.string().optional(),
+  website_company: z.string().optional(),
+  items_preference: z.string().optional(),
+  speciality: z.string().optional(),
+  profile_picture: z.string().optional(),
+  newsletter: z.boolean(),
+  rgpd_accepted: z.boolean(),
+  company_name: z.string().optional(),
+  siret: z.string().optional(),
+  official_document_url: z.string().optional(),
+  cgv_accepted: z.boolean(),
+  is_verified: z.boolean(),
+  created_at: z.coerce.date(),
+  updated_at: z.coerce.date(),
+});

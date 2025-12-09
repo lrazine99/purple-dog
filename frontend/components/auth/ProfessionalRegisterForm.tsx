@@ -18,8 +18,16 @@ import { ProfessionalRegisterForm as ProfessionalRegisterFormType } from "@/lib/
 import { useSiretLookup } from "@/hooks/useSiretLookup";
 import { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
+import { useRegisterProfessional } from "@/hooks/useRegister";
+import { useRouter } from "next/navigation";
+import { useToast } from "@/hooks/useToast";
+
 
 export function ProfessionalRegisterForm() {
+  const router = useRouter();
+  const { toast } = useToast();
+  const registerMutation = useRegisterProfessional();
+
   const form = useForm<ProfessionalRegisterFormType>({
     resolver: zodResolver(professionalRegisterSchema),
     mode: "onBlur",
@@ -87,8 +95,23 @@ export function ProfessionalRegisterForm() {
   }, [siretData, form]);
 
   const onSubmit = (data: ProfessionalRegisterFormType) => {
-    console.log("Inscription vendeur:", data);
-    // TODO: Appel API d'inscription
+    registerMutation.mutate(data, {
+      onSuccess: () => {
+        toast({
+          variant: "success",
+          message: "Inscription réussie",
+          description: "Votre compte a été créé avec succès. Vous pouvez maintenant vous connecter.",
+        });
+        router.push("/connexion");
+      },
+      onError: (error) => {
+        toast({
+          variant: "error",
+          message: "Erreur lors de l'inscription",
+          description: error.message || "Une erreur est survenue lors de l'inscription.",
+        });
+      },
+    });
   };
 
   return (
@@ -304,8 +327,15 @@ export function ProfessionalRegisterForm() {
               />
             </div>
 
-            <Button type="submit" className="w-full h-12">
-              Créer mon compte professionnel
+            <Button type="submit" className="w-full h-12" disabled={registerMutation.isPending}>
+              {registerMutation.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Inscription en cours...
+                </>
+              ) : (
+                "Créer mon compte professionnel"
+              )}
             </Button>
           </>
         )}
