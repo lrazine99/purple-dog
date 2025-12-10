@@ -120,10 +120,41 @@ export async function registerParticular(
   return parseResult.data;
 }
 
-export async function loginWithCookies(
+export interface LoginResponse {
+  access_token: string;
+  refresh_token: string;
+}
+
+export async function login(
   email: string,
   password: string
-): Promise<{ success: boolean }> {
+): Promise<LoginResponse> {
+  const response = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL}/auth/login`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ email, password }),
+    }
+  );
+
+  if (!response.ok) {
+    let error;
+    try {
+      error = await response.json();
+    } catch {
+      error = { message: "Erreur lors de la connexion" };
+    }
+    throw new Error(error.message || "Erreur lors de la connexion");
+  }
+
+  const data = await response.json();
+  return data;
+}
+
+export async function loginWithCookies(email: string, password: string) {
   const response = await fetch("/api/auth/login", {
     method: "POST",
     headers: {
@@ -142,8 +173,7 @@ export async function loginWithCookies(
     throw new Error(error.error || "Erreur lors de la connexion");
   }
 
-  const data = await response.json();
-  return data;
+  return await response.json();
 }
 
 export async function verifyEmail(token: string): Promise<{ message: string }> {

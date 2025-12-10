@@ -50,18 +50,9 @@ export default function AdminLayout({
 
   useEffect(() => {
     const checkAuth = async () => {
-      const token = localStorage.getItem("access_token");
-      
-      if (!token) {
-        router.push("/connexion");
-        return;
-      }
-
       try {
-        // Fetch current user info
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/me`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        // Fetch current user info via API route (uses cookies)
+        const res = await fetch("/api/auth/me");
 
         if (!res.ok) {
           // Token invalid or expired
@@ -116,7 +107,8 @@ export default function AdminLayout({
           </div>
           <h1 className="text-2xl font-bold text-white mb-2">Accès Refusé</h1>
           <p className="text-slate-400 mb-6">
-            Seuls les administrateurs peuvent accéder à ce panneau. Votre compte ({user?.email}) a le rôle "{user?.role}".
+            Seuls les administrateurs peuvent accéder à ce panneau. Votre compte
+            ({user?.email}) a le rôle "{user?.role}".
           </p>
           <div className="flex flex-col gap-3">
             <Button
@@ -233,7 +225,9 @@ export default function AdminLayout({
             <Menu className="w-6 h-6" />
           </button>
           <div className="flex items-center gap-4">
-            <span className="text-slate-400 text-sm hidden sm:block">Panneau d'administration</span>
+            <span className="text-slate-400 text-sm hidden sm:block">
+              Panneau d'administration
+            </span>
           </div>
         </header>
 
