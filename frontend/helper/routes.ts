@@ -9,6 +9,7 @@ export const ROUTES = {
   CGU: "/cgu",
   CONTACT: "/contact",
 
+  PRO_PRODUITS: "/produits",
   PRODUITS: "/produits",
 
   // User pages
@@ -17,7 +18,18 @@ export const ROUTES = {
   MON_COMPTE: "/mon-compte",
 } as const;
 
-export const PROTECTED_ROUTES = [ROUTES.PRODUITS, ROUTES.MON_COMPTE] as const;
+export const PUBLIC_ROUTES = [
+  ROUTES.HOME,
+  ROUTES.CONNEXION,
+  ROUTES.INSCRIPTION,
+] as const;
+export const PROFESSIONNEL_ROUTES = [ROUTES.PRO_PRODUITS] as const;
+export const PARTICULAR_ROUTES = [ROUTES.PRO_PRODUITS] as const;
+
+export const PROTECTED_ROUTES = [
+  ROUTES.PRO_PRODUITS,
+  ROUTES.MON_COMPTE,
+] as const;
 
 export const AUTH_ROUTES = [ROUTES.CONNEXION, ROUTES.INSCRIPTION] as const;
 
