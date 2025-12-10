@@ -9,6 +9,7 @@ import { ItemsModule } from './items/items.module';
 import { CategoriesModule } from './categories/categories.module';
 import { UploadModule } from './upload/upload.module';
 import { OrdersModule } from './orders/orders.module';
+import { UploadsModule } from './uploads/uploads.module';
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { OrdersModule } from './orders/orders.module';
     CategoriesModule,
     UploadModule,
     OrdersModule,
+    UploadsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
