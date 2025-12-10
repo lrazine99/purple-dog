@@ -4,27 +4,27 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { Category } from '../../categories/entities/category.entity';
+import { ItemPhoto } from './item-photo.entity';
+import { ItemCategory } from './item-category.entity';
 
 export enum SaleMode {
   AUCTION = 'auction',
   FAST = 'fast',
+  FIXED = 'fixed',
+  NEGOTIABLE = 'negotiable',
 }
 
 export enum ItemStatus {
   DRAFT = 'draft',
-  FOR_SALE = 'for_sale',
+  PUBLISHED = 'published',
   SOLD = 'sold',
-  PENDING = 'pending',
-  APPROVED = 'approved',
-  CANCELLED = 'cancelled',
-  EXPIRED = 'expired',
-  BLOCKED = 'blocked',
-  DELETED = 'deleted',
+  PENDING_EXPERTISE = 'pending_expertise',
 }
 
 @Entity('items')
@@ -39,12 +39,17 @@ export class Item {
   @JoinColumn({ name: 'seller_id' })
   seller: User;
 
-  @Column({ name: 'category_id' })
-  category_id: number;
+  // Keep category_id for backward compatibility (primary category)
+  @Column({ name: 'category_id', nullable: true })
+  category_id: number | null;
 
   @ManyToOne(() => Category)
   @JoinColumn({ name: 'category_id' })
   category: Category;
+
+  // Multiple categories relationship
+  @OneToMany(() => ItemCategory, (ic) => ic.item, { cascade: true, eager: true })
+  itemCategories: ItemCategory[];
 
   @Column({
     type: 'varchar',
@@ -60,24 +65,28 @@ export class Item {
   @Column({
     type: 'float',
     name: 'width_cm',
+    nullable: true,
   })
   width_cm: number;
 
   @Column({
     type: 'float',
     name: 'height_cm',
+    nullable: true,
   })
   height_cm: number;
 
   @Column({
     type: 'float',
     name: 'depth_cm',
+    nullable: true,
   })
   depth_cm: number;
 
   @Column({
     type: 'float',
     name: 'weight_kg',
+    nullable: true,
   })
   weight_kg: number;
 
@@ -94,6 +103,7 @@ export class Item {
     precision: 10,
     scale: 2,
     name: 'price_min',
+    nullable: true,
   })
   price_min: number;
 
@@ -101,12 +111,14 @@ export class Item {
     type: 'varchar',
     length: 20,
     name: 'sale_mode',
+    default: 'fixed',
   })
   sale_mode: string;
 
   @Column({
     type: 'varchar',
     length: 30,
+    default: 'draft',
   })
   status: string;
 
@@ -126,10 +138,12 @@ export class Item {
   })
   auction_end_date: Date;
 
+  @OneToMany(() => ItemPhoto, (photo) => photo.item, { cascade: true, eager: true })
+  photos: ItemPhoto[];
+
   @CreateDateColumn({ name: 'created_at' })
   created_at: Date;
 
   @UpdateDateColumn({ name: 'updated_at' })
   updated_at: Date;
 }
-
