@@ -38,7 +38,10 @@ export class ItemsService {
   async create(createItemDto: CreateItemDto): Promise<ItemResponseDto> {
     // Règle métier : si prix >= 5000€, statut = pending_expertise
     let status = createItemDto.status || ItemStatus.DRAFT;
-    if (createItemDto.price_desired && Number(createItemDto.price_desired) >= 5000) {
+    if (
+      createItemDto.price_desired &&
+      Number(createItemDto.price_desired) >= 5000
+    ) {
       status = ItemStatus.PENDING_EXPERTISE;
     }
 
@@ -70,11 +73,28 @@ export class ItemsService {
     return this.toResponseDto(reloadedItem!);
   }
 
-  async findAll(): Promise<ItemResponseDto[]> {
+  async findAll(params?: {
+    categoryId?: number;
+    limit?: number;
+    offset?: number;
+  }): Promise<ItemResponseDto[]> {
+    const { categoryId, limit = 50, offset = 0 } = params || {};
+
+    const queryBuilder = this.itemRepository.createQueryBuilder('item');
+
+    if (categoryId) {
+      queryBuilder.where('item.category_id = :categoryId', { categoryId });
+    }
+
+    queryBuilder.skip(offset).take(limit);
+
+    queryBuilder.orderBy('item.created_at', 'DESC');
+
     const items = await this.itemRepository.find({
       relations: ['photos', 'itemCategories', 'itemCategories.category'],
       order: { created_at: 'DESC' },
     });
+
     return items.map((item) => this.toResponseDto(item));
   }
 
@@ -156,7 +176,10 @@ export class ItemsService {
   }
 
   // Category management methods for items
-  async addCategories(itemId: number, categoryIds: number[]): Promise<ItemResponseDto> {
+  async addCategories(
+    itemId: number,
+    categoryIds: number[],
+  ): Promise<ItemResponseDto> {
     const item = await this.itemRepository.findOne({
       where: { id: itemId },
       relations: ['itemCategories'],
@@ -195,7 +218,10 @@ export class ItemsService {
     return this.toResponseDto(reloadedItem!);
   }
 
-  async removeCategory(itemId: number, categoryId: number): Promise<ItemResponseDto> {
+  async removeCategory(
+    itemId: number,
+    categoryId: number,
+  ): Promise<ItemResponseDto> {
     const item = await this.itemRepository.findOne({
       where: { id: itemId },
       relations: ['itemCategories'],
@@ -234,7 +260,10 @@ export class ItemsService {
     return this.toResponseDto(reloadedItem!);
   }
 
-  async setCategories(itemId: number, categoryIds: number[]): Promise<ItemResponseDto> {
+  async setCategories(
+    itemId: number,
+    categoryIds: number[],
+  ): Promise<ItemResponseDto> {
     const item = await this.itemRepository.findOne({
       where: { id: itemId },
     });
@@ -289,10 +318,9 @@ export class ItemsService {
     }
 
     // Get next position
-    const maxPosition = item.photos?.reduce(
-      (max, photo) => Math.max(max, photo.position),
-      -1,
-    ) ?? -1;
+    const maxPosition =
+      item.photos?.reduce((max, photo) => Math.max(max, photo.position), -1) ??
+      -1;
 
     // If this is the first photo or isPrimary, set as primary
     if (isPrimary || !item.photos || item.photos.length === 0) {

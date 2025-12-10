@@ -1,4 +1,12 @@
-import { AUTH_ROUTES, PROTECTED_ROUTES, ROUTES } from "@/helper/routes";
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+import {
+  PROTECTED_ROUTES,
+  AUTH_ROUTES,
+  ROUTES,
+  PUBLIC_ROUTES,
+  ADMIN_ROUTES,
+} from "@/helper/routes";
 import { decodeJWTPayload } from "@/lib/jwt";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
@@ -14,14 +22,36 @@ export async function proxy(request: NextRequest) {
     request.nextUrl.pathname.startsWith(route)
   );
 
-  // Si l'utilisateur est connecté et essaie d'accéder aux pages d'authentification, rediriger vers son compte
-  if (isAuthRoute && token) {
-    return NextResponse.redirect(new URL(ROUTES.MON_COMPTE, request.url));
+  const isPublicRoute = PUBLIC_ROUTES.some(
+    (route) =>
+      request.nextUrl.pathname === route ||
+      request.nextUrl.pathname.startsWith(route + "/")
+  );
+
+  const isAdminRoute = ADMIN_ROUTES.some((route) =>
+    request.nextUrl.pathname.startsWith(route)
+  );
+
+  if (token && !payload) {
+    if (isPublicRoute) {
+      const response = NextResponse.next();
+      response.cookies.delete("access_token");
+      return response;
+    }
+    return NextResponse.redirect(new URL(ROUTES.CONNEXION, request.url));
   }
 
   // Si la route est protégée et l'utilisateur n'est pas connecté, rediriger vers la connexion
   if (isProtectedRoute && !token) {
     return NextResponse.redirect(new URL(ROUTES.CONNEXION, request.url));
+  }
+
+  if (isAuthRoute && payload) {
+    return NextResponse.redirect(new URL(ROUTES.HOME, request.url));
+  }
+
+  if (isAdminRoute && payload?.role !== "admin") {
+    return NextResponse.redirect(new URL(ROUTES.HOME, request.url));
   }
 
   return NextResponse.next();

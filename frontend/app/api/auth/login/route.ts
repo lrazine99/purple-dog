@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
       hasRole: !!data.role,
     });
 
-    const res = NextResponse.json({ success: true });
+    const res = NextResponse.json({ ...data });
     setAuthCookies(res, data);
 
     const cookies = res.cookies.getAll();
