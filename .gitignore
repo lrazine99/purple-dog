@@ -1,0 +1,54 @@
+# Dependencies
+node_modules/
+*/node_modules/
+
+# Build outputs
+dist/
+build/
+.next/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Docker
+docker-compose.override.yml
+
+# Uploads (local dev)
+uploads/
+
+# Terraform
+terraform/.terraform/
+terraform/*.tfstate
+terraform/*.tfstate.*
+terraform/terraform.tfvars
+terraform/*.tfplan
+terraform/.terraform.lock.hcl
+
+# Secrets
+*.pem
+secrets/
+
+# Coverage
+coverage/
+
+# Misc
+*.bak
+*.tmp
+
