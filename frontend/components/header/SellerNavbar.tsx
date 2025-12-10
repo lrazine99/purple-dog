@@ -8,7 +8,7 @@ export function SellerNavbar() {
   return (
     <>
       <Link
-        href={ROUTES.PRODUITS}
+        href={ROUTES.MY_SHOP}
         className="relative text-foreground hover:text-primary transition-colors font-medium pb-1 group"
       >
         Ma Boutique

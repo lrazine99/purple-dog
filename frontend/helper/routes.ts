@@ -11,6 +11,9 @@ export const ROUTES = {
 
   PRO_PRODUITS: "/produits",
   PRODUITS: "/produits",
+  MY_SHOP: "/ma-boutique",
+  MY_SHOP_NEW: "/ma-boutique/new",
+  MY_SHOP_ITEMS_EDIT: "/ma-boutique/items/[id]/edit",
 
   AUTH_VERIFY: "/auth/verify",
 
@@ -31,8 +34,8 @@ export const PUBLIC_ROUTES = [
   ROUTES.PRODUITS,
 ] as const;
 
-export const PROFESSIONNEL_ROUTES = [ROUTES.PRO_PRODUITS] as const;
-export const PARTICULAR_ROUTES = [ROUTES.PRO_PRODUITS] as const;
+export const PROFESSIONNEL_ROUTES = [ROUTES.PRO_PRODUITS, ROUTES.MY_SHOP] as const;
+export const PARTICULAR_ROUTES = [ROUTES.PRO_PRODUITS, ROUTES.MY_SHOP] as const;
 
 export const ADMIN_ROUTES = [
   ROUTES.ADMIN,
@@ -44,6 +47,7 @@ export const ADMIN_ROUTES = [
 
 export const PROTECTED_ROUTES = [
   ROUTES.PRO_PRODUITS,
+  ROUTES.MY_SHOP,
   ROUTES.MON_COMPTE,
   ROUTES.FAVORIS,
   ...ADMIN_ROUTES,
