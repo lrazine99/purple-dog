@@ -1,5 +1,4 @@
-import { ProHeader } from "@/components/header/ProHeader";
-
+import GenericHeader from "@/components/header/GenericHeader";
 export default function ProductsPage() {
-  return <ProHeader />;
+  return <GenericHeader />;
 }

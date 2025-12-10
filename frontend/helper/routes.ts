@@ -10,6 +10,7 @@ export const ROUTES = {
   CONTACT: "/contact",
 
   PRO_PRODUITS: "/produits",
+  PRODUITS: "/produits",
 
   // User pages
   AUTH_VERIFY: "/auth/verify",
