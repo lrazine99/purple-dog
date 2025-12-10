@@ -2,6 +2,8 @@ import type React from "react"
 import type { Metadata } from "next"
 import { Playfair_Display, Geist } from "next/font/google"
 import "./globals.css"
+import { Providers } from "./providers"
+import { Toaster } from "@/components/ui/sonner"
 
 const _playfair = Playfair_Display({ subsets: ["latin"], variable: "--font-serif" })
 const _geist = Geist({ subsets: ["latin"] })
@@ -37,7 +39,10 @@ export default function RootLayout({
   return (
     <html lang="fr">
       <body className={`${_playfair.variable} font-sans antialiased`}>
-        {children}
+        <Providers>
+          {children}
+          <Toaster />
+        </Providers>
       </body>
     </html>
   )

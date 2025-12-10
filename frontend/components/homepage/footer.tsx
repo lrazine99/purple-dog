@@ -1,7 +1,7 @@
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { CustomLogo } from "@/components/ui/custom-logo"
-import { ROUTES } from "@/helper/routes"
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { CustomLogo } from "@/components/ui/custom-logo";
+import { ROUTES } from "@/helper/routes";
 
 export default function Footer() {
   return (
@@ -12,13 +12,16 @@ export default function Footer() {
           <div className="space-y-4">
             <CustomLogo href={ROUTES.HOME} size="lg" />
             <p className="text-sm leading-relaxed text-muted-foreground">
-              La plateforme de confiance pour la vente d'objets d'art et de collection depuis 2024.
+              La plateforme de confiance pour la vente d&apos;objets d&apos;art
+              et de collection depuis 2024.
             </p>
           </div>
 
           {/* Liens légaux */}
           <div className="space-y-4">
-            <h3 className="font-serif text-lg font-semibold text-foreground">Informations</h3>
+            <h3 className="font-serif text-lg font-semibold text-foreground">
+              Informations
+            </h3>
             <nav className="flex flex-col gap-2">
               <Link
                 href={ROUTES.MENTIONS_LEGALES}
@@ -38,7 +41,10 @@ export default function Footer() {
               >
                 Politique de Confidentialité
               </Link>
-              <Link href={ROUTES.CGU} className="text-sm text-muted-foreground transition-colors hover:text-primary">
+              <Link
+                href={ROUTES.CGU}
+                className="text-sm text-muted-foreground transition-colors hover:text-primary"
+              >
                 Conditions Générales
               </Link>
             </nav>
@@ -46,7 +52,9 @@ export default function Footer() {
 
           {/* Contact */}
           <div className="space-y-4">
-            <h3 className="font-serif text-lg font-semibold text-foreground">Contact</h3>
+            <h3 className="font-serif text-lg font-semibold text-foreground">
+              Contact
+            </h3>
             <p className="text-sm leading-relaxed text-muted-foreground">
               Une question ? Notre équipe est à votre écoute.
             </p>
@@ -67,5 +75,5 @@ export default function Footer() {
         </div>
       </div>
     </footer>
-  )
+  );
 }
