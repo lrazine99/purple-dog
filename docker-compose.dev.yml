@@ -33,6 +33,8 @@ services:
       DATABASE_USER: ${POSTGRES_USER:-postgres}
       DATABASE_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
       DATABASE_NAME: ${POSTGRES_DB:-purple_dog_db}
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-your-super-secret-jwt-key-change-in-production}
+      JWT_ACCESS_EXPIRES_IN: ${JWT_ACCESS_EXPIRES_IN:-900}
     ports:
       - "${BACKEND_PORT:-3001}:3001"
     volumes:
