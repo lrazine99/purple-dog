@@ -12,23 +12,41 @@ export const ROUTES = {
   PRO_PRODUITS: "/produits",
   PRODUITS: "/produits",
 
-  // User pages
   AUTH_VERIFY: "/auth/verify",
 
   MON_COMPTE: "/mon-compte",
+  FAVORIS: "/favoris",
+
+  ADMIN: "/admin",
+  ADMIN_USERS: "/admin/users",
+  ADMIN_ITEMS: "/admin/items",
+  ADMIN_CATEGORIES: "/admin/categories",
+  ADMIN_ORDERS: "/admin/orders",
 } as const;
 
 export const PUBLIC_ROUTES = [
   ROUTES.HOME,
   ROUTES.CONNEXION,
   ROUTES.INSCRIPTION,
+  ROUTES.PRODUITS,
 ] as const;
+
 export const PROFESSIONNEL_ROUTES = [ROUTES.PRO_PRODUITS] as const;
 export const PARTICULAR_ROUTES = [ROUTES.PRO_PRODUITS] as const;
+
+export const ADMIN_ROUTES = [
+  ROUTES.ADMIN,
+  ROUTES.ADMIN_USERS,
+  ROUTES.ADMIN_ITEMS,
+  ROUTES.ADMIN_CATEGORIES,
+  ROUTES.ADMIN_ORDERS,
+] as const;
 
 export const PROTECTED_ROUTES = [
   ROUTES.PRO_PRODUITS,
   ROUTES.MON_COMPTE,
+  ROUTES.FAVORIS,
+  ...ADMIN_ROUTES,
 ] as const;
 
 export const AUTH_ROUTES = [ROUTES.CONNEXION, ROUTES.INSCRIPTION] as const;
