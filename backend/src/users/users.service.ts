@@ -15,6 +15,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { UserResponseDto } from './dto/user-response.dto';
 import { User } from './entities/user.entity';
 import { AuthService } from '../auth/auth.service';
+import { UploadsService } from '../uploads/uploads.service';
 
 @Injectable()
 export class UsersService {
@@ -23,9 +24,13 @@ export class UsersService {
     private readonly userRepository: Repository<User>,
     @Inject(forwardRef(() => AuthService))
     private readonly authService: AuthService,
-  ) {}
+    private readonly uploadsService: UploadsService,
+  ) { }
 
-  async create(createUserDto: CreateUserDto): Promise<UserResponseDto> {
+  async create(
+    createUserDto: CreateUserDto,
+    file?: Express.Multer.File,
+  ): Promise<UserResponseDto> {
     // Check if user with email already exists
     const existingUser = await this.userRepository.findOne({
       where: { email: createUserDto.email },
@@ -54,8 +59,8 @@ export class UsersService {
       if (!createUserDto.siret) {
         throw new BadRequestException('SIRET number is required');
       }
-      if (!createUserDto.official_document_url) {
-        throw new BadRequestException('Official document URL is required');
+      if (!file) {
+        throw new BadRequestException('Official document is required');
       }
       if (!createUserDto.address_line) {
         throw new BadRequestException('Postal address is required');
@@ -76,21 +81,33 @@ export class UsersService {
       throw new BadRequestException('Invalid role');
     }
 
+    let official_document_url: string | undefined = undefined;
+    if (file) {
+      try {
+        official_document_url = await this.uploadsService.saveFile(file);
+      } catch (error) {
+        throw new BadRequestException(
+          error.message || 'Failed to upload file',
+        );
+      }
+    }
+
     // Hash password
     const saltRounds = 10;
     const password_hash = await bcrypt.hash(createUserDto.password, saltRounds);
 
-    // Create user
+    // Create user - utiliser spread conditionnel pour official_document_url
     const user = this.userRepository.create({
       ...createUserDto,
       password_hash,
       role: createUserDto.role || 'particular',
+      ...(official_document_url && { official_document_url }),
     });
 
     const savedUser = await this.userRepository.save(user);
     try {
       await this.authService.sendVerification(savedUser.email);
-    } catch {}
+    } catch { }
     return this.toResponseDto(savedUser);
   }
 
@@ -116,6 +133,7 @@ export class UsersService {
   async update(
     id: number,
     updateUserDto: UpdateUserDto,
+    file?: Express.Multer.File,
   ): Promise<UserResponseDto> {
     const user = await this.userRepository.findOne({ where: { id } });
 
@@ -134,6 +152,21 @@ export class UsersService {
       }
     }
 
+    if (file) {
+      try {
+        if (user.official_document_url) {
+          await this.uploadsService.deleteFile(user.official_document_url);
+        }
+
+        const newFileUrl = await this.uploadsService.saveFile(file);
+        updateUserDto.official_document_url = newFileUrl;
+      } catch (error) {
+        throw new BadRequestException(
+          error.message || 'Failed to upload file',
+        );
+      }
+    }
+
     Object.assign(user, updateUserDto);
     const updatedUser = await this.userRepository.save(user);
     return this.toResponseDto(updatedUser);
@@ -144,6 +177,13 @@ export class UsersService {
 
     if (!user) {
       throw new NotFoundException(`User with ID ${id} not found`);
+    }
+
+    if (user.official_document_url) {
+      await this.uploadsService.deleteFile(user.official_document_url);
+    }
+    if (user.profile_picture) {
+      await this.uploadsService.deleteFile(user.profile_picture);
     }
 
     await this.userRepository.remove(user);

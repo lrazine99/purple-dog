@@ -1,25 +1,23 @@
 "use client";
 
-import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form } from "@/components/ui/form";
 import { FormInput } from "@/components/design-system/inputs/FormInput";
-import {
-  loginSchema,
-  type LoginForm as LoginFormType,
-} from "@/lib/validation/auth.schema";
 import { useToast } from "@/hooks/useToast";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { Loader2 } from "lucide-react";
 import { ROUTES } from "@/helper/routes";
+import { LoginForm as LoginFormType } from "@/lib/type/auth.type";
+import { loginSchema } from "@/lib/validation/auth.schema";
+import { useLogin } from "@/hooks/useLogin";
 
 export function LoginForm() {
   const { toast } = useToast();
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
+  const loginMutation = useLogin();
 
   const form = useForm<LoginFormType>({
     resolver: zodResolver(loginSchema),
@@ -30,43 +28,25 @@ export function LoginForm() {
     },
   });
 
-  async function onSubmit(data: LoginFormType) {
-    setLoading(true);
-    
-    try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
+  function onSubmit(data: LoginFormType) {
+    loginMutation.mutate(data, {
+      onSuccess: () => {
+        toast({
+          variant: "success",
+          message: "Connexion réussie !",
+          description: "Vous êtes maintenant connecté",
+        });
 
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.message || "Échec de la connexion");
-      }
-
-      // Store tokens
-      localStorage.setItem("access_token", result.access_token);
-      localStorage.setItem("refresh_token", result.refresh_token);
-
-      toast({
-        variant: "success",
-        message: "Connexion réussie !",
-        description: "Vous êtes maintenant connecté",
-      });
-
-      // Redirect to admin dashboard
-      router.push("/admin");
-    } catch (error: any) {
-      toast({
-        variant: "error",
-        message: "Erreur de connexion",
-        description: error.message || "Une erreur est survenue",
-      });
-    } finally {
-      setLoading(false);
-    }
+        router.push(ROUTES.HOME);
+      },
+      onError: (error) => {
+        toast({
+          variant: "error",
+          message: "Erreur de connexion",
+          description: error.message || "Email ou mot de passe incorrect",
+        });
+      },
+    });
   }
 
   return (
@@ -90,11 +70,15 @@ export function LoginForm() {
           autoComplete="current-password"
         />
 
-        <Button type="submit" disabled={loading} className="w-full h-12">
-          {loading ? (
+        <Button
+          type="submit"
+          className="w-full h-12"
+          disabled={loginMutation.isPending}
+        >
+          {loginMutation.isPending ? (
             <>
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              Connexion...
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Connexion en cours...
             </>
           ) : (
             "Se connecter"
@@ -103,7 +87,10 @@ export function LoginForm() {
 
         <div className="text-center text-sm">
           <span className="text-muted-foreground">Pas encore de compte ? </span>
-          <Link href={ROUTES.INSCRIPTION} className="underline hover:text-primary">
+          <Link
+            href={ROUTES.INSCRIPTION}
+            className="underline hover:text-primary"
+          >
             Créer un compte
           </Link>
         </div>

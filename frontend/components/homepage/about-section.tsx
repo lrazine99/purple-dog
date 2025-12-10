@@ -28,7 +28,7 @@ export default function AboutSection() {
   return (
     <section className="bg-primary/5 py-16 md:py-24">
       <div className="container px-4 md:px-6">
-        <div className="mx-auto max-w-3xl text-center">
+        <div className="mx-auto max-w-3xl text-left">
           <h2 className="font-serif text-3xl font-bold text-foreground md:text-4xl lg:text-5xl">Purple Dog</h2>
           <p className="mt-6 text-xl font-medium text-primary md:text-2xl">
             LA plateforme pour vendre mieux vos objets de valeur à des tiers de confiance

@@ -9,6 +9,7 @@ import { ROLE_OPTIONS } from "@/lib/const";
 import { CustomLogo } from "@/components/ui/custom-logo";
 import { ROUTES } from "@/helper/routes";
 
+
 export default function InscriptionPage() {
   const [role, setRole] = useState<UserRole>("particular");
 
