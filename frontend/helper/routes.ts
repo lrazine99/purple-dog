@@ -11,6 +11,7 @@ export const ROUTES = {
 
   PRO_PRODUITS: "/produits",
 
+  // User pages
   AUTH_VERIFY: "/auth/verify",
 
   MON_COMPTE: "/mon-compte",
