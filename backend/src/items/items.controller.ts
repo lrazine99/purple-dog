@@ -9,11 +9,13 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  Query,
 } from '@nestjs/common';
 import {
   ApiBody,
   ApiOperation,
   ApiParam,
+  ApiQuery,
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
@@ -41,14 +43,40 @@ export class ItemsController {
   }
 
   @Get()
-  @ApiOperation({ summary: 'Get all items' })
+  @ApiOperation({ summary: 'Get all items with optional filters' })
+  @ApiQuery({
+    name: 'categoryId',
+    required: false,
+    type: Number,
+    description: 'Filter by category ID',
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    type: Number,
+    description: 'Number of items to return',
+  })
+  @ApiQuery({
+    name: 'offset',
+    required: false,
+    type: Number,
+    description: 'Number of items to skip',
+  })
   @ApiResponse({
     status: 200,
     description: 'List of items',
     type: [ItemResponseDto],
   })
-  async findAll(): Promise<ItemResponseDto[]> {
-    return this.itemsService.findAll();
+  async findAll(
+    @Query('categoryId') categoryId?: string,
+    @Query('limit') limit?: string,
+    @Query('offset') offset?: string,
+  ): Promise<ItemResponseDto[]> {
+    return this.itemsService.findAll({
+      categoryId: categoryId ? parseInt(categoryId, 10) : undefined,
+      limit: limit ? parseInt(limit, 10) : 50,
+      offset: offset ? parseInt(offset, 10) : 0,
+    });
   }
 
   @Get(':id')
@@ -93,4 +121,3 @@ export class ItemsController {
     return this.itemsService.remove(id);
   }
 }
-

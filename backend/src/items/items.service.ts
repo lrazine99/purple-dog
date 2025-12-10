@@ -1,7 +1,4 @@
-import {
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateItemDto } from './dto/create-item.dto';
@@ -33,8 +30,24 @@ export class ItemsService {
     return this.toResponseDto(savedItem);
   }
 
-  async findAll(): Promise<ItemResponseDto[]> {
-    const items = await this.itemRepository.find();
+  async findAll(params?: {
+    categoryId?: number;
+    limit?: number;
+    offset?: number;
+  }): Promise<ItemResponseDto[]> {
+    const { categoryId, limit = 50, offset = 0 } = params || {};
+
+    const queryBuilder = this.itemRepository.createQueryBuilder('item');
+
+    if (categoryId) {
+      queryBuilder.where('item.category_id = :categoryId', { categoryId });
+    }
+
+    queryBuilder.skip(offset).take(limit);
+
+    queryBuilder.orderBy('item.created_at', 'DESC');
+
+    const items = await queryBuilder.getMany();
     return items.map((item) => this.toResponseDto(item));
   }
 
