@@ -30,13 +30,23 @@ export async function POST(request: NextRequest) {
     }
 
     const data = await response.json();
+    console.log("Login response data:", {
+      hasAccessToken: !!data.access_token,
+      hasRefreshToken: !!data.refresh_token,
+      hasRole: !!data.role,
+    });
 
     const res = NextResponse.json({ ...data });
     setAuthCookies(res, data);
 
+    const cookies = res.cookies.getAll();
+    console.log(
+      "Cookies after setAuthCookies:",
+      cookies.map((c) => ({ name: c.name, value: c.value ? "***" : undefined }))
+    );
+
     return res;
   } catch (error) {
-    console.error("Error logging in:", error);
     return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }
 }

@@ -11,7 +11,6 @@ import { decodeJWTPayload } from "@/lib/jwt";
 
 export async function proxy(request: NextRequest) {
   const token = request.cookies.get("access_token")?.value;
-
   const payload = token ? await decodeJWTPayload(token) : null;
 
   const isProtectedRoute = PROTECTED_ROUTES.some((route) =>
@@ -41,11 +40,12 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL(ROUTES.CONNEXION, request.url));
   }
 
+  // Si la route est protégée et l'utilisateur n'est pas connecté, rediriger vers la connexion
   if (isProtectedRoute && !token) {
     return NextResponse.redirect(new URL(ROUTES.CONNEXION, request.url));
   }
 
-  if (isAuthRoute && payload) {
+  if (isAuthRoute && token) {
     return NextResponse.redirect(new URL(ROUTES.HOME, request.url));
   }
 
@@ -57,5 +57,15 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
+  matcher: [
+    /*
+     * Match all request paths except for the ones starting with:
+     * - api (API routes)
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * - files with extensions (images, etc.)
+     */
+    "/((?!api|_next/static|_next/image|favicon.ico|.*\\..*).*)",
+  ],
 };
