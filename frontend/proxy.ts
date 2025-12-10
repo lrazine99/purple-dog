@@ -8,11 +8,10 @@ import {
   ADMIN_ROUTES,
 } from "@/helper/routes";
 import { decodeJWTPayload } from "@/lib/jwt";
-import type { NextRequest } from "next/server";
-import { NextResponse } from "next/server";
 
 export async function proxy(request: NextRequest) {
   const token = request.cookies.get("access_token")?.value;
+  const payload = token ? await decodeJWTPayload(token) : null;
 
   const isProtectedRoute = PROTECTED_ROUTES.some((route) =>
     request.nextUrl.pathname.startsWith(route)
@@ -46,7 +45,7 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL(ROUTES.CONNEXION, request.url));
   }
 
-  if (isAuthRoute && payload) {
+  if (isAuthRoute && token) {
     return NextResponse.redirect(new URL(ROUTES.HOME, request.url));
   }
 
