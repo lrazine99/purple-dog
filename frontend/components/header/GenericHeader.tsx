@@ -203,7 +203,7 @@ export const GenericHeader = () => {
                         Mes Achats
                       </Link>
                       <Link
-                        href={ROUTES.PRODUITS}
+                        href={ROUTES.MY_SHOP}
                         className="text-foreground hover:text-primary transition-colors font-medium py-2"
                         onClick={() => setMobileMenuOpen(false)}
                       >
