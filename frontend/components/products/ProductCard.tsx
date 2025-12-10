@@ -6,6 +6,9 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Clock, Gavel, Heart } from "lucide-react";
 import { Item } from "@/lib/type/item.type";
+import { useFavoriteMutation } from "@/hooks/useFavoriteMutation";
+import { useFavorites } from "@/hooks/useFavorites";
+import { useMemo } from "react";
 
 interface ProductCardProps {
   product: Item;
@@ -14,7 +17,26 @@ interface ProductCardProps {
 export function ProductCard({ product }: ProductCardProps) {
   const isAuction = product.sale_mode === "auction";
 
-  // Calculer le temps restant pour les enchères
+  const { addFavorite, removeFavorite, isAdding, isRemoving } =
+    useFavoriteMutation();
+  const { data: favorites } = useFavorites();
+
+  const isFavorited = useMemo(() => {
+    if (!favorites) return false;
+    return favorites.some((fav) => fav.item_id === product.id);
+  }, [favorites, product.id]);
+
+  const handleFavoriteClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (isFavorited) {
+      removeFavorite(product.id);
+    } else {
+      addFavorite(product.id);
+    }
+  };
+
   const getTimeRemaining = () => {
     if (!product.auction_end_date) return null;
 
@@ -43,11 +65,16 @@ export function ProductCard({ product }: ProductCardProps) {
             variant="ghost"
             size="icon"
             className="absolute top-3 right-3 bg-background/80 backdrop-blur hover:bg-background z-10"
-            onClick={(e) => {
-              e.preventDefault();
-            }}
+            onClick={handleFavoriteClick}
+            disabled={isAdding || isRemoving}
           >
-            <Heart className="h-4 w-4" />
+            <Heart
+              className={`h-4 w-4 transition-colors ${
+                isFavorited
+                  ? "fill-red-500 text-red-500"
+                  : "text-muted-foreground"
+              }`}
+            />
           </Button>
 
           <div className="absolute top-3 left-3 z-10">
