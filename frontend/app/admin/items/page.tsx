@@ -377,7 +377,7 @@ export default function ItemsPage() {
     setLoading(true);
     try {
       const token = localStorage.getItem("access_token");
-      const res = await fetch("http://localhost:3001/items", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/items`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.ok) {
@@ -394,7 +394,7 @@ export default function ItemsPage() {
   const fetchCategories = async () => {
     try {
       const token = localStorage.getItem("access_token");
-      const res = await fetch("http://localhost:3001/categories", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/categories`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.ok) {
@@ -409,7 +409,7 @@ export default function ItemsPage() {
   const fetchUsers = async () => {
     try {
       const token = localStorage.getItem("access_token");
-      const res = await fetch("http://localhost:3001/users", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.ok) {
@@ -497,7 +497,7 @@ export default function ItemsPage() {
         const formData = new FormData();
         formData.append("file", file);
 
-        const res = await fetch("http://localhost:3001/upload", {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/upload`, {
           method: "POST",
           body: formData,
         });
@@ -510,7 +510,7 @@ export default function ItemsPage() {
 
         const newPhoto: ItemPhoto = {
           id: Date.now() + i, // Temporary ID for new photos
-          url: `http://localhost:3001${data.url}`,
+          url: `${process.env.NEXT_PUBLIC_API_URL}${data.url}`,
           position: photos.length + i,
           is_primary: photos.length === 0 && i === 0,
         };
@@ -520,14 +520,14 @@ export default function ItemsPage() {
         // If editing, add photo to item immediately
         if (editingItem) {
           const token = localStorage.getItem("access_token");
-          await fetch(`http://localhost:3001/items/${editingItem.id}/photos`, {
+          await fetch(`${process.env.NEXT_PUBLIC_API_URL}/items/${editingItem.id}/photos`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
               Authorization: `Bearer ${token}`,
             },
             body: JSON.stringify({
-              url: `http://localhost:3001${data.url}`,
+              url: `${process.env.NEXT_PUBLIC_API_URL}${data.url}`,
               is_primary: photos.length === 0 && i === 0,
             }),
           });
@@ -546,7 +546,7 @@ export default function ItemsPage() {
       // Real photo from DB
       try {
         const token = localStorage.getItem("access_token");
-        await fetch(`http://localhost:3001/items/${editingItem.id}/photos/${photo.id}`, {
+        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/items/${editingItem.id}/photos/${photo.id}`, {
           method: "DELETE",
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -571,7 +571,7 @@ export default function ItemsPage() {
     if (editingItem && photo.id > 1000000) {
       try {
         const token = localStorage.getItem("access_token");
-        await fetch(`http://localhost:3001/items/${editingItem.id}/photos/${photo.id}/primary`, {
+        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/items/${editingItem.id}/photos/${photo.id}/primary`, {
           method: "PATCH",
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -615,8 +615,8 @@ export default function ItemsPage() {
       if (form.auction_end_date) body.auction_end_date = new Date(form.auction_end_date).toISOString();
 
       const url = isEdit
-        ? `http://localhost:3001/items/${editingItem.id}`
-        : "http://localhost:3001/items";
+        ? `${process.env.NEXT_PUBLIC_API_URL}/items/${editingItem.id}`
+        : `${process.env.NEXT_PUBLIC_API_URL}/items`;
 
       const res = await fetch(url, {
         method: isEdit ? "PATCH" : "POST",
@@ -636,7 +636,7 @@ export default function ItemsPage() {
       // If creating, add photos to the new item
       if (!isEdit && photos.length > 0) {
         for (const photo of photos) {
-          await fetch(`http://localhost:3001/items/${data.id}/photos`, {
+          await fetch(`${process.env.NEXT_PUBLIC_API_URL}/items/${data.id}/photos`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -654,7 +654,7 @@ export default function ItemsPage() {
       const itemId = isEdit ? editingItem.id : data.id;
       if (selectedCategoryIds.size > 0) {
         // Use PUT to replace all categories
-        await fetch(`http://localhost:3001/items/${itemId}/categories`, {
+        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/items/${itemId}/categories`, {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
@@ -680,7 +680,7 @@ export default function ItemsPage() {
 
     try {
       const token = localStorage.getItem("access_token");
-      const res = await fetch(`http://localhost:3001/items/${id}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/items/${id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });

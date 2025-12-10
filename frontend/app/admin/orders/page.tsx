@@ -354,9 +354,9 @@ export default function OrdersPage() {
       const headers = { Authorization: `Bearer ${token}` };
 
       const [ordersRes, usersRes, itemsRes] = await Promise.all([
-        fetch("http://localhost:3001/orders", { headers }),
-        fetch("http://localhost:3001/users", { headers }),
-        fetch("http://localhost:3001/items", { headers }),
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/orders`, { headers }),
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/users`, { headers }),
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/items`, { headers }),
       ]);
 
       if (ordersRes.ok) setOrders(await ordersRes.json());
@@ -439,8 +439,8 @@ export default function OrdersPage() {
       }
 
       const url = isEdit
-        ? `http://localhost:3001/orders/${editingOrder.id}`
-        : "http://localhost:3001/orders";
+        ? `${process.env.NEXT_PUBLIC_API_URL}/orders/${editingOrder.id}`
+        : `${process.env.NEXT_PUBLIC_API_URL}/orders`;
 
       const res = await fetch(url, {
         method: isEdit ? "PATCH" : "POST",
@@ -459,7 +459,7 @@ export default function OrdersPage() {
 
       // Update status if editing
       if (isEdit && form.status !== editingOrder.status) {
-        await fetch(`http://localhost:3001/orders/${editingOrder.id}/status`, {
+        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/orders/${editingOrder.id}/status`, {
           method: "PATCH",
           headers: {
             "Content-Type": "application/json",
@@ -483,7 +483,7 @@ export default function OrdersPage() {
 
     try {
       const token = localStorage.getItem("access_token");
-      const res = await fetch(`http://localhost:3001/orders/${id}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/orders/${id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -499,7 +499,7 @@ export default function OrdersPage() {
   const handleStatusChange = async (orderId: number, newStatus: string) => {
     try {
       const token = localStorage.getItem("access_token");
-      const res = await fetch(`http://localhost:3001/orders/${orderId}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/orders/${orderId}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",

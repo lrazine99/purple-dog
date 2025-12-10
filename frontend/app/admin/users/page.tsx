@@ -115,7 +115,7 @@ export default function UsersPage() {
     setLoading(true);
     try {
       const token = localStorage.getItem("access_token");
-      const res = await fetch("http://localhost:3001/users", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.ok) {
@@ -141,7 +141,7 @@ export default function UsersPage() {
       const formData = new FormData();
       formData.append("file", file);
 
-      const res = await fetch("http://localhost:3001/upload", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/upload`, {
         method: "POST",
         body: formData,
       });
@@ -155,7 +155,7 @@ export default function UsersPage() {
       // Set the URL in the form
       setForm((prev) => ({
         ...prev,
-        official_document_url: `http://localhost:3001${data.url}`,
+        official_document_url: `${process.env.NEXT_PUBLIC_API_URL}${data.url}`,
       }));
       setUploadedFileName(data.originalname);
     } catch (err: any) {
@@ -183,7 +183,7 @@ export default function UsersPage() {
       const formData = new FormData();
       formData.append("file", file);
 
-      const res = await fetch("http://localhost:3001/upload", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/upload`, {
         method: "POST",
         body: formData,
       });
@@ -197,7 +197,7 @@ export default function UsersPage() {
       // Set the profile picture URL in the form
       setForm((prev) => ({
         ...prev,
-        profile_picture: `http://localhost:3001${data.url}`,
+        profile_picture: `${process.env.NEXT_PUBLIC_API_URL}${data.url}`,
       }));
     } catch (err: any) {
       setError(err.message || "Failed to upload photo");
@@ -362,8 +362,8 @@ export default function UsersPage() {
       }
 
       const url = isEdit
-        ? `http://localhost:3001/users/${editingUser.id}`
-        : "http://localhost:3001/users";
+        ? `${process.env.NEXT_PUBLIC_API_URL}/users/${editingUser.id}`
+        : `${process.env.NEXT_PUBLIC_API_URL}/users`;
 
       const res = await fetch(url, {
         method: isEdit ? "PATCH" : "POST",
@@ -394,7 +394,7 @@ export default function UsersPage() {
 
     try {
       const token = localStorage.getItem("access_token");
-      const res = await fetch(`http://localhost:3001/users/${id}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/${id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -409,7 +409,7 @@ export default function UsersPage() {
   const toggleVerify = async (user: User) => {
     try {
       const token = localStorage.getItem("access_token");
-      const res = await fetch(`http://localhost:3001/users/${user.id}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/${user.id}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",

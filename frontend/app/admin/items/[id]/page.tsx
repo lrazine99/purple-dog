@@ -128,7 +128,7 @@ export default function ItemDetailPage() {
     setLoading(true);
     try {
       const token = localStorage.getItem("access_token");
-      const res = await fetch(`http://localhost:3001/items/${itemId}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/items/${itemId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.ok) {
@@ -148,7 +148,7 @@ export default function ItemDetailPage() {
   const fetchCategories = async () => {
     try {
       const token = localStorage.getItem("access_token");
-      const res = await fetch("http://localhost:3001/categories", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/categories`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.ok) {
@@ -162,7 +162,7 @@ export default function ItemDetailPage() {
   const fetchUsers = async () => {
     try {
       const token = localStorage.getItem("access_token");
-      const res = await fetch("http://localhost:3001/users", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.ok) {
@@ -250,7 +250,7 @@ export default function ItemDetailPage() {
       if (editForm.auction_end_date) dataToSend.auction_end_date = new Date(editForm.auction_end_date).toISOString();
 
       // Update item
-      const res = await fetch(`http://localhost:3001/items/${itemId}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/items/${itemId}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -266,7 +266,7 @@ export default function ItemDetailPage() {
 
       // Update categories
       if (selectedCategoryIds.size > 0) {
-        await fetch(`http://localhost:3001/items/${itemId}/categories`, {
+        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/items/${itemId}/categories`, {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
@@ -291,7 +291,7 @@ export default function ItemDetailPage() {
     setDeleting(true);
     try {
       const token = localStorage.getItem("access_token");
-      const res = await fetch(`http://localhost:3001/items/${itemId}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/items/${itemId}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });
