@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { SubscriptionResponseDto } from '../../subscriptions/dto/subscription-response.dto';
 
 export class UserResponseDto {
   @ApiProperty()
@@ -67,10 +68,12 @@ export class UserResponseDto {
   @ApiProperty()
   is_verified: boolean;
 
+  @ApiProperty({ required: false })
+  subscription?: SubscriptionResponseDto;
+
   @ApiProperty()
   created_at: Date;
 
   @ApiProperty()
   updated_at: Date;
 }
-
