@@ -60,16 +60,70 @@ export class OrdersService {
       await this.orderItemRepo.save(oi);
     }
 
-    const result = await this.orderRepo.findOne({ where: { id: saved.id }, relations: ['items'] });
+    const result = await this.orderRepo.findOne({
+      where: { id: saved.id },
+      relations: ['items', 'items.item', 'buyer', 'seller'],
+    });
     if (!result) {
       throw new NotFoundException(`Order ${saved.id} not found`);
     }
     return result;
   }
 
+  async findAll(): Promise<Order[]> {
+    return this.orderRepo.find({
+      relations: ['items', 'items.item', 'buyer', 'seller'],
+      order: { created_at: 'DESC' },
+    });
+  }
+
   async findOne(id: number): Promise<Order> {
-    const order = await this.orderRepo.findOne({ where: { id }, relations: ['items'] });
+    const order = await this.orderRepo.findOne({
+      where: { id },
+      relations: ['items', 'items.item', 'buyer', 'seller'],
+    });
     if (!order) throw new NotFoundException(`Order ${id} not found`);
     return order;
+  }
+
+  async update(id: number, dto: Partial<CreateOrderDto>): Promise<Order> {
+    const order = await this.orderRepo.findOne({ where: { id } });
+    if (!order) throw new NotFoundException(`Order ${id} not found`);
+
+    // Update order fields
+    if (dto.buyer_id !== undefined) order.buyer_id = dto.buyer_id;
+    if (dto.seller_id !== undefined) order.seller_id = dto.seller_id;
+    if (dto.billing_address_line !== undefined) order.billing_address_line = dto.billing_address_line;
+    if (dto.billing_city !== undefined) order.billing_city = dto.billing_city;
+    if (dto.billing_postal_code !== undefined) order.billing_postal_code = dto.billing_postal_code;
+    if (dto.billing_country !== undefined) order.billing_country = dto.billing_country;
+    if (dto.shipping_address_line !== undefined) order.shipping_address_line = dto.shipping_address_line;
+    if (dto.shipping_city !== undefined) order.shipping_city = dto.shipping_city;
+    if (dto.shipping_postal_code !== undefined) order.shipping_postal_code = dto.shipping_postal_code;
+    if (dto.shipping_country !== undefined) order.shipping_country = dto.shipping_country;
+
+    await this.orderRepo.save(order);
+
+    return this.findOne(id);
+  }
+
+  async updateStatus(id: number, status: string): Promise<Order> {
+    const order = await this.orderRepo.findOne({ where: { id } });
+    if (!order) throw new NotFoundException(`Order ${id} not found`);
+
+    order.status = status;
+    await this.orderRepo.save(order);
+
+    return this.findOne(id);
+  }
+
+  async remove(id: number): Promise<void> {
+    const order = await this.orderRepo.findOne({ where: { id } });
+    if (!order) throw new NotFoundException(`Order ${id} not found`);
+
+    // Delete order items first
+    await this.orderItemRepo.delete({ order_id: id });
+    // Then delete the order
+    await this.orderRepo.remove(order);
   }
 }

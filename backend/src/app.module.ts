@@ -7,6 +7,7 @@ import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { ItemsModule } from './items/items.module';
 import { CategoriesModule } from './categories/categories.module';
+import { UploadModule } from './upload/upload.module';
 import { OrdersModule } from './orders/orders.module';
 import { UploadsModule } from './uploads/uploads.module';
 import { FavoritesModule } from './favorites/favorites.module';
@@ -32,6 +33,7 @@ import { FavoritesModule } from './favorites/favorites.module';
     AuthModule,
     ItemsModule,
     CategoriesModule,
+    UploadModule,
     OrdersModule,
     UploadsModule,
     FavoritesModule,

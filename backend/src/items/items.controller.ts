@@ -10,6 +10,7 @@ import {
   Patch,
   Post,
   Query,
+  Put,
 } from '@nestjs/common';
 import {
   ApiBody,
@@ -119,5 +120,84 @@ export class ItemsController {
   @ApiResponse({ status: 404, description: 'Item not found' })
   async remove(@Param('id', ParseIntPipe) id: number): Promise<void> {
     return this.itemsService.remove(id);
+  }
+
+  // Category management endpoints
+  @Post(':id/categories')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Add categories to an item' })
+  @ApiParam({ name: 'id', type: 'number', description: 'Item ID' })
+  async addCategories(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body: { category_ids: number[] },
+  ): Promise<ItemResponseDto> {
+    return this.itemsService.addCategories(id, body.category_ids);
+  }
+
+  @Put(':id/categories')
+  @ApiOperation({ summary: 'Set categories for an item (replaces all)' })
+  @ApiParam({ name: 'id', type: 'number', description: 'Item ID' })
+  async setCategories(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body: { category_ids: number[] },
+  ): Promise<ItemResponseDto> {
+    return this.itemsService.setCategories(id, body.category_ids);
+  }
+
+  @Delete(':id/categories/:categoryId')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Remove a category from an item' })
+  @ApiParam({ name: 'id', type: 'number', description: 'Item ID' })
+  @ApiParam({ name: 'categoryId', type: 'number', description: 'Category ID' })
+  async removeCategory(
+    @Param('id', ParseIntPipe) id: number,
+    @Param('categoryId', ParseIntPipe) categoryId: number,
+  ): Promise<ItemResponseDto> {
+    return this.itemsService.removeCategory(id, categoryId);
+  }
+
+  // Photo endpoints
+  @Post(':id/photos')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ summary: 'Add a photo to an item' })
+  @ApiParam({ name: 'id', type: 'number', description: 'Item ID' })
+  async addPhoto(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body: { url: string; is_primary?: boolean },
+  ) {
+    return this.itemsService.addPhoto(id, body.url, body.is_primary);
+  }
+
+  @Delete(':id/photos/:photoId')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Remove a photo from an item' })
+  @ApiParam({ name: 'id', type: 'number', description: 'Item ID' })
+  @ApiParam({ name: 'photoId', type: 'number', description: 'Photo ID' })
+  async removePhoto(
+    @Param('id', ParseIntPipe) id: number,
+    @Param('photoId', ParseIntPipe) photoId: number,
+  ): Promise<void> {
+    return this.itemsService.removePhoto(id, photoId);
+  }
+
+  @Patch(':id/photos/:photoId/primary')
+  @ApiOperation({ summary: 'Set a photo as primary' })
+  @ApiParam({ name: 'id', type: 'number', description: 'Item ID' })
+  @ApiParam({ name: 'photoId', type: 'number', description: 'Photo ID' })
+  async setPrimaryPhoto(
+    @Param('id', ParseIntPipe) id: number,
+    @Param('photoId', ParseIntPipe) photoId: number,
+  ) {
+    return this.itemsService.setPrimaryPhoto(id, photoId);
+  }
+
+  @Patch(':id/photos/reorder')
+  @ApiOperation({ summary: 'Reorder photos' })
+  @ApiParam({ name: 'id', type: 'number', description: 'Item ID' })
+  async reorderPhotos(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body: { photoIds: number[] },
+  ) {
+    return this.itemsService.reorderPhotos(id, body.photoIds);
   }
 }
