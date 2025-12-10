@@ -1,6 +1,6 @@
 "use client";
 
-import { LoginForm } from "@/components/auth/LoginForm";
+import { LoginForm } from "@/components/form/LoginForm";
 import { CustomLogo } from "@/components/ui/custom-logo";
 import { ROUTES } from "@/helper/routes";
 

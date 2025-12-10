@@ -1,3 +1,4 @@
+import GenericHeader from "@/components/header/GenericHeader";
 export default function ProductsPage() {
-    return <div>PAge produits</div>;
+  return <GenericHeader />;
 }

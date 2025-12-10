@@ -28,7 +28,7 @@ export interface RegisterPayload {
 }
 
 function buildFormData(
-  data: Record<string, any>,
+  data: Record<string, unknown>,
   file?: File | null,
   fileFieldName?: string
 ): FormData {

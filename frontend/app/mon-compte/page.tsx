@@ -1,6 +1,6 @@
 "use client";
 
-import { UserProfile } from "@/components/auth/UserProfile";
+import { UserProfile } from "@/components/UserProfile";
 import { useAuth } from "@/hooks/useAuth";
 import { Loader2 } from "lucide-react";
 
