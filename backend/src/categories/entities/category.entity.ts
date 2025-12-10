@@ -6,6 +6,7 @@ import {
   OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+import { ItemCategory } from '../../items/entities/item-category.entity';
 
 @Entity('categories')
 export class Category {
@@ -22,7 +23,14 @@ export class Category {
     name: 'parent_id',
     nullable: true,
   })
-  parent_id: number;
+  parent_id: number | null;
+
+  @Column({
+    type: 'boolean',
+    default: false,
+    name: 'is_default',
+  })
+  is_default: boolean;
 
   @ManyToOne(() => Category, (category) => category.children)
   @JoinColumn({ name: 'parent_id' })
@@ -30,4 +38,7 @@ export class Category {
 
   @OneToMany(() => Category, (category) => category.parent)
   children: Category[];
+
+  @OneToMany(() => ItemCategory, (ic) => ic.category)
+  itemCategories: ItemCategory[];
 }

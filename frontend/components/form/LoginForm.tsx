@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form } from "@/components/ui/form";
@@ -7,12 +8,11 @@ import { FormInput } from "@/components/design-system/inputs/FormInput";
 import { useToast } from "@/hooks/useToast";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { Loader2 } from "lucide-react";
 import { ROUTES } from "@/helper/routes";
 import { LoginForm as LoginFormType } from "@/lib/type/auth.type";
 import { loginSchema } from "@/lib/validation/auth.schema";
 import { useLogin } from "@/hooks/useLogin";
-import { useRouter } from "next/navigation";
-import { Loader2 } from "lucide-react";
 
 export function LoginForm() {
   const { toast } = useToast();
