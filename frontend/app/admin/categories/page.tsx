@@ -85,7 +85,7 @@ export default function CategoriesPage() {
     setLoading(true);
     try {
       const token = localStorage.getItem("access_token");
-      const res = await fetch("http://localhost:3001/categories", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/categories`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.ok) {
@@ -102,7 +102,7 @@ export default function CategoriesPage() {
   const fetchAllItems = async () => {
     try {
       const token = localStorage.getItem("access_token");
-      const res = await fetch("http://localhost:3001/items", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/items`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.ok) {
@@ -118,7 +118,7 @@ export default function CategoriesPage() {
     setLoadingItems(true);
     try {
       const token = localStorage.getItem("access_token");
-      const res = await fetch("http://localhost:3001/items", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/items`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.ok) {
@@ -186,7 +186,7 @@ export default function CategoriesPage() {
 
       // Add category to each selected item using the new endpoint
       for (const itemId of selectedItemIds) {
-        await fetch(`http://localhost:3001/items/${itemId}/categories`, {
+        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/items/${itemId}/categories`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -220,14 +220,14 @@ export default function CategoriesPage() {
       const defaultCat = categories.find((c) => c.is_default);
       
       // Remove from current category and add to "Autre" if needed
-      await fetch(`http://localhost:3001/items/${item.id}/categories/${selectedCategory.id}`, {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/items/${item.id}/categories/${selectedCategory.id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });
 
       // If item had only this category, it will be orphan - add to "Autre"
       if (defaultCat && item.category_id === selectedCategory.id) {
-        await fetch(`http://localhost:3001/items/${item.id}`, {
+        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/items/${item.id}`, {
           method: "PATCH",
           headers: {
             "Content-Type": "application/json",
@@ -260,7 +260,7 @@ export default function CategoriesPage() {
       const token = localStorage.getItem("access_token");
 
       // Update the item's primary category
-      await fetch(`http://localhost:3001/items/${itemToMove.id}`, {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/items/${itemToMove.id}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -271,13 +271,13 @@ export default function CategoriesPage() {
 
       // Remove from current category if different
       if (selectedCategory.id !== targetCategoryId) {
-        await fetch(`http://localhost:3001/items/${itemToMove.id}/categories/${selectedCategory.id}`, {
+        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/items/${itemToMove.id}/categories/${selectedCategory.id}`, {
           method: "DELETE",
           headers: { Authorization: `Bearer ${token}` },
         });
 
         // Add to new category
-        await fetch(`http://localhost:3001/items/${itemToMove.id}/categories`, {
+        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/items/${itemToMove.id}/categories`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -308,7 +308,7 @@ export default function CategoriesPage() {
         body.parent_id = selectedParent;
       }
 
-      const res = await fetch("http://localhost:3001/categories", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/categories`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -339,7 +339,7 @@ export default function CategoriesPage() {
 
     try {
       const token = localStorage.getItem("access_token");
-      const res = await fetch(`http://localhost:3001/categories/${id}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/categories/${id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });

@@ -29,7 +29,7 @@ export default function AdminDashboard() {
       const headers = { Authorization: `Bearer ${token}` };
 
       // Fetch users
-      const usersRes = await fetch("http://localhost:3001/users", { headers });
+      const usersRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users`, { headers });
       const users = usersRes.ok ? await usersRes.json() : [];
 
       // Fetch items
