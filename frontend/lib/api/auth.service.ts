@@ -1,6 +1,6 @@
 import {
-  ProfessionalRegisterForm,
   ParticularRegisterForm,
+  ProfessionalRegisterForm,
   UserResponse,
 } from "@/lib/type/auth.type";
 import { userResponseSchema } from "../validation/auth.schema";
@@ -99,7 +99,6 @@ export async function registerParticular(
     },
     body: JSON.stringify(payload),
   });
-  console.log("response", response);
   if (!response.ok) {
     let error;
     try {

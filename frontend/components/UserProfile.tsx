@@ -1,7 +1,7 @@
 "use client";
 
-import { useAuth, useLogout } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
+import { useAuth, useLogout } from "@/hooks/useAuth";
 import { Loader2, LogOut, User } from "lucide-react";
 
 export function UserProfile() {
@@ -26,10 +26,10 @@ export function UserProfile() {
       <div className="flex items-center gap-2">
         <User className="h-5 w-5 text-muted-foreground" />
         <div className="flex flex-col">
-          <span className="text-sm font-medium">
-            {user.first_name} {user.last_name}
+          <span className="text-sm font-medium">{user.email}</span>
+          <span className="text-xs text-muted-foreground capitalize">
+            {user.role}
           </span>
-          <span className="text-xs text-muted-foreground">{user.email}</span>
         </div>
       </div>
 

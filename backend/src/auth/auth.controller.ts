@@ -1,11 +1,18 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Post, Query, Req, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Post,
+  Query,
+} from '@nestjs/common';
 import { ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { AuthService } from './auth.service';
 import { LoginDto } from '../users/dto/login.dto';
+import { AuthService } from './auth.service';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
-import { TokensDto } from './dto/tokens.dto';
-import { AuthGuard } from '@nestjs/passport';
 import { SendVerificationDto } from './dto/send-verification.dto';
+import { TokensDto } from './dto/tokens.dto';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -18,9 +25,13 @@ export class AuthController {
   @ApiBody({ type: LoginDto })
   @ApiResponse({ status: 200, description: 'Tokens returned', type: TokensDto })
   @ApiResponse({ status: 401, description: 'Invalid credentials' })
-  async login(@Body() dto: LoginDto): Promise<TokensDto> {
+  async login(@Body() dto: LoginDto): Promise<TokensDto & { role: string }> {
     const tokens = await this.authService.login(dto.email, dto.password);
-    return { access_token: tokens.access_token, refresh_token: tokens.refresh_token };
+    return {
+      access_token: tokens.access_token,
+      refresh_token: tokens.refresh_token,
+      role: tokens.role,
+    };
   }
 
   @Post('refresh')
@@ -28,9 +39,13 @@ export class AuthController {
   @ApiOperation({ summary: 'Refresh tokens' })
   @ApiBody({ type: RefreshTokenDto })
   @ApiResponse({ status: 200, description: 'New tokens', type: TokensDto })
-  async refresh(@Body() dto: RefreshTokenDto): Promise<TokensDto> {
+  async refresh(@Body() dto: RefreshTokenDto): Promise<TokensDto & { role: string }> {
     const tokens = await this.authService.refresh(dto.refresh_token);
-    return { access_token: tokens.access_token, refresh_token: tokens.refresh_token };
+    return {
+      access_token: tokens.access_token,
+      refresh_token: tokens.refresh_token,
+      role: tokens.role,
+    };
   }
 
   @Post('logout')
@@ -58,14 +73,5 @@ export class AuthController {
   async verify(@Query('token') token: string): Promise<{ message: string }> {
     await this.authService.verify(token);
     return { message: 'Account verified' };
-  }
-
-  @Get('me')
-  @UseGuards(AuthGuard('jwt'))
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Get current user from access token' })
-  @ApiResponse({ status: 200, description: 'Current user payload' })
-  async me(@Req() req: any): Promise<any> {
-    return req.user;
   }
 }
