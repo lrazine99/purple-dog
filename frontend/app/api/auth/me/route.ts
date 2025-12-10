@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
 
     const user = await response.json();
     return NextResponse.json(user);
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }
 }

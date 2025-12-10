@@ -2,13 +2,12 @@
 
 import { useState } from "react";
 import { SwitchButton } from "@/components/design-system/buttons/SwitchButton";
-import { ParticularRegisterForm } from "@/components/auth/ParticularRegisterForm";
-import { ProfessionalRegisterForm } from "@/components/auth/ProfessionalRegisterForm";
+import { ParticularRegisterForm } from "@/components/form/ParticularRegisterForm";
+import { ProfessionalRegisterForm } from "@/components/form/ProfessionalRegisterForm";
 import { UserRole } from "@/lib/type/user-roe.enum";
 import { ROLE_OPTIONS } from "@/lib/const";
 import { CustomLogo } from "@/components/ui/custom-logo";
 import { ROUTES } from "@/helper/routes";
-
 
 export default function InscriptionPage() {
   const [role, setRole] = useState<UserRole>("particular");

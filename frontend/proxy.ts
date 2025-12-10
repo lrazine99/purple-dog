@@ -1,9 +1,17 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { PROTECTED_ROUTES, AUTH_ROUTES, ROUTES } from "@/helper/routes";
+import {
+  PROTECTED_ROUTES,
+  AUTH_ROUTES,
+  ROUTES,
+  PUBLIC_ROUTES,
+} from "@/helper/routes";
+import { decodeJWTPayload } from "@/lib/jwt";
 
-export function proxy(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const token = request.cookies.get("access_token")?.value;
+
+  const payload = token ? await decodeJWTPayload(token) : null;
 
   const isProtectedRoute = PROTECTED_ROUTES.some((route) =>
     request.nextUrl.pathname.startsWith(route)
@@ -13,11 +21,26 @@ export function proxy(request: NextRequest) {
     request.nextUrl.pathname.startsWith(route)
   );
 
+  const isPublicRoute = PUBLIC_ROUTES.some(
+    (route) =>
+      request.nextUrl.pathname === route ||
+      request.nextUrl.pathname.startsWith(route + "/")
+  );
+
+  if (token && !payload) {
+    if (isPublicRoute) {
+      const response = NextResponse.next();
+      response.cookies.delete("access_token");
+      return response;
+    }
+    return NextResponse.redirect(new URL(ROUTES.CONNEXION, request.url));
+  }
+
   if (isProtectedRoute && !token) {
     return NextResponse.redirect(new URL(ROUTES.CONNEXION, request.url));
   }
 
-  if (isAuthRoute && token) {
+  if (isAuthRoute && payload) {
     return NextResponse.redirect(new URL(ROUTES.HOME, request.url));
   }
 
