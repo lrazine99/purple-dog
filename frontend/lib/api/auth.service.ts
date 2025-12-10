@@ -1,6 +1,6 @@
 import {
-  ProfessionalRegisterForm,
   ParticularRegisterForm,
+  ProfessionalRegisterForm,
   UserResponse,
 } from "@/lib/type/auth.type";
 import { userResponseSchema } from "../validation/auth.schema";
@@ -99,7 +99,6 @@ export async function registerParticular(
     },
     body: JSON.stringify(payload),
   });
-  console.log("response", response);
   if (!response.ok) {
     let error;
     try {
@@ -119,40 +118,6 @@ export async function registerParticular(
   }
 
   return parseResult.data;
-}
-
-export interface LoginResponse {
-  access_token: string;
-  refresh_token: string;
-}
-
-export async function login(
-  email: string,
-  password: string
-): Promise<LoginResponse> {
-  const response = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/auth/login`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ email, password }),
-    }
-  );
-
-  if (!response.ok) {
-    let error;
-    try {
-      error = await response.json();
-    } catch {
-      error = { message: "Erreur lors de la connexion" };
-    }
-    throw new Error(error.message || "Erreur lors de la connexion");
-  }
-
-  const data = await response.json();
-  return data;
 }
 
 export async function loginWithCookies(
@@ -177,7 +142,8 @@ export async function loginWithCookies(
     throw new Error(error.error || "Erreur lors de la connexion");
   }
 
-  return response.json();
+  const data = await response.json();
+  return data;
 }
 
 export async function verifyEmail(token: string): Promise<{ message: string }> {
