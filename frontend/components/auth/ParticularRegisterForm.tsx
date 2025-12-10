@@ -15,8 +15,16 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { particularRegisterSchema } from "@/lib/validation/auth.schema";
 import { ParticularRegisterForm as ParticularRegisterFormType } from "@/lib/type/auth.type";
+import { useRegisterParticular } from "@/hooks/useRegister";
+import { useRouter } from "next/navigation";
+import { useToast } from "@/hooks/useToast";
+import { Loader2 } from "lucide-react";
 
 export function ParticularRegisterForm() {
+  const router = useRouter();
+  const { toast } = useToast();
+  const registerMutation = useRegisterParticular();
+
   const form = useForm<ParticularRegisterFormType>({
     resolver: zodResolver(particularRegisterSchema),
     mode: "onBlur",
@@ -27,14 +35,36 @@ export function ParticularRegisterForm() {
       email: "",
       password: "",
       confirmPassword: "",
+      address_line: "",
+      city: "",
+      postal_code: "",
+      country: "",
       rgpd_accepted: false,
       newsletter: false,
     },
   });
 
   const onSubmit = (data: ParticularRegisterFormType) => {
-    console.log("Inscription acheteur:", data);
-    // TODO: Appel API
+    registerMutation.mutate(data, {
+      onSuccess: () => {
+        toast({
+          variant: "success",
+          message: "Inscription réussie",
+          description:
+            "Votre compte a été créé avec succès. Vous pouvez maintenant vous connecter.",
+        });
+        router.push("/connexion");
+      },
+      onError: (error: Error) => {
+        console.log("erreor", error);
+        toast({
+          variant: "error",
+          message: "Erreur lors de l'inscription",
+          description:
+            error.message || "Une erreur est survenue lors de l'inscription.",
+        });
+      },
+    });
   };
 
   return (
@@ -80,6 +110,36 @@ export function ParticularRegisterForm() {
           />
         </div>
 
+        <div className="space-y-4 border-t pt-4">
+          <FormInput
+            control={form.control}
+            name="address_line"
+            label="Adresse"
+            placeholder="123 rue de la Paix"
+          />
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <FormInput
+              control={form.control}
+              name="postal_code"
+              label="Code postal"
+              placeholder="75001"
+            />
+            <FormInput
+              control={form.control}
+              name="city"
+              label="Ville"
+              placeholder="Paris"
+            />
+            <FormInput
+              control={form.control}
+              name="country"
+              label="Pays"
+              placeholder="France"
+            />
+          </div>
+        </div>
+
         <div className="space-y-4">
           <FormField
             control={form.control}
@@ -121,8 +181,19 @@ export function ParticularRegisterForm() {
           />
         </div>
 
-        <Button type="submit" className="w-full h-12">
-          Créer mon compte
+        <Button
+          type="submit"
+          className="w-full h-12"
+          disabled={registerMutation.isPending}
+        >
+          {registerMutation.isPending ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Inscription en cours...
+            </>
+          ) : (
+            "Créer mon compte"
+          )}
         </Button>
       </form>
     </Form>
