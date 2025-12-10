@@ -5,6 +5,7 @@ import {
   AUTH_ROUTES,
   ROUTES,
   PUBLIC_ROUTES,
+  ADMIN_ROUTES,
 } from "@/helper/routes";
 import { decodeJWTPayload } from "@/lib/jwt";
 
@@ -27,6 +28,10 @@ export async function proxy(request: NextRequest) {
       request.nextUrl.pathname.startsWith(route + "/")
   );
 
+  const isAdminRoute = ADMIN_ROUTES.some((route) =>
+    request.nextUrl.pathname.startsWith(route)
+  );
+
   if (token && !payload) {
     if (isPublicRoute) {
       const response = NextResponse.next();
@@ -41,6 +46,10 @@ export async function proxy(request: NextRequest) {
   }
 
   if (isAuthRoute && payload) {
+    return NextResponse.redirect(new URL(ROUTES.HOME, request.url));
+  }
+
+  if (isAdminRoute && payload?.role !== "admin") {
     return NextResponse.redirect(new URL(ROUTES.HOME, request.url));
   }
 
