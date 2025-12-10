@@ -217,6 +217,7 @@ export default async function ProduitPage({
             {/* Pricing Section */}
             {isAuction ? (
               <AuctionCard
+                itemId={item.id}
                 currentBid={item.auction_start_price || item.price_min}
                 startingBid={item.auction_start_price || item.price_min}
                 bidCount={0}
