@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { decodeJWTPayload, type JWTPayload } from "@/lib/jwt";
+import { decodeJWTPayload, JWTPayload } from "@/lib/jwt";
 
 export function useJWTPayload() {
   const [payload, setPayload] = useState<JWTPayload | null>(null);
