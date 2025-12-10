@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Search, Menu } from "lucide-react";
+import { Search, Menu, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -55,6 +55,10 @@ export function ProHeader() {
 
             <Button variant="ghost" size="icon" className="md:hidden">
               <Menu className="h-5 w-5" />
+            </Button>
+
+            <Button variant="ghost" size="icon-lg">
+              <User className="h-5 w-5" />
             </Button>
           </div>
         </div>
