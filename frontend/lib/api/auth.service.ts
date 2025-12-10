@@ -155,10 +155,7 @@ export async function login(
   return data;
 }
 
-export async function loginWithCookies(
-  email: string,
-  password: string
-): Promise<{ success: boolean }> {
+export async function loginWithCookies(email: string, password: string) {
   const response = await fetch("/api/auth/login", {
     method: "POST",
     headers: {
@@ -177,7 +174,7 @@ export async function loginWithCookies(
     throw new Error(error.error || "Erreur lors de la connexion");
   }
 
-  return response.json();
+  return await response.json();
 }
 
 export async function verifyEmail(token: string): Promise<{ message: string }> {
