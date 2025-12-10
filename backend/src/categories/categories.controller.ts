@@ -17,10 +17,10 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
+import { CategoriesService } from './categories.service';
+import { CategoryResponseDto } from './dto/category-response.dto';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
-import { CategoryResponseDto } from './dto/category-response.dto';
-import { CategoriesService } from './categories.service';
 
 @ApiTags('categories')
 @Controller('categories')
@@ -36,7 +36,9 @@ export class CategoriesController {
     description: 'Category created successfully',
     type: CategoryResponseDto,
   })
-  async create(@Body() createCategoryDto: CreateCategoryDto): Promise<CategoryResponseDto> {
+  async create(
+    @Body() createCategoryDto: CreateCategoryDto,
+  ): Promise<CategoryResponseDto> {
     return this.categoriesService.create(createCategoryDto);
   }
 
@@ -93,4 +95,3 @@ export class CategoriesController {
     return this.categoriesService.remove(id);
   }
 }
-
