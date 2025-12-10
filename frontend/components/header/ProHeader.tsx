@@ -18,7 +18,7 @@ export function ProHeader() {
 
             <nav className="hidden md:flex items-center gap-6">
               <Link
-                href="#"
+                href="/favoris"
                 className="text-sm font-medium hover:text-accent transition-colors"
               >
                 Mes Favoris
