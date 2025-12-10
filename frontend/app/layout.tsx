@@ -1,17 +1,20 @@
-import type React from "react"
-import type { Metadata } from "next"
-import { Playfair_Display, Geist } from "next/font/google"
-import "./globals.css"
-import { Providers } from "./providers"
-import { Toaster } from "@/components/ui/sonner"
+import type React from "react";
+import type { Metadata } from "next";
+import { Playfair_Display, Geist } from "next/font/google";
+import "./globals.css";
+import { Providers } from "./providers";
+import { Toaster } from "@/components/ui/sonner";
+import { CategoryProvider } from "@/contexts/CategoryContext";
 
-const _playfair = Playfair_Display({ subsets: ["latin"], variable: "--font-serif" })
-const _geist = Geist({ subsets: ["latin"] })
+const _playfair = Playfair_Display({
+  subsets: ["latin"],
+  variable: "--font-serif",
+});
 
 export const metadata: Metadata = {
   title: "Purple Dog - La plateforme pour vendre vos objets de valeur",
-  description: "Vendez vos objets de valeur à des tiers de confiance avec Purple Dog",
-  generator: "v0.app",
+  description:
+    "Vendez vos objets de valeur à des tiers de confiance avec Purple Dog",
   icons: {
     icon: [
       {
@@ -29,21 +32,21 @@ export const metadata: Metadata = {
     ],
     apple: "/apple-icon.png",
   },
-}
+};
 
 export default function RootLayout({
   children,
 }: Readonly<{
-  children: React.ReactNode
+  children: React.ReactNode;
 }>) {
   return (
     <html lang="fr">
       <body className={`${_playfair.variable} font-sans antialiased`}>
         <Providers>
-          {children}
+          <CategoryProvider>{children}</CategoryProvider>
           <Toaster />
         </Providers>
       </body>
     </html>
-  )
+  );
 }

@@ -1,9 +1,9 @@
-import Header from "@/components/homepage/header"
-import HeroBanner from "@/components/homepage/hero-banner"
-import CategoryGrid from "@/components/homepage/category-grid"
-import AboutSection from "@/components/homepage/about-section"
-import Newsletter from "@/components/homepage/newsletter"
-import Footer from "@/components/homepage/footer"
+import Header from "@/components/homepage/header";
+import HeroBanner from "@/components/homepage/hero-banner";
+import CategoryGrid from "@/components/homepage/category-grid";
+import AboutSection from "@/components/homepage/about-section";
+import Newsletter from "@/components/homepage/newsletter";
+import Footer from "@/components/homepage/footer";
 
 export default function HomePage() {
   return (
@@ -15,5 +15,5 @@ export default function HomePage() {
       <Newsletter />
       <Footer />
     </main>
-  )
+  );
 }
