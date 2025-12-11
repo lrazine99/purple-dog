@@ -9,7 +9,11 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  Req,
+  UseGuards,
+  BadRequestException,
 } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
 import {
   ApiBody,
   ApiOperation,
@@ -21,18 +25,28 @@ import { OrdersService } from './orders.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { OrderResponseDto } from './dto/order-response.dto';
 import { Order } from './entities/order.entity';
+import type { RequestWithUser } from '../common/types/request.types';
 
 @ApiTags('orders')
 @Controller('orders')
 export class OrdersController {
   constructor(private readonly ordersService: OrdersService) {}
 
+  @UseGuards(AuthGuard('jwt'))
   @Post()
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Create a draft order' })
   @ApiBody({ type: CreateOrderDto })
   @ApiResponse({ status: 201, description: 'Order created', type: OrderResponseDto })
-  async create(@Body() dto: CreateOrderDto): Promise<Order> {
+  async create(@Body() dto: CreateOrderDto, @Req() req: RequestWithUser): Promise<Order> {
+    const userId = req.user?.id || req.user?.sub;
+    if (!userId) {
+      throw new BadRequestException('User ID not found in request');
+    }
+    // Ensure the buyer_id matches the authenticated user
+    if (dto.buyer_id !== userId) {
+      throw new BadRequestException('You can only create orders for yourself');
+    }
     return this.ordersService.create(dto);
   }
 
