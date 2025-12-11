@@ -51,7 +51,7 @@ export function ParticularRegisterForm() {
           variant: "success",
           message: "Inscription réussie",
           description:
-            "Votre compte a été créé avec succès. Vous pouvez maintenant vous connecter.",
+            "Votre compte a été créé avec succès. Vous recevrez un email de vérification.",
         });
         router.push("/connexion");
       },

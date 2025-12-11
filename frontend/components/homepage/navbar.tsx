@@ -24,7 +24,7 @@ export default function Navbar() {
 
         <nav className="hidden md:flex items-center gap-6">
           <Link
-            href={ROUTES.PRO_PRODUITS}
+            href={ROUTES.PRODUITS}
             className="relative text-foreground hover:text-primary transition-colors font-medium pb-1 group"
           >
             Produits
@@ -69,7 +69,7 @@ export default function Navbar() {
         <div className="md:hidden border-t border-border/40 bg-background/95 backdrop-blur">
           <nav className="container flex flex-col gap-2 p-4">
             <Link
-              href={ROUTES.PRO_PRODUITS}
+              href={ROUTES.PRODUITS}
               onClick={toggleMenu}
               className="px-4 py-2 text-foreground hover:text-primary hover:bg-accent rounded-md transition-colors font-medium"
             >

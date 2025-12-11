@@ -1,4 +1,3 @@
-import GenericHeader from "@/components/header/GenericHeader";
 import HeroBanner from "@/components/homepage/hero-banner";
 import CategoryGrid from "@/components/homepage/category-grid";
 import AboutSection from "@/components/homepage/about-section";
@@ -8,7 +7,6 @@ import Footer from "@/components/homepage/footer";
 export default function HomePage() {
   return (
     <main className="min-h-screen">
-      <GenericHeader />
       <HeroBanner />
       <CategoryGrid />
       <AboutSection />
