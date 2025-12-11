@@ -1,4 +1,18 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+
+export class ItemPhotoResponseDto {
+  @ApiProperty()
+  id: number;
+
+  @ApiProperty()
+  url: string;
+
+  @ApiProperty()
+  position: number;
+
+  @ApiProperty()
+  is_primary: boolean;
+}
 
 export class ItemResponseDto {
   @ApiProperty()
@@ -51,5 +65,7 @@ export class ItemResponseDto {
 
   @ApiProperty()
   updated_at: Date;
-}
 
+  @ApiPropertyOptional({ type: [ItemPhotoResponseDto] })
+  photos?: ItemPhotoResponseDto[];
+}
