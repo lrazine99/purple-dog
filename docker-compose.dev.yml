@@ -62,7 +62,10 @@ services:
     container_name: purple-dog-frontend-dev
     environment:
       NODE_ENV: development
-      NEXT_PUBLIC_API_URL: http://backend:3001
+      # NEXT_PUBLIC_API_URL is for client-side (browser) - must use localhost
+      NEXT_PUBLIC_API_URL: http://localhost:3001
+      # API_URL is for server-side (API routes inside Docker) - uses Docker network
+      API_URL: http://backend:3001
       JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-OBymCYlQAAoqMRDvJyFbH2XlyeU5jbr6N3PKoMWHbJ3g/lTt1V5nQXxAkd7zZiOQzmuMa1Vlkc6sf4B9ibEXGQ==}
     ports:
       - "${FRONTEND_PORT:-3000}:3000"
