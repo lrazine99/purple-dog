@@ -80,20 +80,26 @@ export class ItemsService {
   }): Promise<ItemResponseDto[]> {
     const { categoryId, limit = 50, offset = 0 } = params || {};
 
-    const queryBuilder = this.itemRepository.createQueryBuilder('item');
+    const queryBuilder = this.itemRepository
+      .createQueryBuilder('item')
+      .leftJoinAndSelect('item.photos', 'photos')
+      .leftJoinAndSelect('item.itemCategories', 'itemCategories')
+      .leftJoinAndSelect('itemCategories.category', 'category')
+      .leftJoin('item.category', 'mainCategory')
+      .orderBy('item.created_at', 'DESC');
 
     if (categoryId) {
-      queryBuilder.where('item.category_id = :categoryId', { categoryId });
+      // Find items where category_id matches OR where the category's parent_id matches
+      // This allows filtering by parent category to show items from subcategories
+      queryBuilder.where(
+        '(item.category_id = :categoryId OR mainCategory.parent_id = :categoryId)',
+        { categoryId }
+      );
     }
 
     queryBuilder.skip(offset).take(limit);
 
-    queryBuilder.orderBy('item.created_at', 'DESC');
-
-    const items = await this.itemRepository.find({
-      relations: ['photos', 'itemCategories', 'itemCategories.category'],
-      order: { created_at: 'DESC' },
-    });
+    const items = await queryBuilder.getMany();
 
     return items.map((item) => this.toResponseDto(item));
   }

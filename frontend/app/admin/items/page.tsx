@@ -201,7 +201,10 @@ function UserAutocomplete({
             <button
               key={user.id}
               type="button"
-              onClick={() => handleSelect(user)}
+              onMouseDown={(e) => {
+                e.preventDefault();
+                handleSelect(user);
+              }}
               className={`w-full px-4 py-3 text-left hover:bg-slate-700/50 transition-colors ${
                 index === highlightedIndex ? "bg-slate-700/50" : ""
               } ${selectedUserId === user.id ? "bg-purple-500/20" : ""}`}
@@ -312,7 +315,10 @@ function CategoryAutocomplete({
               <button
                 key={category.id}
                 type="button"
-                onClick={() => handleSelect(category)}
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  handleSelect(category);
+                }}
                 className={`w-full px-4 py-3 text-left hover:bg-slate-700/50 transition-colors ${
                   index === highlightedIndex ? "bg-slate-700/50" : ""
                 } ${selectedCategoryId === category.id ? "bg-orange-500/20" : ""}`}
@@ -380,9 +386,8 @@ export default function ItemsPage() {
   const fetchItems = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem("access_token");
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/items`, {
-        headers: { Authorization: `Bearer ${token}` },
+      const res = await fetch('/api/items', {
+        credentials: "include",
       });
       if (res.ok) {
         const data = await res.json();
@@ -397,9 +402,8 @@ export default function ItemsPage() {
 
   const fetchCategories = async () => {
     try {
-      const token = localStorage.getItem("access_token");
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/categories`, {
-        headers: { Authorization: `Bearer ${token}` },
+      const res = await fetch('/api/categories', {
+        credentials: "include",
       });
       if (res.ok) {
         const data = await res.json();
@@ -412,9 +416,8 @@ export default function ItemsPage() {
 
   const fetchUsers = async () => {
     try {
-      const token = localStorage.getItem("access_token");
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users`, {
-        headers: { Authorization: `Bearer ${token}` },
+      const res = await fetch('/api/users', {
+        credentials: "include",
       });
       if (res.ok) {
         const data = await res.json();
@@ -502,7 +505,7 @@ export default function ItemsPage() {
         const formData = new FormData();
         formData.append("file", file);
 
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/upload`, {
+        const res = await fetch("/api/upload", {
           method: "POST",
           body: formData,
         });
@@ -515,7 +518,7 @@ export default function ItemsPage() {
 
         const newPhoto: ItemPhoto = {
           id: Date.now() + i, // Temporary ID for new photos
-          url: `${process.env.NEXT_PUBLIC_API_URL}${data.url}`,
+          url: data.url,
           position: photos.length + i,
           is_primary: photos.length === 0 && i === 0,
         };
@@ -524,15 +527,14 @@ export default function ItemsPage() {
 
         // If editing, add photo to item immediately
         if (editingItem) {
-          const token = localStorage.getItem("access_token");
-          await fetch(`${process.env.NEXT_PUBLIC_API_URL}/items/${editingItem.id}/photos`, {
+          await fetch(`/api/items/${editingItem.id}/photos`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
             },
+            credentials: "include",
             body: JSON.stringify({
-              url: `${process.env.NEXT_PUBLIC_API_URL}${data.url}`,
+              url: data.url,
               is_primary: photos.length === 0 && i === 0,
             }),
           });
@@ -585,14 +587,18 @@ export default function ItemsPage() {
   };
 
   const handleRemovePhoto = async (photo: ItemPhoto, index: number) => {
-    if (editingItem && photo.id > 1000000) {
-      // Real photo from DB
+    // Real photo from DB has small ID; temporary photos have Date.now() IDs (large numbers)
+    const isRealDbPhoto = editingItem && photo.id < 1000000000;
+    
+    if (isRealDbPhoto) {
       try {
-        const token = localStorage.getItem("access_token");
-        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/items/${editingItem.id}/photos/${photo.id}`, {
+        const res = await fetch(`/api/items/${editingItem.id}/photos/${photo.id}`, {
           method: "DELETE",
-          headers: { Authorization: `Bearer ${token}` },
+          credentials: "include",
         });
+        if (!res.ok) {
+          console.error("Failed to delete photo:", await res.text());
+        }
       } catch (err) {
         console.error("Failed to delete photo:", err);
       }
@@ -610,13 +616,13 @@ export default function ItemsPage() {
 
   const handleSetPrimary = async (index: number) => {
     const photo = photos[index];
-    
-    if (editingItem && photo.id > 1000000) {
+    const isRealDbPhoto = editingItem && photo.id < 1000000000;
+
+    if (isRealDbPhoto) {
       try {
-        const token = localStorage.getItem("access_token");
-        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/items/${editingItem.id}/photos/${photo.id}/primary`, {
+        await fetch(`/api/items/${editingItem.id}/photos/${photo.id}/primary`, {
           method: "PATCH",
-          headers: { Authorization: `Bearer ${token}` },
+          credentials: "include",
         });
       } catch (err) {
         console.error("Failed to set primary:", err);
@@ -665,34 +671,32 @@ export default function ItemsPage() {
       if (form.auction_start_price) body.auction_start_price = parseFloat(form.auction_start_price);
       if (form.auction_end_date) body.auction_end_date = new Date(form.auction_end_date).toISOString();
 
-      const url = isEdit
-        ? `${process.env.NEXT_PUBLIC_API_URL}/items/${editingItem.id}`
-        : `${process.env.NEXT_PUBLIC_API_URL}/items`;
+      const url = isEdit ? `/api/items/${editingItem.id}` : `/api/items`;
 
       const res = await fetch(url, {
         method: isEdit ? "PATCH" : "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
+        credentials: "include",
         body: JSON.stringify(body),
       });
 
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.message || "Échec de l'enregistrement");
+        throw new Error(data.message || data.error || "Échec de l'enregistrement");
       }
 
       // If creating, add photos to the new item
       if (!isEdit && photos.length > 0) {
         for (const photo of photos) {
-          await fetch(`${process.env.NEXT_PUBLIC_API_URL}/items/${data.id}/photos`, {
+          await fetch(`/api/items/${data.id}/photos`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
             },
+            credentials: "include",
             body: JSON.stringify({
               url: photo.url,
               is_primary: photo.is_primary,
@@ -705,12 +709,12 @@ export default function ItemsPage() {
       const itemId = isEdit ? editingItem.id : data.id;
       if (selectedCategoryIds.size > 0) {
         // Use PUT to replace all categories
-        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/items/${itemId}/categories`, {
+        await fetch(`/api/items/${itemId}/categories`, {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
           },
+          credentials: "include",
           body: JSON.stringify({
             category_ids: Array.from(selectedCategoryIds),
           }),
@@ -730,10 +734,9 @@ export default function ItemsPage() {
     if (!confirm("Êtes-vous sûr de vouloir supprimer cet article ?")) return;
 
     try {
-      const token = localStorage.getItem("access_token");
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/items/${id}`, {
+      const res = await fetch(`/api/items/${id}`, {
         method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
+        credentials: "include",
       });
       if (res.ok) {
         setItems(items.filter((i) => i.id !== id));
@@ -793,16 +796,16 @@ export default function ItemsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-white flex items-center gap-3">
-            <Package className="w-8 h-8 text-purple-400" />
+          <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
+            <Package className="w-8 h-8 text-purple-600" />
             Gestion des Articles
           </h1>
-          <p className="text-slate-400 mt-1">{items.length} articles</p>
+          <p className="text-gray-600 mt-1">{items.length} articles</p>
         </div>
         <div className="flex gap-3">
           <Button
             onClick={openCreateModal}
-            className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
+            className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white"
           >
             <Plus className="w-4 h-4 mr-2" />
             Ajouter
@@ -810,7 +813,7 @@ export default function ItemsPage() {
           <Button
             onClick={fetchItems}
             variant="outline"
-            className="bg-slate-800 border-slate-700 text-white hover:bg-slate-700"
+            className="border-gray-300 text-gray-700 hover:bg-gray-100"
           >
             <RefreshCw className={`w-4 h-4 mr-2 ${loading ? "animate-spin" : ""}`} />
             Actualiser
@@ -820,12 +823,12 @@ export default function ItemsPage() {
 
       {/* Search */}
       <div className="relative">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
+        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
         <Input
           placeholder="Rechercher des articles..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="h-12 pl-12 bg-slate-800/50 border-slate-700 text-white placeholder:text-slate-500 focus:border-purple-500"
+          className="h-12 pl-12 bg-white border-gray-300 text-gray-900 placeholder:text-gray-400 focus:border-purple-500 focus:ring-purple-500"
         />
       </div>
 
@@ -833,17 +836,17 @@ export default function ItemsPage() {
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {[...Array(6)].map((_, i) => (
-            <div key={i} className="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-6 animate-pulse">
-              <div className="w-full h-32 bg-slate-700 rounded-xl mb-4" />
-              <div className="w-3/4 h-5 bg-slate-700 rounded mb-2" />
-              <div className="w-1/2 h-4 bg-slate-700 rounded" />
+            <div key={i} className="bg-white border border-gray-200 rounded-2xl p-6 animate-pulse shadow-sm">
+              <div className="w-full h-32 bg-gray-200 rounded-xl mb-4" />
+              <div className="w-3/4 h-5 bg-gray-200 rounded mb-2" />
+              <div className="w-1/2 h-4 bg-gray-200 rounded" />
             </div>
           ))}
         </div>
       ) : filteredItems.length === 0 ? (
-        <div className="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-12 text-center">
-          <Package className="w-16 h-16 text-slate-600 mx-auto mb-4" />
-          <p className="text-slate-400">Aucun article trouvé</p>
+        <div className="bg-white border border-gray-200 rounded-2xl p-12 text-center shadow-sm">
+          <Package className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+          <p className="text-gray-500">Aucun article trouvé</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -852,10 +855,10 @@ export default function ItemsPage() {
             return (
               <div
                 key={item.id}
-                className="bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-2xl overflow-hidden hover:border-slate-600 transition-all duration-300"
+                className="bg-white border border-gray-200 rounded-2xl overflow-hidden hover:border-purple-300 hover:shadow-lg transition-all duration-300"
               >
                 {/* Photo */}
-                <div className="relative h-48 bg-slate-700">
+                <div className="relative h-48 bg-gray-100">
                   {primaryPhoto ? (
                     <img
                       src={primaryPhoto.url}
@@ -864,7 +867,7 @@ export default function ItemsPage() {
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
-                      <Image className="w-12 h-12 text-slate-600" />
+                      <Image className="w-12 h-12 text-gray-400" />
                     </div>
                   )}
                   <div className="absolute top-3 right-3">
@@ -873,23 +876,23 @@ export default function ItemsPage() {
                     </span>
                   </div>
                   {item.photos && item.photos.length > 1 && (
-                    <div className="absolute bottom-3 right-3 px-2 py-1 bg-black/60 rounded-full text-white text-xs">
+                    <div className="absolute bottom-3 right-3 px-2 py-1 bg-black/70 rounded-full text-white text-xs font-medium">
                       {item.photos.length} photos
                     </div>
                   )}
                 </div>
 
                 <div className="p-6">
-                  <h3 className="text-white font-semibold text-lg mb-2">{item.name}</h3>
-                  <p className="text-slate-400 text-sm mb-4 line-clamp-2">{item.description}</p>
+                  <h3 className="text-gray-900 font-semibold text-lg mb-2">{item.name}</h3>
+                  <p className="text-gray-600 text-sm mb-4 line-clamp-2">{item.description}</p>
 
                   {/* Info Grid */}
                   <div className="grid grid-cols-2 gap-2 mb-4 text-sm">
-                    <div className="flex items-center gap-2 text-slate-400">
+                    <div className="flex items-center gap-2 text-gray-600">
                       <FolderTree className="w-3 h-3" />
                       <span className="truncate">{getCategoryName(item.category_id)}</span>
                     </div>
-                    <div className="flex items-center gap-2 text-slate-400">
+                    <div className="flex items-center gap-2 text-gray-600">
                       <User className="w-3 h-3" />
                       <span className="truncate">{getSellerName(item.seller_id)}</span>
                     </div>
@@ -898,22 +901,22 @@ export default function ItemsPage() {
                   {/* Prices */}
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-2">
-                      <DollarSign className="w-4 h-4 text-green-400" />
-                      <span className="text-white font-semibold">{item.price_desired} €</span>
+                      <DollarSign className="w-4 h-4 text-green-600" />
+                      <span className="text-gray-900 font-semibold">{item.price_desired} €</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Tag className="w-3 h-3 text-slate-400" />
-                      <span className="text-slate-400 text-sm">{getSaleModeLabel(item.sale_mode)}</span>
+                      <Tag className="w-3 h-3 text-gray-500" />
+                      <span className="text-gray-600 text-sm">{getSaleModeLabel(item.sale_mode)}</span>
                     </div>
                   </div>
 
                   {/* Actions */}
-                  <div className="pt-4 border-t border-slate-700/50 flex justify-end gap-2">
+                  <div className="pt-4 border-t border-gray-200 flex justify-end gap-2">
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => router.push(`/admin/items/${item.id}`)}
-                      className="text-blue-400 hover:text-blue-300 hover:bg-blue-500/10"
+                      className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
                     >
                       <Eye className="w-4 h-4 mr-1" />
                       Voir
@@ -922,7 +925,7 @@ export default function ItemsPage() {
                       variant="ghost"
                       size="sm"
                       onClick={() => openEditModal(item)}
-                      className="text-slate-400 hover:text-white hover:bg-slate-700"
+                      className="text-gray-600 hover:text-purple-600 hover:bg-purple-50"
                     >
                       <Edit className="w-4 h-4 mr-1" />
                       Modifier
@@ -931,7 +934,7 @@ export default function ItemsPage() {
                       variant="ghost"
                       size="sm"
                       onClick={() => handleDelete(item.id)}
-                      className="text-red-400 hover:text-red-300 hover:bg-red-500/10"
+                      className="text-red-500 hover:text-red-700 hover:bg-red-50"
                     >
                       <Trash2 className="w-4 h-4 mr-1" />
                       Supprimer

@@ -1,14 +1,11 @@
-import Link from "next/link";
-import { Search, Menu } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { ROUTES } from "@/helper/routes";
+import Link from "next/link";
 
 export function SellerNavbar() {
   return (
     <>
       <Link
-        href={ROUTES.MY_SHOP}
+        href={ROUTES.MA_BOUTIQUE}
         className="relative text-foreground hover:text-primary transition-colors font-medium pb-1 group"
       >
         Ma Boutique

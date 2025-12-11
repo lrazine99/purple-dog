@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -12,7 +13,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Clock, Heart, Plus, AlertTriangle } from "lucide-react";
+import { Clock, Heart, Plus, AlertTriangle, CreditCard } from "lucide-react";
+import { useSubscriptionStatus } from "@/hooks/useSubscription";
+import { useAuth } from "@/hooks/useAuth";
 
 interface AuctionCardProps {
   itemId: number;
@@ -39,6 +42,8 @@ export function AuctionCard({
   endDate,
   priceMin,
 }: AuctionCardProps) {
+  const { data: user } = useAuth();
+  const { canAccessPro, isExpired } = useSubscriptionStatus();
   const increment = getBidIncrement(Number(currentBid));
   const [bidAmount, setBidAmount] = useState(Number(currentBid) + increment);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
@@ -103,48 +108,71 @@ export function AuctionCard({
         </div>
 
         <div className="space-y-3">
-          {/* Single quick bid button matching current bracket */}
-          <Button
-            variant="default"
-            size="lg"
-            onClick={handleQuickBid}
-            className="w-full"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Enchérir +
-            {increment.toLocaleString("fr-FR", {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            })}
-            €
-          </Button>
+          {/* Check if professional user with expired subscription */}
+          {user && user.role === "professional" && !canAccessPro ? (
+            <div className="space-y-3">
+              <div className="p-4 bg-destructive/10 border border-destructive/20 rounded-lg">
+                <p className="text-sm font-medium text-destructive mb-2">
+                  Abonnement expiré
+                </p>
+                <p className="text-xs text-muted-foreground mb-3">
+                  Vous devez souscrire à un abonnement pour enchérir sur ce
+                  produit.
+                </p>
+                <Button asChild variant="default" size="sm" className="w-full">
+                  <Link href="/abonnement">
+                    <CreditCard className="h-4 w-4 mr-2" />
+                    S&apos;abonner maintenant
+                  </Link>
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <>
+              {/* Single quick bid button matching current bracket */}
+              <Button
+                variant="default"
+                size="lg"
+                onClick={handleQuickBid}
+                className="w-full"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Enchérir +
+                {increment.toLocaleString("fr-FR", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
+                €
+              </Button>
 
-          <p className="text-xs text-muted-foreground text-center">
-            Enchère minimum :{" "}
-            {(Number(currentBid) + increment).toLocaleString("fr-FR", {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            })}{" "}
-            € • Palier :{" "}
-            {increment.toLocaleString("fr-FR", {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            })}
-            €
-          </p>
-          <p className="text-xs text-muted-foreground text-center">
-            Prix de départ :{" "}
-            {startingBid.toLocaleString("fr-FR", {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            })}{" "}
-            € • Prix minimum :{" "}
-            {priceMin.toLocaleString("fr-FR", {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            })}{" "}
-            €
-          </p>
+              <p className="text-xs text-muted-foreground text-center">
+                Enchère minimum :{" "}
+                {(Number(currentBid) + increment).toLocaleString("fr-FR", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}{" "}
+                € • Palier :{" "}
+                {increment.toLocaleString("fr-FR", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
+                €
+              </p>
+              <p className="text-xs text-muted-foreground text-center">
+                Prix de départ :{" "}
+                {startingBid.toLocaleString("fr-FR", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}{" "}
+                € • Prix minimum :{" "}
+                {priceMin?.toLocaleString("fr-FR", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}{" "}
+                €
+              </p>
+            </>
+          )}
         </div>
 
         <Separator />

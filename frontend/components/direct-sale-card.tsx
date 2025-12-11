@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -9,6 +10,7 @@ import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { useSubscriptionStatus } from "@/hooks/useSubscription";
 
 interface DirectSaleCardProps {
   itemId: number;
@@ -97,8 +99,7 @@ export function DirectSaleCard({ itemId, sellerId, price }: DirectSaleCardProps)
         </Button>
       </div>
 
-      <Separator />
-
+          <Separator />
 
     </Card>
     <Dialog open={offerOpen} onOpenChange={setOfferOpen}>

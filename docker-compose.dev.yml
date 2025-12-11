@@ -4,6 +4,8 @@ services:
   postgres:
     image: postgres:16-alpine
     container_name: purple-dog-postgres-dev
+    env_file:
+      - ./backend/.env
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
@@ -25,6 +27,8 @@ services:
       context: ./backend
       dockerfile: Dockerfile.dev
     container_name: purple-dog-backend-dev
+    env_file:
+      - ./backend/.env
     environment:
       NODE_ENV: development
       PORT: 3001
@@ -33,13 +37,17 @@ services:
       DATABASE_USER: ${POSTGRES_USER:-postgres}
       DATABASE_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
       DATABASE_NAME: ${POSTGRES_DB:-purple_dog_db}
-      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-your-super-secret-jwt-key-change-in-production}
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-OBymCYlQAAoqMRDvJyFbH2XlyeU5jbr6N3PKoMWHbJ3g/lTt1V5nQXxAkd7zZiOQzmuMa1Vlkc6sf4B9ibEXGQ==}
       JWT_ACCESS_EXPIRES_IN: ${JWT_ACCESS_EXPIRES_IN:-900}
+      JWT_PRIVATE_KEY_PATH: /app/secrets/jwt_private.pem
+      JWT_PUBLIC_KEY_PATH: /app/secrets/jwt_public.pem
     ports:
       - "${BACKEND_PORT:-3001}:3001"
     volumes:
       - ./backend/src:/app/src
       - ./backend/package.json:/app/package.json
+      - ./backend/secrets:/app/secrets:ro
+      - ./backend/uploads:/app/uploads
     depends_on:
       postgres:
         condition: service_healthy
@@ -55,6 +63,7 @@ services:
     environment:
       NODE_ENV: development
       NEXT_PUBLIC_API_URL: http://backend:3001
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-OBymCYlQAAoqMRDvJyFbH2XlyeU5jbr6N3PKoMWHbJ3g/lTt1V5nQXxAkd7zZiOQzmuMa1Vlkc6sf4B9ibEXGQ==}
     ports:
       - "${FRONTEND_PORT:-3000}:3000"
     volumes:
@@ -63,6 +72,18 @@ services:
       - /app/.next
     depends_on:
       - backend
+    networks:
+      - purple-dog-network-dev
+
+  adminer:
+    image: adminer:latest
+    container_name: purple-dog-adminer-dev
+    ports:
+      - "${ADMINER_PORT:-8080}:8080"
+    environment:
+      ADMINER_DEFAULT_SERVER: postgres
+    depends_on:
+      - postgres
     networks:
       - purple-dog-network-dev
 
