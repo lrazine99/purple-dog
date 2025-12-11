@@ -34,6 +34,7 @@ type AddressType = {
   city: string;
   postal_code: string;
   country: string;
+  complement?: string;
 };
 
 const ADDRESS_OPTION_SAVED = "saved";
@@ -58,6 +59,7 @@ export function CheckoutDialog({
         city: user.city || "",
         postal_code: user.postal_code || "",
         country: user.country || "France",
+        complement: "",
       }
     : null;
 
@@ -70,6 +72,7 @@ export function CheckoutDialog({
     city: "",
     postal_code: "",
     country: "France",
+    complement: "",
   });
 
   // Shipping address selection and form
@@ -81,6 +84,7 @@ export function CheckoutDialog({
     city: "",
     postal_code: "",
     country: "France",
+    complement: "",
   });
 
   const [useSameAddress, setUseSameAddress] = useState(true);
@@ -153,15 +157,19 @@ export function CheckoutDialog({
         billing_city: finalBillingAddress.city,
         billing_postal_code: finalBillingAddress.postal_code,
         billing_country: finalBillingAddress.country,
+        billing_address_complement: finalBillingAddress.complement || undefined,
         shipping_address_line: finalShippingAddress.line,
         shipping_city: finalShippingAddress.city,
         shipping_postal_code: finalShippingAddress.postal_code,
         shipping_country: finalShippingAddress.country,
+        shipping_address_complement: finalShippingAddress.complement || undefined,
       });
 
       // Create payment and get checkout URL
+      // Le choix du mode de paiement se fera sur la page Stripe
       const payment = await paymentService.createPayment({
         order_id: order.id,
+        payment_method_type: 'both', // Stripe affichera les deux options
       });
 
       if (payment.checkout_url) {
@@ -187,6 +195,9 @@ export function CheckoutDialog({
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="sr-only">Chargement en cours</DialogTitle>
+          </DialogHeader>
           <div className="flex items-center justify-center py-8">
             <Loader2 className="h-6 w-6 animate-spin" />
           </div>
@@ -272,6 +283,22 @@ export function CheckoutDialog({
                     }
                     placeholder="123 Rue Example"
                     required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="billing_complement">
+                    Complément d'adresse (facultatif)
+                  </Label>
+                  <Input
+                    id="billing_complement"
+                    value={billingAddress.complement || ""}
+                    onChange={(e) =>
+                      setBillingAddress({
+                        ...billingAddress,
+                        complement: e.target.value,
+                      })
+                    }
+                    placeholder="Appartement, étage, etc."
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
@@ -392,6 +419,22 @@ export function CheckoutDialog({
                         }
                         placeholder="123 Rue Example"
                         required
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="shipping_complement">
+                        Complément d'adresse (facultatif)
+                      </Label>
+                      <Input
+                        id="shipping_complement"
+                        value={shippingAddress.complement || ""}
+                        onChange={(e) =>
+                          setShippingAddress({
+                            ...shippingAddress,
+                            complement: e.target.value,
+                          })
+                        }
+                        placeholder="Appartement, étage, etc."
                       />
                     </div>
                     <div className="grid grid-cols-2 gap-4">

@@ -89,6 +89,7 @@ export class PaymentService {
     order_id: number;
     success_url?: string;
     cancel_url?: string;
+    payment_method_type?: 'card' | 'sepa_debit' | 'both';
   }): Promise<Payment & { checkout_url?: string }> {
     // Use the API proxy route instead of direct backend call
     const response = await fetch("/api/payments", {

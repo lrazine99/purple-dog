@@ -1,7 +1,6 @@
 import {
   BadRequestException,
   Injectable,
-  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -10,6 +9,7 @@ import { Repository } from 'typeorm';
 import Stripe from 'stripe';
 import { Payment, PaymentStatus } from './entities/payment.entity';
 import { Order, OrderStatus } from '../orders/entities/order.entity';
+import { OrderItem } from '../orders/entities/order-item.entity';
 import { CreatePaymentDto } from './dto/create-payment.dto';
 import { OrdersService } from '../orders/orders.service';
 import { VerifyPaymentDto } from './dto/verify-payment.dto';
@@ -23,6 +23,8 @@ export class PaymentsService {
     @InjectRepository(Payment)
     private readonly paymentRepo: Repository<Payment>,
     @InjectRepository(Order) private readonly orderRepo: Repository<Order>,
+    @InjectRepository(OrderItem)
+    private readonly orderItemRepo: Repository<OrderItem>,
     @InjectRepository(User) private readonly userRepo: Repository<User>,
     private readonly config: ConfigService,
     private readonly ordersService: OrdersService,
@@ -54,7 +56,10 @@ export class PaymentsService {
       throw new BadRequestException('You can only pay for your own orders');
     }
 
-    if (order.status !== OrderStatus.DRAFT && order.status !== OrderStatus.PENDING_PAYMENT) {
+    if (
+      String(order.status) !== OrderStatus.DRAFT &&
+      String(order.status) !== OrderStatus.PENDING_PAYMENT
+    ) {
       throw new BadRequestException(
         `Order status must be draft or pending_payment, current: ${order.status}`,
       );
@@ -65,7 +70,10 @@ export class PaymentsService {
       where: { order_id: dto.order_id, user_id: userId },
     });
 
-    if (existingPayment && existingPayment.status === PaymentStatus.SUCCEEDED) {
+    if (
+      existingPayment &&
+      String(existingPayment.status) === PaymentStatus.SUCCEEDED
+    ) {
       throw new BadRequestException('This order has already been paid');
     }
 
@@ -108,23 +116,85 @@ export class PaymentsService {
     const cancelUrl =
       dto.cancel_url || `${frontendUrl}/paiements?canceled=true`;
 
-    // Créer la session de checkout Stripe
-    const session = await this.stripe.checkout.sessions.create({
-      customer: stripeCustomerId,
-      payment_method_types: ['card'],
-      line_items: [
-        {
+    // Récupérer les items de la commande avec leurs détails
+    const orderItems = await this.orderItemRepo.find({
+      where: { order_id: order.id },
+      relations: ['item'],
+    });
+
+    if (!orderItems || orderItems.length === 0) {
+      throw new NotFoundException(`No items found for order ${order.id}`);
+    }
+
+    // Calculer les montants
+    const productPrice = parseFloat(order.total_amount);
+    const commissionRate = 0.02; // 2%
+    const commissionAmount = productPrice * commissionRate;
+    const totalAmount = productPrice + commissionAmount;
+
+    // Vérifier que la devise est EUR pour SEPA
+    const currency = order.currency.toLowerCase();
+    const paymentMethodType = dto.payment_method_type || 'both';
+    
+    // Déterminer les méthodes de paiement acceptées
+    let paymentMethodTypes: string[] = [];
+    if (paymentMethodType === 'card') {
+      paymentMethodTypes = ['card'];
+    } else if (paymentMethodType === 'sepa_debit') {
+      if (currency !== 'eur') {
+        throw new BadRequestException(
+          'SEPA Direct Debit is only available for EUR currency',
+        );
+      }
+      paymentMethodTypes = ['sepa_debit'];
+    } else {
+      // 'both' ou par défaut
+      paymentMethodTypes = ['card'];
+      if (currency === 'eur') {
+        paymentMethodTypes.push('sepa_debit');
+      }
+    }
+
+    // Préparer les line_items pour Stripe avec récapitulatif détaillé
+    const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [];
+
+    // Ajouter chaque produit
+    for (const orderItem of orderItems) {
+      if (orderItem.item) {
+        const itemPrice = parseFloat(orderItem.unit_price) * orderItem.qty;
+        lineItems.push({
           price_data: {
-            currency: order.currency.toLowerCase(),
+            currency: currency,
             product_data: {
-              name: `Commande #${order.id}`,
-              description: `Paiement pour la commande ${order.id}`,
+              name: orderItem.item.name,
+              description:
+                orderItem.item.description || `Quantité: ${orderItem.qty}`,
             },
-            unit_amount: Math.round(parseFloat(order.total_amount) * 100), // Convert to cents
+            unit_amount: Math.round(itemPrice * 100), // Convert to cents
           },
           quantity: 1,
+        });
+      }
+    }
+
+    // Ajouter la commission comme ligne séparée
+    lineItems.push({
+      price_data: {
+        currency: currency,
+        product_data: {
+          name: 'Commission de transaction',
+          description: `Commission de ${(commissionRate * 100).toFixed(2)}%`,
         },
-      ],
+        unit_amount: Math.round(commissionAmount * 100), // Convert to cents
+      },
+      quantity: 1,
+    });
+
+    // Configuration de la session Stripe
+    const sessionParams: Stripe.Checkout.SessionCreateParams = {
+      customer: stripeCustomerId,
+      payment_method_types: paymentMethodTypes as any,
+      line_items: lineItems,
       mode: 'payment',
       success_url: successUrl,
       cancel_url: cancelUrl,
@@ -132,14 +202,18 @@ export class PaymentsService {
         order_id: order.id.toString(),
         user_id: userId.toString(),
       },
-    });
+    };
+
+    // Créer la session de checkout Stripe avec récapitulatif détaillé
+    // Stripe gère automatiquement les mandats SEPA dans Checkout Sessions
+    const session = await this.stripe.checkout.sessions.create(sessionParams);
 
     // Créer ou mettre à jour l'enregistrement de paiement
     let payment: Payment;
     if (existingPayment) {
       existingPayment.stripe_checkout_session_id = session.id;
       existingPayment.stripe_customer_id = stripeCustomerId || null;
-      existingPayment.amount = order.total_amount;
+      existingPayment.amount = totalAmount.toFixed(2);
       existingPayment.currency = order.currency;
       existingPayment.status = PaymentStatus.PENDING;
       payment = await this.paymentRepo.save(existingPayment);
@@ -149,7 +223,7 @@ export class PaymentsService {
         user_id: userId,
         stripe_checkout_session_id: session.id,
         stripe_customer_id: stripeCustomerId || null,
-        amount: order.total_amount,
+        amount: totalAmount.toFixed(2),
         currency: order.currency,
         status: PaymentStatus.PENDING,
         is_used: false,
@@ -199,8 +273,19 @@ export class PaymentsService {
       throw new NotFoundException('Payment not found');
     }
 
+    // Détecter si c'est un paiement SEPA
+    const isSepaPayment =
+      session.payment_method_types?.includes('sepa_debit') ||
+      (session.payment_intent &&
+        typeof session.payment_intent === 'object' &&
+        'payment_method_types' in session.payment_intent &&
+        (session.payment_intent as any).payment_method_types?.includes(
+          'sepa_debit',
+        ));
+
     // Vérifier le statut de la session
     if (session.status === 'complete' && session.payment_status === 'paid') {
+      // Paiement par carte : immédiat et confirmé
       // Marquer le paiement comme utilisé si pas déjà fait
       if (!payment.is_used) {
         payment.status = PaymentStatus.SUCCEEDED;
@@ -223,11 +308,66 @@ export class PaymentsService {
       return { verified: true, payment };
     }
 
-    // Si le paiement a échoué
-    if (session.payment_status === 'unpaid') {
-      payment.status = PaymentStatus.FAILED;
-      await this.paymentRepo.save(payment);
-      return { verified: false, payment };
+    // Pour SEPA : vérifier les différents cas
+    if (isSepaPayment) {
+      // Cas 1 : Session complète et unpaid = mandat accepté, prélèvement en attente (normal)
+      if (session.status === 'complete' && session.payment_status === 'unpaid') {
+        // Vérifier aussi le payment_intent pour détecter les échecs
+        if (session.payment_intent) {
+          const pi = session.payment_intent as Stripe.PaymentIntent;
+          // Si le payment_intent a échoué, c'est un vrai échec
+          if (pi.status === 'payment_failed' || pi.status === 'canceled') {
+            payment.status = PaymentStatus.FAILED;
+            await this.paymentRepo.save(payment);
+            return { verified: false, payment };
+          }
+        }
+
+        // Le mandat est accepté, mais le prélèvement n'est pas encore effectué
+        // Garder le statut PENDING (pas SUCCEEDED)
+        // Le webhook mettra à jour quand le prélèvement sera effectué
+        if (!payment.is_used) {
+          payment.status = PaymentStatus.PENDING;
+          if (session.payment_intent) {
+            const pi = session.payment_intent as Stripe.PaymentIntent;
+            payment.stripe_payment_intent_id = pi.id;
+          }
+          await this.paymentRepo.save(payment);
+        }
+
+        return { verified: true, payment };
+      }
+
+      // Cas 2 : Session expirée ou ouverte = échec
+      if (session.status === 'expired' || session.status === 'open') {
+        payment.status = PaymentStatus.FAILED;
+        await this.paymentRepo.save(payment);
+        return { verified: false, payment };
+      }
+
+      // Cas 3 : Payment intent avec statut d'échec
+      if (session.payment_intent) {
+        const pi = session.payment_intent as Stripe.PaymentIntent;
+        if (pi.status === 'payment_failed' || pi.status === 'canceled') {
+          payment.status = PaymentStatus.FAILED;
+          payment.stripe_payment_intent_id = pi.id;
+          await this.paymentRepo.save(payment);
+          return { verified: false, payment };
+        }
+      }
+    }
+
+    // Si le paiement a échoué (unpaid et pas SEPA, ou session expirée)
+    if (
+      session.payment_status === 'unpaid' ||
+      session.status === 'expired' ||
+      session.status === 'open'
+    ) {
+      if (!isSepaPayment) {
+        payment.status = PaymentStatus.FAILED;
+        await this.paymentRepo.save(payment);
+        return { verified: false, payment };
+      }
     }
 
     return { verified: false, payment };

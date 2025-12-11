@@ -51,6 +51,11 @@ export class CreateOrderDto {
   @ApiProperty({ required: false })
   @IsString()
   @IsOptional()
+  billing_address_complement?: string;
+
+  @ApiProperty({ required: false })
+  @IsString()
+  @IsOptional()
   shipping_address_line?: string;
 
   @ApiProperty({ required: false })
@@ -67,4 +72,9 @@ export class CreateOrderDto {
   @IsString()
   @IsOptional()
   shipping_country?: string;
+
+  @ApiProperty({ required: false })
+  @IsString()
+  @IsOptional()
+  shipping_address_complement?: string;
 }

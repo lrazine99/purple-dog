@@ -23,11 +23,19 @@ export default function PaymentVerificationPage() {
       try {
         const result = await paymentService.verifyPayment(checkoutSessionId);
         setIsVerified(result.verified);
-        setMessage(
-          result.verified
-            ? "Votre paiement a été confirmé avec succès."
-            : "Le paiement n'a pas pu être vérifié. Veuillez contacter le support."
-        );
+        
+        // Détecter si c'est un paiement SEPA en attente
+        const isSepaPending = result.verified && result.payment.status === 'pending';
+        
+        if (isSepaPending) {
+          setMessage(
+            "Votre mandat de prélèvement SEPA a été accepté avec succès. Le prélèvement sera effectué dans 1 à 3 jours ouvrables. Vous recevrez une confirmation par email une fois le prélèvement effectué."
+          );
+        } else if (result.verified) {
+          setMessage("Votre paiement a été confirmé avec succès.");
+        } else {
+          setMessage("Le paiement n'a pas pu être vérifié. Veuillez contacter le support.");
+        }
       } catch (error) {
         console.error("Erreur lors de la vérification:", error);
         setIsVerified(false);
