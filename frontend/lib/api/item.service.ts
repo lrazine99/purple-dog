@@ -21,8 +21,10 @@ export async function getItems(
     queryParams.append("categoryId", categoryId.toString());
   }
 
+  // Use the API proxy route instead of direct backend call
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
   const response = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/items?${queryParams.toString()}`,
+    `/api/items?${queryParams.toString()}`,
     {
       method: "GET",
       headers: {

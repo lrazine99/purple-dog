@@ -1,18 +1,31 @@
 "use client";
 
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Heart } from "lucide-react";
+import { CheckoutDialog } from "@/components/checkout/CheckoutDialog";
+import { useRouter } from "next/navigation";
 
 interface DirectSaleCardProps {
   price: number;
+  itemId: number;
+  sellerId: number;
+  itemName: string;
 }
 
-export function DirectSaleCard({ price }: DirectSaleCardProps) {
+export function DirectSaleCard({
+  price,
+  itemId,
+  sellerId,
+  itemName,
+}: DirectSaleCardProps) {
+  const [showCheckout, setShowCheckout] = useState(false);
+  const router = useRouter();
+
   const handleBuyNow = () => {
-    // TODO: Implement buy now
-    console.log("Buying item for:", price);
+    setShowCheckout(true);
   };
 
   const handleMakeOffer = () => {
@@ -56,6 +69,15 @@ export function DirectSaleCard({ price }: DirectSaleCardProps) {
       <Button variant="ghost" className="w-full" onClick={handleMakeOffer}>
         Faire une offre
       </Button>
+
+      <CheckoutDialog
+        open={showCheckout}
+        onOpenChange={setShowCheckout}
+        itemId={itemId}
+        sellerId={sellerId}
+        price={price}
+        itemName={itemName}
+      />
     </Card>
   );
 }

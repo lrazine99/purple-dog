@@ -19,6 +19,8 @@ export const ROUTES = {
 
   MON_COMPTE: "/mon-compte",
   FAVORIS: "/favoris",
+  PAIEMENTS: "/paiements",
+  PAIEMENTS_VERIFICATION: "/paiements/verification",
 
   ADMIN: "/admin",
   ADMIN_USERS: "/admin/users",

@@ -1,0 +1,71 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import PaymentVerificationView from "@/components/payments/PaymentVerificationView";
+import { paymentService } from "@/lib/api/payment.service";
+
+export default function PaymentVerificationPage() {
+  const searchParams = useSearchParams();
+  const checkoutSessionId = searchParams.get("checkout_session_id");
+  const [isVerified, setIsVerified] = useState(false);
+  const [message, setMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    async function verifyPayment() {
+      if (!checkoutSessionId) {
+        setMessage("Aucun identifiant de session de paiement fourni.");
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        const result = await paymentService.verifyPayment(checkoutSessionId);
+        setIsVerified(result.verified);
+        setMessage(
+          result.verified
+            ? "Votre paiement a été confirmé avec succès."
+            : "Le paiement n'a pas pu être vérifié. Veuillez contacter le support."
+        );
+      } catch (error) {
+        console.error("Erreur lors de la vérification:", error);
+        setIsVerified(false);
+        setMessage(
+          error instanceof Error
+            ? error.message
+            : "Une erreur s'est produite lors de la vérification du paiement."
+        );
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    verifyPayment();
+  }, [checkoutSessionId]);
+
+  if (isLoading) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="max-w-4xl mx-auto">
+          <h1 className="text-2xl font-bold mb-6">Vérification du paiement</h1>
+          <div className="flex items-center justify-center py-12">
+            <p className="text-muted-foreground">
+              Vérification du paiement en cours...
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <div className="max-w-4xl mx-auto">
+        <h1 className="text-2xl font-bold mb-6">Vérification du paiement</h1>
+        <PaymentVerificationView isVerified={isVerified} message={message} />
+      </div>
+    </div>
+  );
+}
+

@@ -225,7 +225,12 @@ export default async function ProduitPage({
                 priceMin={item.price_min}
               />
             ) : (
-              <DirectSaleCard price={item.price_desired} />
+              <DirectSaleCard
+                price={item.price_desired}
+                itemId={item.id}
+                sellerId={item.seller_id}
+                itemName={item.name}
+              />
             )}
 
             {/* Trust Badges */}
