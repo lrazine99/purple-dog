@@ -97,7 +97,10 @@ export class ItemsService {
       );
     }
 
-    queryBuilder.skip(offset).take(limit);
+    queryBuilder
+      .skip(offset)
+      .take(limit)
+      .orderBy('item.created_at', 'DESC');
 
     const items = await queryBuilder.getMany();
 

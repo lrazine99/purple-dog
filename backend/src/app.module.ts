@@ -15,6 +15,7 @@ import { FavoritesModule } from './favorites/favorites.module';
 import { OffersModule } from './offers/offers.module';
 import { MessagesModule } from './messages/messages.module';
 import { NotificationsModule } from './notifications/notifications.module';
+import { PaymentsModule } from './payments/payments.module';
 import { SubscriptionsModule } from './subscriptions/subscriptions.module';
 import { BidsModule } from './bids/bids.module';
 
@@ -47,6 +48,7 @@ import { BidsModule } from './bids/bids.module';
     OffersModule,
     MessagesModule,
     NotificationsModule,
+    PaymentsModule,
     SubscriptionsModule,
     BidsModule,
   ],
