@@ -7,6 +7,7 @@ import { useItems } from "@/hooks/useItems";
 import { useAuth } from "@/hooks/useAuth";
 import { Fragment, useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
+import { SlidersHorizontal, X } from "lucide-react";
 
 export default function ProductsPage() {
   const { selectedCategory } = useSelectedCategory();
@@ -24,6 +25,7 @@ export default function ProductsPage() {
   const [selectedSubCategories, setSelectedSubCategories] = useState<number[]>(
     []
   );
+  const [showFilters, setShowFilters] = useState(false);
 
   if (categoryKey !== lastCategoryKey) {
     setLimit(12);
@@ -41,7 +43,7 @@ export default function ProductsPage() {
   });
 
   const currentUserId = currentUser?.id;
-  
+
   const filteredItems = useMemo(() => {
     if (!items) return [];
 
@@ -62,8 +64,10 @@ export default function ProductsPage() {
     }
 
     if (selectedSubCategories.length > 0) {
-      filtered = filtered.filter((item) =>
-        item.category_id !== null && selectedSubCategories.includes(item.category_id)
+      filtered = filtered.filter(
+        (item) =>
+          item.category_id !== null &&
+          selectedSubCategories.includes(item.category_id)
       );
     }
 
@@ -83,11 +87,12 @@ export default function ProductsPage() {
       <CategorySlider />
 
       {selectedCategory && (
-        <div className="container mx-auto px-4 py-12">
+        <div className="container mx-auto px-4 py-6 md:py-12">
           <div className="max-w-4xl">
             <h1 className=" text-center font-serif text-4xl md:text-5xl font-normal text-foreground mb-4">
               {selectedCategory?.name}
             </h1>
+            <p className="text-muted-foreground text-sm md:text-base lg:text-lg leading-relaxed max-w-2xl">
             
           </div>
         </div>
@@ -102,8 +107,27 @@ export default function ProductsPage() {
       )}
 
       <div className="container mx-auto px-4 pb-12">
-        <div className="flex gap-8">
-          <aside className="w-64 flex-shrink-0">
+        {/* Bouton filtres mobile */}
+        <div className="lg:hidden mb-6 flex items-center justify-between">
+          <p className="text-sm text-muted-foreground">
+            {filteredItems.length} objet
+            {filteredItems.length > 1 ? "s" : ""} disponible
+            {filteredItems.length > 1 ? "s" : ""}
+          </p>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowFilters(!showFilters)}
+            className="gap-2"
+          >
+            <SlidersHorizontal className="h-4 w-4" />
+            Filtres
+          </Button>
+        </div>
+
+        <div className="flex flex-col lg:flex-row gap-8">
+          {/* Sidebar Desktop */}
+          <aside className="hidden lg:block w-64 flex-shrink-0">
             <div className="sticky top-4">
               <p className="text-sm text-muted-foreground mb-6">
                 {filteredItems.length} objet
@@ -120,7 +144,39 @@ export default function ProductsPage() {
             </div>
           </aside>
 
-          <div className="flex-1">
+          {/* Sidebar Mobile - Overlay */}
+          {showFilters && (
+            <div className="lg:hidden fixed inset-0 z-50 bg-background/80 backdrop-blur-sm">
+              <div className="fixed inset-y-0 left-0 w-full sm:w-80 bg-background border-r shadow-lg">
+                <div className="flex items-center justify-between p-4 border-b">
+                  <h2 className="text-lg font-semibold">Filtres</h2>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setShowFilters(false)}
+                  >
+                    <X className="h-5 w-5" />
+                  </Button>
+                </div>
+                <div className="p-4 overflow-y-auto h-[calc(100vh-73px)]">
+                  <p className="text-sm text-muted-foreground mb-6">
+                    {filteredItems.length} objet
+                    {filteredItems.length > 1 ? "s" : ""} disponible
+                    {filteredItems.length > 1 ? "s" : ""}
+                  </p>
+                  <ProductFilters
+                    selectedCategoryId={selectedCategory?.id}
+                    selectedSubCategories={selectedSubCategories}
+                    onSubCategoryChange={setSelectedSubCategories}
+                    selectedSaleTypes={selectedSaleTypes}
+                    onSaleTypeChange={setSelectedSaleTypes}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="flex-1 w-full">
             {isLoading && (
               <div className="text-center py-12">
                 <p className="text-muted-foreground">
@@ -147,7 +203,7 @@ export default function ProductsPage() {
 
             {paginatedItems.length > 0 && (
               <>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
                   {paginatedItems.map((item) => (
                     <ProductCard key={item.id} product={item} />
                   ))}

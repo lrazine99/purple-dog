@@ -50,9 +50,9 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL?.includes('localhost') 
-      ? 'http://backend:3001' 
+
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL?.includes("localhost")
+      ? "http://backend:3001"
       : process.env.NEXT_PUBLIC_API_URL;
 
     const response = await fetch(`${apiUrl}/orders`, {

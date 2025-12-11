@@ -74,23 +74,3 @@ export default function PaymentsPage() {
   );
 }
 
-export default function PaymentsPage() {
-  return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="max-w-6xl mx-auto">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold">Historique des paiements</h1>
-          <p className="text-muted-foreground mt-2">
-            Consultez l'historique de tous vos paiements
-          </p>
-        </div>
-        <Suspense
-          fallback={<PaymentsView data={[]} isLoading={true} />}
-        >
-          <PaymentsContent />
-        </Suspense>
-      </div>
-    </div>
-  );
-}
-

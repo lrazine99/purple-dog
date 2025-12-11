@@ -1,7 +1,7 @@
 import { UserResponse } from "@/lib/type/auth.type";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-type AuthResponse = Pick<UserResponse, "id" | "email" | "role">;
+type AuthResponse = Pick<UserResponse, "id" | "email" | "role" | "address_line" | "city" | "postal_code" | "country">;
 
 export function useAuth() {
   return useQuery<AuthResponse>({
@@ -21,6 +21,10 @@ export function useAuth() {
         id: data.id,
         email: data.email,
         role: data.role,
+        address_line: data.address_line,
+        city: data.city,
+        postal_code: data.postal_code,
+        country: data.country,
       };
     },
     refetchInterval: 10 * 60 * 1000, // Rafraîchir toutes les 10 minutes
