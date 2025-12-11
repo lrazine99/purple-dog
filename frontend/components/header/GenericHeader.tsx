@@ -7,45 +7,18 @@ import { useLogout } from "@/hooks/useAuth";
 import { Menu, Search, User, X } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { ProNavbar } from "./ProNavbar";
 import { SellerNavbar } from "./SellerNavbar";
 import { useAuth } from "@/hooks/useAuth";
 
-function getUserRoleFromCookie(): string | null {
-  if (typeof document === "undefined") return null;
-  const role = document.cookie
-    .split("; ")
-    .find((row) => row.startsWith("user_role="))
-    ?.split("=")[1];
-  return role ? decodeURIComponent(role) : null;
-}
-
 export const GenericHeader = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [role, setRole] = useState<string | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const logoutMutation = useLogout();
-  const user = useAuth();
-
-  useEffect(() => {
-    function checkAuth() {
-      // Le cookie access_token est httpOnly, donc inaccessible depuis JavaScript
-      // On vérifie uniquement user_role qui est accessible côté client
-      const userRole = getUserRoleFromCookie();
-      setIsAuthenticated(!!userRole);
-      setRole(userRole);
-    }
-
-    checkAuth();
-
-    // Vérifier périodiquement les cookies
-    const interval = setInterval(checkAuth, 1000);
-    return () => clearInterval(interval);
-  }, []);
+  const { data: user } = useAuth();
 
   return (
-    <header className="border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
+    <header className="border-b border-border bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60 sticky top-0 z-50">
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
           <div className="flex items-center gap-8">
@@ -60,10 +33,10 @@ export const GenericHeader = () => {
               />
             </Link>
             <nav className="hidden md:flex items-center gap-6">
-              {isAuthenticated && (
+              {user && (
                 <>
-                  {role === "particular" && <ProNavbar />}
-                  {role === "professional" && (
+                  {user.role === "particular" && <ProNavbar />}
+                  {user.role === "professional" && (
                     <>
                       <ProNavbar />
                       <SellerNavbar />
@@ -86,7 +59,7 @@ export const GenericHeader = () => {
             </div>
 
             <div className="hidden md:flex items-center gap-3">
-              {isAuthenticated ? (
+              {user ? (
                 <>
                   <Button asChild variant="default">
                     <Link
@@ -138,9 +111,9 @@ export const GenericHeader = () => {
         {mobileMenuOpen && (
           <div className="md:hidden border-t border-border py-4 animate-in slide-in-from-top-2">
             <nav className="flex flex-col gap-4">
-              {isAuthenticated && (
+              {user && (
                 <>
-                  {role === "professional" && (
+                  {user.role === "professional" && (
                     <div className="flex flex-col gap-3">
                       <Link
                         href={ROUTES.PRODUITS}
@@ -150,7 +123,7 @@ export const GenericHeader = () => {
                         Produits
                       </Link>
                       <Link
-                        href="#"
+                        href={ROUTES.FAVORIS}
                         className="text-sm font-medium hover:text-accent transition-colors py-2"
                         onClick={() => setMobileMenuOpen(false)}
                       >
@@ -172,7 +145,7 @@ export const GenericHeader = () => {
                       </Link>
                     </div>
                   )}
-                  {role === "particular" && (
+                  {user.role === "particular" && (
                     <div className="flex flex-col gap-3">
                       <Link
                         href={ROUTES.PRODUITS}
@@ -180,13 +153,6 @@ export const GenericHeader = () => {
                         onClick={() => setMobileMenuOpen(false)}
                       >
                         Produits
-                      </Link>
-                      <Link
-                        href="#"
-                        className="text-sm font-medium hover:text-accent transition-colors py-2"
-                        onClick={() => setMobileMenuOpen(false)}
-                      >
-                        Mes Favoris
                       </Link>
                       <Link
                         href="#"
@@ -227,7 +193,7 @@ export const GenericHeader = () => {
 
               {/* Boutons d'authentification mobile */}
               <div className="flex flex-col gap-2 pt-2">
-                {isAuthenticated ? (
+                {user ? (
                   <>
                     <Button asChild variant="default" className="w-full">
                       <Link
