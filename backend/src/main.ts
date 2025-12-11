@@ -9,8 +9,8 @@ import * as express from 'express';
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
-  // Configure raw body for Stripe webhooks
-  app.use('/payments/webhook', express.raw({ type: 'application/json' }));
+  app.use(express.json());
+  app.use(express.urlencoded({ extended: true }));
 
   // Enable validation globally
   app.useGlobalPipes(

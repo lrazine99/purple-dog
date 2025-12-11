@@ -35,12 +35,10 @@ export function DirectSaleCard({
 
   const handleMakeOffer = () => {
     // TODO: Implement make offer
-    console.log("Making offer for item");
   };
 
   const handleAddToFavorites = () => {
     // TODO: Implement add to favorites
-    console.log("Adding to favorites");
   };
 
   return (

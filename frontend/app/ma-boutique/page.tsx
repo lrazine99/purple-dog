@@ -510,7 +510,7 @@ export default function MyShopPage() {
                     <div className="flex items-center gap-3">
                       <div className="text-xs text-muted-foreground">{item.status}</div>
                       <Button asChild variant="outline" size="sm">
-                        <Link href={ROUTES.MY_SHOP_ITEMS_EDIT.replace("[id]", item.id)}>Modifier</Link>
+                        <Link href={ROUTES.MY_SHOP_ITEMS_EDIT.replace("[id]", item.id.toString())}>Modifier</Link>
                       </Button>
                     </div>
                   </div>

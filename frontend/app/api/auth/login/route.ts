@@ -42,7 +42,6 @@ export async function POST(request: NextRequest) {
     }
 
     const payload = await decodeJWTPayload(data.access_token);
-    console.log("PAYLOAD LOGIN", payload);
     if (!payload) {
       return NextResponse.json(
         { error: "Erreur lors du décodage du token" },

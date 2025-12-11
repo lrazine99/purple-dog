@@ -26,7 +26,6 @@ export async function GET(request: NextRequest) {
     }
 
     const data = await response.json();
-    console.log("data", data);
     return Response.json(data);
   } catch (error) {
     console.error("Error fetching subscription:", error);

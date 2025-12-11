@@ -36,7 +36,8 @@ export function useSubscription() {
         throw new Error("Failed to fetch subscription");
       }
 
-      return response.json();
+      const data = await response.json();
+      return data;
     },
     enabled: !!user && user.role === "professional",
     staleTime: 1 * 60 * 1000, // 1 minute
@@ -49,9 +50,10 @@ export function useSubscriptionStatus() {
   const isActive = subscription.data?.status === "active";
   const isExpired =
     subscription.data?.status === "expired" ||
-    subscription.data?.status === "pending_payment";
+    subscription.data?.status === "pending_payment" ||
+    subscription.data?.status === "cancelled";
   const isTrial = subscription.data?.plan_type === "free_trial";
-  const isPaid = subscription.data?.plan_type === "paid";
+  const isPaid = subscription.data?.plan_type === "paid" && subscription.data?.status === "active";
 
   const daysRemaining = subscription.data?.trial_end_date
     ? Math.max(
