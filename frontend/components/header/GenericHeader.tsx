@@ -1,20 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { Heart, CreditCard } from "lucide-react";
-import { useAuth } from "@/hooks/useAuth";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
   DialogDescription,
   DialogFooter,
+  DialogHeader,
+  DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { ROUTES } from "@/helper/routes";
@@ -26,86 +20,253 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ProNavbar } from "./ProNavbar";
 import { SellerNavbar } from "./SellerNavbar";
-import { CheckoutDialog } from "@/components/checkout/CheckoutDialog";
 
-interface DirectSaleCardProps {
-  itemId: number;
-  sellerId: number;
-  price: number;
-  itemName: string;
+interface NotificationItem {
+  type: "offer" | "message";
+  id?: number;
+  item_id?: number;
+  item_name?: string;
+  amount?: number;
+  status?: string;
+  text: string;
+  displayText?: string;
+  created_at: string;
+  href?: string;
 }
 
-export function DirectSaleCard({
-  itemId,
-  sellerId,
-  price,
-  itemName,
-}: DirectSaleCardProps) {
-  const { data: user } = useAuth();
-  const [showCheckout, setShowCheckout] = useState(false);
+interface Message {
+  id: number;
+  content: string;
+  is_read: boolean;
+  item_id?: number;
+  created_at: string;
+}
 
-  const [offerOpen, setOfferOpen] = useState(false);
-  const [amount, setAmount] = useState<number>(price);
-  const [message, setMessage] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
+interface Offer {
+  id: number;
+  item_id: number;
+  item?: { name: string };
+  amount: number;
+  status: string;
+  created_at: string;
+}
 
-  const handleBuyNow = () => {
-    if (!user) {
-      alert("Veuillez vous connecter pour acheter cet article.");
-      return;
-    }
-    setShowCheckout(true);
-  };
+export default function GenericHeader() {
+  const { data: user, isLoading } = useAuth();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const logoutMutation = useLogout();
+  const router = useRouter();
+  const pathname = usePathname();
+  const [notif, setNotif] = useState<{
+    newOffers: number;
+    unreadMessages: number;
+  }>({ newOffers: 0, unreadMessages: 0 });
+  const [notifOpen, setNotifOpen] = useState(false);
+  const [notifItems, setNotifItems] = useState<NotificationItem[]>([]);
+  const [confirmHref, setConfirmHref] = useState<string | null>(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
-  const handleMakeOffer = () => {
-    if (!user) {
-      alert("Veuillez vous connecter pour faire une offre.");
-      return;
-    }
-    if (user.id === sellerId) {
-      return;
-    }
-    setOfferOpen(true);
-  };
+  const isAuthenticated = !isLoading && !!user;
+  const role = user?.role || null;
 
-  const handleSubmitOffer = async () => {
-    if (!user) return;
-    const amt = Number(amount);
-    if (isNaN(amt) || amt <= 0) {
-      alert("Montant invalide");
-      return;
+  useEffect(() => {
+    if (isLoading || !user?.id) return;
+    let timer: NodeJS.Timeout | null = null;
+    async function fetchCounters() {
+      if (!user?.id) return;
+      try {
+        if (role === "professional") {
+          const res = await fetch(
+            `${process.env.NEXT_PUBLIC_API_URL}/notifications?sellerId=${user.id}`
+          );
+          if (res.ok) {
+            const data = await res.json();
+            setNotif({
+              newOffers: data.newOffers ?? 0,
+              unreadMessages: data.unreadMessages ?? 0,
+            });
+          }
+        } else {
+          const res = await fetch(
+            `${process.env.NEXT_PUBLIC_API_URL}/messages/user/${user.id}`
+          );
+          if (res.ok) {
+            const msgs = (await res.json()) as Message[];
+            const unread = Array.isArray(msgs)
+              ? msgs.filter((m: Message) => !m.is_read).length
+              : 0;
+            setNotif({ newOffers: 0, unreadMessages: unread });
+          }
+        }
+      } catch {}
     }
-    setIsSubmitting(true);
-    try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/offers`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          item_id: itemId,
-          buyer_id: user.id,
-          amount: amt,
-          message: message || undefined,
-        }),
-      });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.message || "Échec de la création de l'offre");
+    fetchCounters();
+    timer = setInterval(fetchCounters, 30000);
+    return () => {
+      if (timer) clearInterval(timer);
+    };
+  }, [role, user?.id, isLoading]);
+
+  useEffect(() => {
+    if (isLoading || !notifOpen || !user?.id) return;
+
+    async function fetchList() {
+      if (!user?.id) return;
+      const token =
+        typeof window !== "undefined"
+          ? localStorage.getItem("access_token")
+          : null;
+      const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
+      try {
+        if (role === "professional") {
+          const [offersRes, messagesRes] = await Promise.all([
+            fetch(
+              `${process.env.NEXT_PUBLIC_API_URL}/offers/seller/${user.id}`,
+              { headers }
+            ),
+            fetch(
+              `${process.env.NEXT_PUBLIC_API_URL}/messages/user/${user.id}`,
+              { headers }
+            ),
+          ]);
+          const offers = offersRes.ok
+            ? ((await offersRes.json()) as Offer[])
+            : [];
+          const messages = messagesRes.ok
+            ? ((await messagesRes.json()) as Message[])
+            : [];
+          const oItems: NotificationItem[] = Array.isArray(offers)
+            ? offers.map((o: Offer) => ({
+                type: "offer" as const,
+                id: o.id,
+                item_id: o.item_id,
+                item_name: o.item?.name,
+                amount: o.amount,
+                status: o.status,
+                text: `Offre ${o.amount}€ sur \"${
+                  o.item?.name || `Objet ${o.item_id}`
+                }\"`,
+                created_at: o.created_at,
+                href: `/paiement/offre/${o.id}`,
+              }))
+            : [];
+          const mItems: NotificationItem[] = Array.isArray(messages)
+            ? messages.map((m: Message) => {
+                const content = typeof m.content === "string" ? m.content : "";
+                let href: string | undefined;
+                const marker = "/paiement/offre/";
+                const idx = content.indexOf(marker);
+                if (idx >= 0) {
+                  const rest = content.slice(idx + marker.length);
+                  const idMatch = rest.match(/^\d+/);
+                  if (idMatch) href = `/paiement/offre/${idMatch[0]}`;
+                }
+                const displayText =
+                  href || content.includes("Lien de paiement Stripe")
+                    ? "Votre offre a été acceptée. Confirmez et payez."
+                    : content;
+                return {
+                  type: "message",
+                  text: content,
+                  displayText,
+                  created_at: m.created_at,
+                  href,
+                };
+              })
+            : [];
+          const combined = [...oItems, ...mItems]
+            .sort(
+              (a, b) =>
+                new Date(b.created_at).getTime() -
+                new Date(a.created_at).getTime()
+            )
+            .slice(0, 10);
+          setNotifItems(combined);
+        } else {
+          const [offersRes, messagesRes] = await Promise.all([
+            fetch(
+              `${process.env.NEXT_PUBLIC_API_URL}/offers/buyer/${user.id}`,
+              { headers }
+            ),
+            fetch(
+              `${process.env.NEXT_PUBLIC_API_URL}/messages/user/${user.id}`,
+              { headers }
+            ),
+          ]);
+          const offers = offersRes.ok
+            ? ((await offersRes.json()) as Offer[])
+            : [];
+          const messages = messagesRes.ok
+            ? ((await messagesRes.json()) as Message[])
+            : [];
+          const acceptedByItem: Record<number, number> = {};
+          (Array.isArray(offers) ? offers : []).forEach((o: Offer) => {
+            if (o.status === "accepted") acceptedByItem[o.item_id] = o.id;
+          });
+          const oItems: NotificationItem[] = Array.isArray(offers)
+            ? offers.map((o: Offer) => ({
+                type: "offer" as const,
+                id: o.id,
+                item_id: o.item_id,
+                item_name: o.item?.name,
+                amount: o.amount,
+                status: o.status,
+                text: `Offre ${o.amount}€ sur \"${
+                  o.item?.name || `Objet ${o.item_id}`
+                }\"`,
+                created_at: o.created_at,
+                href:
+                  o.status === "accepted"
+                    ? `/paiement/offre/${o.id}`
+                    : undefined,
+              }))
+            : [];
+          const mItems: NotificationItem[] = Array.isArray(messages)
+            ? messages.map((m: Message) => {
+                const content = typeof m.content === "string" ? m.content : "";
+                let href: string | undefined;
+                const marker = "/paiement/offre/";
+                const idx = content.indexOf(marker);
+                if (idx >= 0) {
+                  const rest = content.slice(idx + marker.length);
+                  const idMatch = rest.match(/^\d+/);
+                  if (idMatch) href = `/paiement/offre/${idMatch[0]}`;
+                }
+                if (
+                  !href &&
+                  typeof m.item_id === "number" &&
+                  acceptedByItem[m.item_id]
+                ) {
+                  href = `/paiement/offre/${acceptedByItem[m.item_id]}`;
+                }
+                const displayText =
+                  href || content.includes("Lien de paiement Stripe")
+                    ? "Votre offre a été acceptée. Confirmez et payez."
+                    : content;
+                return {
+                  type: "message",
+                  text: content,
+                  displayText,
+                  created_at: m.created_at,
+                  href,
+                };
+              })
+            : [];
+          const combined = [...oItems, ...mItems]
+            .sort(
+              (a, b) =>
+                new Date(b.created_at).getTime() -
+                new Date(a.created_at).getTime()
+            )
+            .slice(0, 10);
+          setNotifItems(combined);
+        }
+      } catch {
+        setNotifItems([]);
       }
-      setOfferOpen(false);
-      setMessage("");
-      alert("Offre envoyée avec succès !");
-    } catch (e: any) {
-      alert(e.message || "Erreur lors de l'envoi de l'offre");
-    } finally {
-      setIsSubmitting(false);
     }
-  };
-
-  const handleAddToFavorites = () => {
-    console.log("Adding to favorites");
-  };
-
-  const isOwner = user?.id === sellerId;
+    fetchList();
+  }, [notifOpen, role, user?.id, isLoading]);
 
   if (isLoading) {
     return (
@@ -119,107 +280,288 @@ export function DirectSaleCard({
   }
 
   return (
-    <>
-      <Card className="p-6 space-y-4 bg-muted/30">
-        <div>
-          <p className="text-sm text-muted-foreground mb-1">Prix</p>
-          <p className="font-serif text-4xl font-bold">
-            {price.toLocaleString("fr-FR")} €
-          </p>
-          <p className="text-xs text-muted-foreground mt-2">
-            TVA incluse, livraison disponible
-          </p>
-        </div>
-
-        <Separator />
-
-        <div className="space-y-3">
-          {/* Boutons d'action (cachés si c'est le vendeur) */}
-          {!isOwner && (
-            <>
-              <Button 
-                size="lg" 
-                className="w-full bg-primary hover:bg-primary/90" 
-                onClick={handleBuyNow}
-              >
-                <CreditCard className="mr-2 h-4 w-4" />
-                Acheter maintenant
-              </Button>
-
-              <Button 
-                variant="secondary" 
-                className="w-full" 
-                onClick={handleMakeOffer}
-              >
-                Faire une offre
-              </Button>
-            </>
-          )}
-
-          <Button
-            variant="outline"
-            className="w-full bg-transparent"
-            onClick={handleAddToFavorites}
-          >
-            <Heart className="h-4 w-4 mr-2" />
-            Ajouter aux favoris
-          </Button>
-        </div>
-      </Card>
-
-      {/* Modal de Paiement Stripe */}
-      <CheckoutDialog
-        open={showCheckout}
-        onOpenChange={setShowCheckout}
-        itemId={itemId}
-        sellerId={sellerId}
-        price={price}
-        itemName={itemName}
-      />
-
-      {/* Modal de création d'offre */}
-      <Dialog open={offerOpen} onOpenChange={setOfferOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Faire une offre</DialogTitle>
-            <DialogDescription>
-              Proposez un montant et un message optionnel au vendeur.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-3">
-            <div>
-              <label className="block text-sm mb-1">Montant (€)</label>
-              <Input
-                type="number"
-                step="0.01"
-                value={amount}
-                onChange={(e) => setAmount(parseFloat(e.target.value || "0"))}
-              />
-            </div>
-            <div>
-              <label className="block text-sm mb-1">Message</label>
-              <Textarea
-                rows={3}
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                placeholder="Bonjour, je suis intéressé par..."
-              />
-            </div>
-          </div>
-          <DialogFooter className="gap-2 sm:gap-0">
-            <Button
-              variant="outline"
-              onClick={() => setOfferOpen(false)}
-              disabled={isSubmitting}
+    <header className="border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
+      <div className="container mx-auto px-4">
+        <div className="flex h-16 items-center justify-between">
+          <div className="flex items-center gap-8">
+            <Link
+              href={ROUTES.HOME}
+              className="flex w-20 items-center space-x-2"
             >
-              Annuler
+              <Image
+                src="/purple-dog-logo.png"
+                alt="Purple Dog Logo"
+                width={120}
+                height={120}
+                className="h-10 w-auto object-contain"
+                priority
+              />
+            </Link>
+            {/* Navigation - responsive avec classes Tailwind */}
+            <nav className="hidden md:flex items-center gap-6">
+              <Link
+                href={ROUTES.PRODUITS}
+                className="relative text-foreground hover:text-primary transition-colors font-medium pb-1 group"
+              >
+                Produits
+                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-primary transition-all duration-300 group-hover:w-full"></span>
+              </Link>
+              {isAuthenticated && (
+                <>
+                  {role === "particular" && <SellerNavbar />}
+                  {role === "professional" && (
+                    <>
+                      <ProNavbar />
+                      <SellerNavbar />
+                    </>
+                  )}
+                </>
+              )}
+            </nav>
+          </div>
+
+          <div className="flex items-center gap-4">
+            <div className="hidden lg:flex items-center gap-2 max-w-xs">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Rechercher..."
+                  className="pl-9 h-9 bg-secondary border-transparent focus:border-accent"
+                />
+              </div>
+            </div>
+
+            <div className="hidden md:flex items-center gap-3">
+              {isAuthenticated ? (
+                <>
+                  <Button asChild variant="default">
+                    <Link
+                      href={ROUTES.MON_COMPTE}
+                      className="flex items-center gap-2"
+                    >
+                      <User className="h-4 w-4" />
+                      Mon compte
+                    </Link>
+                  </Button>
+                  <div className="relative">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setNotifOpen(!notifOpen)}
+                      aria-label="Notifications"
+                    >
+                      <Bell className="h-5 w-5" />
+                    </Button>
+                    {notif.newOffers + notif.unreadMessages > 0 && (
+                      <span className="absolute -top-1 -right-1">
+                        <Badge variant="destructive">
+                          {notif.newOffers + notif.unreadMessages}
+                        </Badge>
+                      </span>
+                    )}
+                    {notifOpen && (
+                      <div className="absolute right-0 mt-2 w-96 max-h-96 overflow-auto bg-background border rounded shadow-lg p-2 z-50">
+                        <div className="text-sm font-medium px-2 py-1">
+                          Notifications
+                        </div>
+                        <div className="divide-y">
+                          {notifItems.length === 0 ? (
+                            <div className="text-sm text-muted-foreground px-2 py-3">
+                              Aucune notification
+                            </div>
+                          ) : (
+                            notifItems.map((n, idx) => (
+                              <div
+                                key={idx}
+                                className="px-2 py-2 flex items-center gap-2"
+                              >
+                                <Badge
+                                  variant={
+                                    n.type === "offer" ? "secondary" : "outline"
+                                  }
+                                  className="shrink-0"
+                                >
+                                  {n.type === "offer" ? "Offre" : "Message"}
+                                </Badge>
+                                {n.href ? (
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setConfirmHref(n.href || null);
+                                      setConfirmOpen(true);
+                                    }}
+                                    className="text-sm flex-1 text-left whitespace-pre-wrap break-words hover:text-accent transition-colors"
+                                  >
+                                    {n.displayText || n.text}
+                                  </button>
+                                ) : (
+                                  <div className="text-sm flex-1 whitespace-pre-wrap break-words">
+                                    {n.displayText || n.text}
+                                  </div>
+                                )}
+                              </div>
+                            ))
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Confirmer le paiement</DialogTitle>
+                        <DialogDescription>
+                          Souhaitez-vous payer le produit pour lequel votre
+                          offre a été acceptée ?
+                        </DialogDescription>
+                      </DialogHeader>
+                      <DialogFooter className="gap-2">
+                        <Button
+                          variant="outline"
+                          onClick={() => setConfirmOpen(false)}
+                        >
+                          Plus tard
+                        </Button>
+                        <Button
+                          onClick={() => {
+                            if (confirmHref) {
+                              setConfirmOpen(false);
+                              setNotifOpen(false);
+                              router.push(confirmHref);
+                            }
+                          }}
+                        >
+                          Continuer
+                        </Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+                  <Button
+                    variant="ghost"
+                    onClick={() => logoutMutation.mutate()}
+                    disabled={logoutMutation.isPending}
+                  >
+                    Se déconnecter
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button variant="ghost" asChild>
+                    <Link href={ROUTES.CONNEXION}>Se connecter</Link>
+                  </Button>
+                  <Button asChild>
+                    <Link href={ROUTES.INSCRIPTION}>S&apos;inscrire</Link>
+                  </Button>
+                </>
+              )}
+            </div>
+
+            {/* Menu hamburger mobile */}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="md:hidden"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              aria-label="Toggle menu"
+            >
+              {mobileMenuOpen ? (
+                <X className="h-5 w-5" />
+              ) : (
+                <Menu className="h-5 w-5" />
+              )}
             </Button>
-            <Button onClick={handleSubmitOffer} disabled={isSubmitting}>
-              {isSubmitting ? "Envoi..." : "Envoyer l'offre"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </>
+          </div>
+        </div>
+
+        {/* Menu mobile - réutilise les mêmes composants avec classes Tailwind */}
+        {mobileMenuOpen && (
+          <div className="md:hidden border-t border-border py-4 animate-in slide-in-from-top-2">
+            <nav className="flex flex-col gap-4">
+              {isAuthenticated && (
+                <div className="flex flex-col gap-3">
+                  {role === "particular" && (
+                    <SellerNavbar
+                      onLinkClick={() => setMobileMenuOpen(false)}
+                      className="py-2"
+                    />
+                  )}
+                  {role === "professional" && (
+                    <>
+                      <ProNavbar
+                        onLinkClick={() => setMobileMenuOpen(false)}
+                        className="py-2"
+                      />
+                      <SellerNavbar
+                        onLinkClick={() => setMobileMenuOpen(false)}
+                        className="py-2"
+                      />
+                    </>
+                  )}
+                </div>
+              )}
+
+              {/* Barre de recherche mobile */}
+              <div className="flex items-center gap-2 pt-2">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Rechercher..."
+                    className="pl-9 h-9 bg-secondary border-transparent focus:border-accent"
+                  />
+                </div>
+              </div>
+
+              {/* Boutons d'authentification mobile */}
+              <div className="flex flex-col gap-2 pt-2">
+                {isAuthenticated ? (
+                  <>
+                    <Button asChild variant="default" className="w-full">
+                      <Link
+                        href={ROUTES.MON_COMPTE}
+                        className="flex items-center justify-center gap-2"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        <User className="h-4 w-4" />
+                        Mon compte
+                      </Link>
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      className="w-full"
+                      onClick={() => {
+                        logoutMutation.mutate();
+                        setMobileMenuOpen(false);
+                      }}
+                      disabled={logoutMutation.isPending}
+                    >
+                      Se déconnecter
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button variant="ghost" asChild className="w-full">
+                      <Link
+                        href={ROUTES.CONNEXION}
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        Se connecter
+                      </Link>
+                    </Button>
+                    <Button asChild className="w-full">
+                      <Link
+                        href={ROUTES.INSCRIPTION}
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        S&apos;inscrire
+                      </Link>
+                    </Button>
+                  </>
+                )}
+              </div>
+            </nav>
+          </div>
+        )}
+      </div>
+    </header>
   );
 }

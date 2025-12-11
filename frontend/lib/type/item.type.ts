@@ -9,6 +9,7 @@ export enum SaleMode {
 
 export enum ItemStatus {
   DRAFT = "draft",
+  PUBLISHED = "published",
   FOR_SALE = "for_sale",
   SOLD = "sold",
   PENDING = "pending",
