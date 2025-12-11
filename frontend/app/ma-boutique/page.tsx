@@ -8,9 +8,9 @@ import { Textarea } from "@/components/ui/textarea";
 import Link from "next/link";
 import GenericHeader from "@/components/header/GenericHeader";
 import Footer from "@/components/homepage/footer";
+import { ProductCard } from "@/components/products/ProductCard";
 import {
   Upload,
-  Image as ImageIcon,
   FolderTree,
   Star,
   DollarSign,
@@ -487,33 +487,15 @@ export default function MyShopPage() {
           </div>
         </div>
 
-        <div className="lg:col-span-1 space-y-4">
+        <div className="lg:col-span-3 space-y-4">
           <div className="border rounded p-4">
             <h3 className="text-sm font-medium mb-2 flex items-center gap-2"><DollarSign className="w-4 h-4" /> Vos produits</h3>
             {items.length === 0 ? (
               <div className="text-sm text-muted-foreground">Aucun produit pour le moment</div>
             ) : (
-              <div className="space-y-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {items.map((item) => (
-                  <div key={item.id} className="rounded border p-3 flex gap-3 items-center">
-                    <div className="w-16 h-16 bg-slate-100 rounded overflow-hidden flex items-center justify-center">
-                      {item.photos && item.photos.length ? (
-                        <img src={item.photos.find((p) => p.is_primary)?.url || item.photos[0].url} alt={item.name} className="w-full h-full object-cover" />
-                      ) : (
-                        <ImageIcon className="w-6 h-6 text-slate-400" />
-                      )}
-                    </div>
-                    <div className="flex-1">
-                      <div className="text-sm font-medium">{item.name}</div>
-                      <div className="text-xs text-muted-foreground">{item.sale_mode === "auction" ? "Enchères" : "Vente rapide"} • {item.price_desired} €</div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="text-xs text-muted-foreground">{item.status}</div>
-                      <Button asChild variant="outline" size="sm">
-                        <Link href={ROUTES.MY_SHOP_ITEMS_EDIT.replace("[id]", item.id)}>Modifier</Link>
-                      </Button>
-                    </div>
-                  </div>
+                  <ProductCard key={item.id} product={item} />
                 ))}
               </div>
             )}
