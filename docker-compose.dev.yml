@@ -47,6 +47,7 @@ services:
       - ./backend/src:/app/src
       - ./backend/package.json:/app/package.json
       - ./backend/secrets:/app/secrets:ro
+      - ./backend/uploads:/app/uploads
     depends_on:
       postgres:
         condition: service_healthy
