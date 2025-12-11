@@ -113,7 +113,7 @@ export function ProductCard({ product }: ProductCardProps) {
                 {isAuction
                   ? (
                       product.auction_start_price || product.price_min
-                    ).toLocaleString("fr-FR")
+                    )?.toLocaleString("fr-FR")
                   : product.price_desired.toLocaleString("fr-FR")}{" "}
                 €
               </span>
