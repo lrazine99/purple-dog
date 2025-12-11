@@ -101,6 +101,7 @@ export default function UsersPage() {
   const [siretLoading, setSiretLoading] = useState(false);
   const [siretValid, setSiretValid] = useState<boolean | null>(null);
   const [siretError, setSiretError] = useState("");
+  const [fetchError, setFetchError] = useState<string | null>(null);
   
   // File upload states
   const [uploading, setUploading] = useState(false);
@@ -113,17 +114,28 @@ export default function UsersPage() {
 
   const fetchUsers = async () => {
     setLoading(true);
+    setFetchError(null);
     try {
-      const token = localStorage.getItem("access_token");
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users`, {
-        headers: { Authorization: `Bearer ${token}` },
+      const res = await fetch('/api/users', {
+        credentials: "include", // Send http-only cookies
       });
       if (res.ok) {
         const data = await res.json();
-        setUsers(data);
+        console.log("Users API Response:", data);
+        if (Array.isArray(data)) {
+            setUsers(data);
+        } else {
+            console.error("API did not return an array:", data);
+            setFetchError("API returned invalid data format");
+        }
+      } else {
+        const text = await res.text();
+        console.error("Fetch users failed:", res.status, text);
+        setFetchError(`Error ${res.status}: ${text}`);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to fetch users:", error);
+      setFetchError(error.message || "Network error fetching users");
     } finally {
       setLoading(false);
     }
@@ -143,6 +155,7 @@ export default function UsersPage() {
 
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/upload`, {
         method: "POST",
+        credentials: "include", // Send http-only cookies
         body: formData,
       });
 
@@ -185,6 +198,7 @@ export default function UsersPage() {
 
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/upload`, {
         method: "POST",
+        credentials: "include", // Send http-only cookies
         body: formData,
       });
 
@@ -326,7 +340,6 @@ export default function UsersPage() {
     setSaving(true);
 
     try {
-      const token = localStorage.getItem("access_token");
       const isEdit = !!editingUser;
 
       const body: any = {
@@ -362,22 +375,22 @@ export default function UsersPage() {
       }
 
       const url = isEdit
-        ? `${process.env.NEXT_PUBLIC_API_URL}/users/${editingUser.id}`
-        : `${process.env.NEXT_PUBLIC_API_URL}/users`;
+        ? `/api/users/${editingUser.id}`
+        : `/api/users`;
 
       const res = await fetch(url, {
         method: isEdit ? "PATCH" : "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
+        credentials: "include", // Send http-only cookies
         body: JSON.stringify(body),
       });
 
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.message || "Failed to save user");
+        throw new Error(data.error || data.message || "Failed to save user");
       }
 
       setShowModal(false);
@@ -393,10 +406,9 @@ export default function UsersPage() {
     if (!confirm("Are you sure you want to delete this user?")) return;
 
     try {
-      const token = localStorage.getItem("access_token");
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/${id}`, {
+      const res = await fetch(`/api/users/${id}`, {
         method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
+        credentials: "include", // Send http-only cookies
       });
       if (res.ok) {
         setUsers(users.filter((u) => u.id !== id));
@@ -408,13 +420,12 @@ export default function UsersPage() {
 
   const toggleVerify = async (user: User) => {
     try {
-      const token = localStorage.getItem("access_token");
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/${user.id}`, {
+      const res = await fetch(`/api/users/${user.id}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
+        credentials: "include", // Send http-only cookies
         body: JSON.stringify({ is_verified: !user.is_verified }),
       });
       if (res.ok) {
@@ -459,16 +470,16 @@ export default function UsersPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-white flex items-center gap-3">
-            <Users className="w-8 h-8 text-purple-400" />
+          <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
+            <Users className="w-8 h-8 text-purple-600" />
             Gestion des Utilisateurs
           </h1>
-          <p className="text-slate-400 mt-1">{users.length} utilisateurs</p>
+          <p className="text-gray-600 mt-1">{users.length} utilisateurs</p>
         </div>
         <div className="flex gap-3">
           <Button
             onClick={openCreateModal}
-            className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
+            className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white"
           >
             <Plus className="w-4 h-4 mr-2" />
             Ajouter
@@ -476,7 +487,7 @@ export default function UsersPage() {
           <Button
             onClick={fetchUsers}
             variant="outline"
-            className="bg-slate-800 border-slate-700 text-white hover:bg-slate-700"
+            className="border-gray-300 text-gray-700 hover:bg-gray-100"
           >
             <RefreshCw className={`w-4 h-4 mr-2 ${loading ? "animate-spin" : ""}`} />
             Actualiser
@@ -486,26 +497,33 @@ export default function UsersPage() {
 
       {/* Search */}
       <div className="relative">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
+        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
         <Input
           placeholder="Rechercher par nom ou email..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="h-12 pl-12 bg-slate-800/50 border-slate-700 text-white placeholder:text-slate-500 focus:border-purple-500"
+          className="h-12 pl-12 bg-white border-gray-300 text-gray-900 placeholder:text-gray-400 focus:border-purple-500 focus:ring-purple-500"
         />
       </div>
 
+      {/* Error Display */}
+      {fetchError && (
+        <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 mb-6">
+            <strong>Error loading users:</strong> {fetchError}
+        </div>
+      )}
+
       {/* Users Table */}
-      <div className="bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-2xl overflow-hidden">
+      <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
         {loading ? (
           <div className="p-6 space-y-4">
             {[...Array(5)].map((_, i) => (
               <div key={i} className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-slate-700 rounded-full animate-pulse" />
+                  <div className="w-12 h-12 bg-gray-200 rounded-full animate-pulse" />
                   <div className="space-y-2">
-                    <div className="w-40 h-4 bg-slate-700 rounded animate-pulse" />
-                    <div className="w-32 h-3 bg-slate-700 rounded animate-pulse" />
+                    <div className="w-40 h-4 bg-gray-200 rounded animate-pulse" />
+                    <div className="w-32 h-3 bg-gray-200 rounded animate-pulse" />
                   </div>
                 </div>
               </div>
@@ -513,42 +531,42 @@ export default function UsersPage() {
           </div>
         ) : filteredUsers.length === 0 ? (
           <div className="p-12 text-center">
-            <Users className="w-16 h-16 text-slate-600 mx-auto mb-4" />
-            <p className="text-slate-400">Aucun utilisateur trouvé</p>
+            <Users className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+            <p className="text-gray-500">Aucun utilisateur trouvé</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-slate-900/50 border-b border-slate-700">
+              <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
-                  <th className="text-left px-6 py-4 text-slate-400 font-medium">Utilisateur</th>
-                  <th className="text-left px-6 py-4 text-slate-400 font-medium">Rôle</th>
-                  <th className="text-left px-6 py-4 text-slate-400 font-medium">Statut</th>
-                  <th className="text-left px-6 py-4 text-slate-400 font-medium">Localisation</th>
-                  <th className="text-right px-6 py-4 text-slate-400 font-medium">Actions</th>
+                  <th className="text-left px-6 py-4 text-gray-600 font-semibold">Utilisateur</th>
+                  <th className="text-left px-6 py-4 text-gray-600 font-semibold">Rôle</th>
+                  <th className="text-left px-6 py-4 text-gray-600 font-semibold">Statut</th>
+                  <th className="text-left px-6 py-4 text-gray-600 font-semibold">Localisation</th>
+                  <th className="text-right px-6 py-4 text-gray-600 font-semibold">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-700/50">
+              <tbody className="divide-y divide-gray-200">
                 {filteredUsers.map((user) => (
-                  <tr key={user.id} className="hover:bg-slate-700/20 transition-colors">
+                  <tr key={user.id} className="hover:bg-purple-50/50 transition-colors">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-4">
                         {(user as any).profile_picture ? (
                           <img 
                             src={(user as any).profile_picture} 
                             alt={`${user.first_name} ${user.last_name}`}
-                            className="w-12 h-12 rounded-full object-cover border-2 border-purple-500/30"
+                            className="w-12 h-12 rounded-full object-cover border-2 border-purple-200"
                           />
                         ) : (
-                          <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-indigo-500 rounded-full flex items-center justify-center text-white font-bold text-lg">
+                          <div className="w-12 h-12 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-md">
                             {user.first_name[0]}{user.last_name[0]}
                           </div>
                         )}
                         <div>
-                          <p className="text-white font-medium">
+                          <p className="text-gray-900 font-medium">
                             {user.first_name} {user.last_name}
                           </p>
-                          <p className="text-slate-400 text-sm flex items-center gap-1">
+                          <p className="text-gray-600 text-sm flex items-center gap-1">
                             <Mail className="w-3 h-3" />
                             {user.email}
                           </p>
@@ -586,7 +604,7 @@ export default function UsersPage() {
                       </button>
                     </td>
                     <td className="px-6 py-4">
-                      <p className="text-slate-300 text-sm">
+                      <p className="text-gray-700 text-sm">
                         {user.city ? `${user.city}, ${user.country || ""}` : "-"}
                       </p>
                     </td>
@@ -596,7 +614,7 @@ export default function UsersPage() {
                           variant="ghost"
                           size="sm"
                           onClick={() => openEditModal(user)}
-                          className="text-slate-400 hover:text-white hover:bg-slate-700"
+                          className="text-gray-600 hover:text-purple-600 hover:bg-purple-50"
                         >
                           <Edit className="w-4 h-4" />
                         </Button>
@@ -604,7 +622,7 @@ export default function UsersPage() {
                           variant="ghost"
                           size="sm"
                           onClick={() => handleDelete(user.id)}
-                          className="text-red-400 hover:text-red-300 hover:bg-red-500/10"
+                          className="text-red-500 hover:text-red-700 hover:bg-red-50"
                         >
                           <Trash2 className="w-4 h-4" />
                         </Button>
@@ -620,15 +638,15 @@ export default function UsersPage() {
 
       {/* Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-slate-800 border border-slate-700 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between p-6 border-b border-slate-700">
-              <h2 className="text-xl font-bold text-white">
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white border border-gray-200 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl">
+            <div className="flex items-center justify-between p-6 border-b border-gray-200">
+              <h2 className="text-xl font-bold text-gray-900">
                 {editingUser ? "Modifier l'utilisateur" : "Créer un utilisateur"}
               </h2>
               <button
                 onClick={() => setShowModal(false)}
-                className="text-slate-400 hover:text-white"
+                className="text-gray-500 hover:text-gray-900"
               >
                 <X className="w-6 h-6" />
               </button>
@@ -636,14 +654,14 @@ export default function UsersPage() {
 
             <div className="p-6 space-y-6">
               {error && (
-                <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400">
+                <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
                   {error}
                 </div>
               )}
 
               {/* Role selector */}
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">Rôle</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Rôle</label>
                 <div className="flex gap-2">
                   {["particular", "professional", "admin"].map((role) => (
                     <button
@@ -652,8 +670,8 @@ export default function UsersPage() {
                       onClick={() => setForm({ ...form, role })}
                       className={`flex-1 px-4 py-3 rounded-xl border text-sm font-medium transition-all ${
                         form.role === role
-                          ? "bg-purple-500/20 border-purple-500 text-purple-400"
-                          : "bg-slate-900/50 border-slate-700 text-slate-400 hover:border-slate-600"
+                          ? "bg-purple-100 border-purple-500 text-purple-700"
+                          : "bg-white border-gray-300 text-gray-700 hover:border-purple-300"
                       }`}
                     >
                       <span className="flex items-center justify-center gap-2">
@@ -992,18 +1010,18 @@ export default function UsersPage() {
               </label>
             </div>
 
-            <div className="flex justify-end gap-3 p-6 border-t border-slate-700">
+            <div className="flex justify-end gap-3 p-6 border-t border-gray-200 bg-gray-50">
               <Button
                 variant="outline"
                 onClick={() => setShowModal(false)}
-                className="bg-slate-700 border-slate-600 text-white hover:bg-slate-600"
+                className="border-gray-300 text-gray-700 hover:bg-gray-100"
               >
                 Annuler
               </Button>
               <Button
                 onClick={handleSave}
                 disabled={saving}
-                className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
+                className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white"
               >
                 {saving ? "Enregistrement..." : editingUser ? "Modifier" : "Créer"}
               </Button>

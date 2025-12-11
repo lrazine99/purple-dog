@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 
-// GET all items
-export async function GET(request: NextRequest) {
+// DELETE category
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   const token = request.cookies.get("access_token")?.value;
 
   if (!token) {
@@ -9,11 +12,14 @@ export async function GET(request: NextRequest) {
   }
 
   try {
+    const { id } = await params;
+    
     const apiUrl = process.env.NEXT_PUBLIC_API_URL?.includes('localhost') 
       ? 'http://backend:3001' 
       : process.env.NEXT_PUBLIC_API_URL;
 
-    const response = await fetch(`${apiUrl}/items`, {
+    const response = await fetch(`${apiUrl}/categories/${id}`, {
+      method: "DELETE",
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -22,15 +28,15 @@ export async function GET(request: NextRequest) {
     if (!response.ok) {
       const errorText = await response.text();
       return NextResponse.json(
-        { error: errorText || "Failed to fetch items" },
+        { error: errorText || "Failed to delete category" },
         { status: response.status }
       );
     }
 
-    const items = await response.json();
-    return NextResponse.json(items);
+    return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Error in /api/items GET:", error);
+    console.error("Error in /api/categories/[id] DELETE:", error);
     return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }
 }
+

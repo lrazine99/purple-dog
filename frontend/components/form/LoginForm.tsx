@@ -31,14 +31,18 @@ export function LoginForm() {
   function onSubmit(data: LoginFormType) {
     loginMutation.mutate(data, {
       onSuccess: (data: any) => {
-        localStorage.setItem("access_token", data.access_token);
         toast({
           variant: "success",
           message: "Connexion réussie !",
           description: "Vous êtes maintenant connecté",
         });
 
-        router.push(ROUTES.HOME);
+        // Redirect based on user role
+        if (data.user?.role === 'admin') {
+          router.push('/admin');
+        } else {
+          router.push(ROUTES.HOME);
+        }
       },
       onError: (error) => {
         toast({

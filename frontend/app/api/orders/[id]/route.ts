@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
-// GET single item
-export async function GET(
+// PATCH - Update order
+export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
@@ -12,35 +12,39 @@ export async function GET(
   }
 
   try {
-    const { id } = await params; // ✅ Await params first
+    const { id } = await params;
+    const body = await request.json();
     
     const apiUrl = process.env.NEXT_PUBLIC_API_URL?.includes('localhost') 
       ? 'http://backend:3001' 
       : process.env.NEXT_PUBLIC_API_URL;
 
-    const response = await fetch(`${apiUrl}/items/${id}`, {
+    const response = await fetch(`${apiUrl}/orders/${id}`, {
+      method: "PATCH",
       headers: {
+        "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
+      body: JSON.stringify(body),
     });
 
+    const data = await response.json();
+
     if (!response.ok) {
-      const errorText = await response.text();
       return NextResponse.json(
-        { error: errorText || "Failed to fetch item" },
+        { error: data.message || "Failed to update order" },
         { status: response.status }
       );
     }
 
-    const item = await response.json();
-    return NextResponse.json(item);
+    return NextResponse.json(data);
   } catch (error) {
-    console.error("Error in /api/items/[id] GET:", error);
+    console.error("Error in /api/orders/[id] PATCH:", error);
     return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }
 }
 
-// DELETE item
+// DELETE - Delete order
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -52,13 +56,13 @@ export async function DELETE(
   }
 
   try {
-    const { id } = await params; // ✅ Await params first
+    const { id } = await params;
     
     const apiUrl = process.env.NEXT_PUBLIC_API_URL?.includes('localhost') 
       ? 'http://backend:3001' 
       : process.env.NEXT_PUBLIC_API_URL;
 
-    const response = await fetch(`${apiUrl}/items/${id}`, {
+    const response = await fetch(`${apiUrl}/orders/${id}`, {
       method: "DELETE",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -68,14 +72,15 @@ export async function DELETE(
     if (!response.ok) {
       const errorText = await response.text();
       return NextResponse.json(
-        { error: errorText || "Failed to delete item" },
+        { error: errorText || "Failed to delete order" },
         { status: response.status }
       );
     }
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Error in /api/items/[id] DELETE:", error);
+    console.error("Error in /api/orders/[id] DELETE:", error);
     return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }
 }
+

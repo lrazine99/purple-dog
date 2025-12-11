@@ -1,10 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
-// GET single item
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+// GET all orders
+export async function GET(request: NextRequest) {
   const token = request.cookies.get("access_token")?.value;
 
   if (!token) {
@@ -12,13 +9,11 @@ export async function GET(
   }
 
   try {
-    const { id } = await params; // ✅ Await params first
-    
     const apiUrl = process.env.NEXT_PUBLIC_API_URL?.includes('localhost') 
       ? 'http://backend:3001' 
       : process.env.NEXT_PUBLIC_API_URL;
 
-    const response = await fetch(`${apiUrl}/items/${id}`, {
+    const response = await fetch(`${apiUrl}/orders`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -27,24 +22,21 @@ export async function GET(
     if (!response.ok) {
       const errorText = await response.text();
       return NextResponse.json(
-        { error: errorText || "Failed to fetch item" },
+        { error: errorText || "Failed to fetch orders" },
         { status: response.status }
       );
     }
 
-    const item = await response.json();
-    return NextResponse.json(item);
+    const orders = await response.json();
+    return NextResponse.json(orders);
   } catch (error) {
-    console.error("Error in /api/items/[id] GET:", error);
+    console.error("Error in /api/orders GET:", error);
     return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }
 }
 
-// DELETE item
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+// POST - Create new order
+export async function POST(request: NextRequest) {
   const token = request.cookies.get("access_token")?.value;
 
   if (!token) {
@@ -52,30 +44,34 @@ export async function DELETE(
   }
 
   try {
-    const { id } = await params; // ✅ Await params first
+    const body = await request.json();
     
     const apiUrl = process.env.NEXT_PUBLIC_API_URL?.includes('localhost') 
       ? 'http://backend:3001' 
       : process.env.NEXT_PUBLIC_API_URL;
 
-    const response = await fetch(`${apiUrl}/items/${id}`, {
-      method: "DELETE",
+    const response = await fetch(`${apiUrl}/orders`, {
+      method: "POST",
       headers: {
+        "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
+      body: JSON.stringify(body),
     });
 
+    const data = await response.json();
+
     if (!response.ok) {
-      const errorText = await response.text();
       return NextResponse.json(
-        { error: errorText || "Failed to delete item" },
+        { error: data.message || "Failed to create order" },
         { status: response.status }
       );
     }
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json(data);
   } catch (error) {
-    console.error("Error in /api/items/[id] DELETE:", error);
+    console.error("Error in /api/orders POST:", error);
     return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }
 }
+
