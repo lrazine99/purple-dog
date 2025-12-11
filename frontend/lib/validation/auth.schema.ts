@@ -118,6 +118,19 @@ export const userResponseSchema = z.object({
   official_document_url: z.string().nullish(),
   cgv_accepted: z.boolean(),
   is_verified: z.boolean(),
+  subscription: z
+    .object({
+      id: z.number(),
+      plan_type: z.enum(["free_trial", "paid"]),
+      status: z.enum(["active", "expired", "cancelled", "pending_payment"]),
+      price: z.number(),
+      trial_start_date: z.coerce.date().nullish(),
+      trial_end_date: z.coerce.date().nullish(),
+      next_billing_date: z.coerce.date().nullish(),
+      created_at: z.coerce.date(),
+      updated_at: z.coerce.date(),
+    })
+    .nullish(),
   created_at: z.coerce.date(),
   updated_at: z.coerce.date(),
 });

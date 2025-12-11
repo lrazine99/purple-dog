@@ -31,9 +31,6 @@ export async function POST(request: NextRequest) {
     }
 
     const data = await response.json();
-    console.log("DATA LOGIN", data);
-    console.log("Has access_token:", !!data.access_token);
-    console.log("JWT_ACCESS_SECRET defined:", !!process.env.JWT_ACCESS_SECRET);
 
     // Décoder le access_token pour obtenir les infos utilisateur
     if (!data.access_token) {
@@ -60,12 +57,6 @@ export async function POST(request: NextRequest) {
       role: data.role,
     });
     setAuthCookies(res, data);
-
-    const cookies = res.cookies.getAll();
-    console.log(
-      "Cookies after setAuthCookies:",
-      cookies.map((c) => ({ name: c.name, value: c.value ? "***" : undefined }))
-    );
 
     return res;
   } catch (error) {

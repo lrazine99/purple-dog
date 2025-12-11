@@ -38,7 +38,9 @@ export function LoginForm() {
           description: "Vous êtes maintenant connecté",
         });
 
-        router.push(ROUTES.HOME);
+        if (data.role === "professional") router.push(ROUTES.PRODUITS);
+        if (data.role === "particular") router.push(ROUTES.HOME);
+        if (data.role === "admin") router.push(ROUTES.ADMIN);
       },
       onError: (error) => {
         toast({

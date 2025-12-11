@@ -2,9 +2,11 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { Subscription } from '../../subscriptions/entities/subscription.entity';
 
 export enum UserRole {
   PARTICULAR = 'particular',
@@ -162,6 +164,12 @@ export class User {
     default: false,
   })
   is_verified: boolean;
+
+  @OneToOne(() => Subscription, (subscription) => subscription.user, {
+    nullable: true,
+    eager: false,
+  })
+  subscription: Subscription;
 
   @Column({
     type: 'varchar',
