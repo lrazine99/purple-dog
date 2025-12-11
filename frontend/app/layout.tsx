@@ -5,6 +5,7 @@ import "./globals.css";
 import { Providers } from "./providers";
 import { Toaster } from "@/components/ui/sonner";
 import { CategoryProvider } from "@/contexts/CategoryContext";
+import { GenericHeader } from "@/components/header/GenericHeader";
 
 const _playfair = Playfair_Display({
   subsets: ["latin"],
@@ -43,6 +44,7 @@ export default function RootLayout({
     <html lang="fr">
       <body className={`${_playfair.variable} font-sans antialiased`}>
         <Providers>
+          <GenericHeader />
           <CategoryProvider>{children}</CategoryProvider>
           <Toaster />
         </Providers>

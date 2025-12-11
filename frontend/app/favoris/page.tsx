@@ -1,18 +1,13 @@
 "use client";
 
-import { ProHeader } from "@/components/header/ProHeader";
 import { ProductCard } from "@/components/products/ProductCard";
 import { useFavorites } from "@/hooks/useFavorites";
-import { Fragment } from "react";
 
 export default function FavorisPage() {
   const { data: favorites, isLoading, error } = useFavorites();
 
   return (
-    <Fragment>
-      <ProHeader />
-
-      <div className="container mx-auto px-4 py-12">
+    <div className="container mx-auto px-4 py-12">
         <h1 className="font-serif text-4xl md:text-5xl font-normal text-foreground mb-8">
           Mes Favoris
         </h1>
@@ -61,6 +56,5 @@ export default function FavorisPage() {
           </>
         )}
       </div>
-    </Fragment>
   );
 }
