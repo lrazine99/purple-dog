@@ -13,6 +13,7 @@ function VerificationContent() {
   const [status, setStatus] = useState<"loading" | "success" | "error">(
     "loading"
   );
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const sessionId = searchParams.get("session_id");
 
   useEffect(() => {
@@ -23,16 +24,11 @@ function VerificationContent() {
 
     const verifyPayment = async () => {
       try {
-        const response = await fetch(
-          `${
-            process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000"
-          }/subscriptions/verify-payment-simple`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ sessionId }),
-          }
-        );
+        const response = await fetch("/api/subscriptions/verify", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ sessionId }),
+        });
 
         const data = await response.json();
 
@@ -41,9 +37,15 @@ function VerificationContent() {
           // Invalider les queries de subscription pour forcer le rechargement
           queryClient.invalidateQueries({ queryKey: ["subscription"] });
         } else {
+          console.error("Verification failed:", data);
+          setErrorMessage(data.message || data.error || "Erreur inconnue");
           setStatus("error");
         }
       } catch (error) {
+        console.error("Verification error:", error);
+        setErrorMessage(
+          error instanceof Error ? error.message : "Erreur de connexion"
+        );
         setStatus("error");
       }
     };
@@ -73,9 +75,17 @@ function VerificationContent() {
         <div className="max-w-md w-full p-8 bg-card border border-border rounded-lg text-center">
           <XCircle className="h-16 w-16 text-destructive mx-auto mb-4" />
           <h2 className="text-2xl font-bold mb-2">Erreur</h2>
-          <p className="text-muted-foreground mb-6">
+          <p className="text-muted-foreground mb-2">
             Une erreur est survenue lors de la vérification de votre paiement.
-            Veuillez contacter le support.
+          </p>
+          {errorMessage && (
+            <p className="text-sm text-destructive mb-4 font-mono bg-destructive/10 p-2 rounded">
+              {errorMessage}
+            </p>
+          )}
+          <p className="text-muted-foreground mb-6 text-sm">
+            Si vous avez bien effectué le paiement, votre abonnement sera activé automatiquement.
+            Sinon, veuillez contacter le support.
           </p>
           <div className="flex flex-col gap-3">
             <Button asChild className="w-full">
