@@ -16,7 +16,7 @@ import { useAuth, useLogout } from "@/hooks/useAuth";
 import { Bell, Menu, Search, User, X } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ProNavbar } from "./ProNavbar";
 import { SellerNavbar } from "./SellerNavbar";
@@ -56,6 +56,7 @@ export const GenericHeader = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const logoutMutation = useLogout();
   const router = useRouter();
+  const pathname = usePathname();
   const [notif, setNotif] = useState<{
     newOffers: number;
     unreadMessages: number;
@@ -70,23 +71,6 @@ export const GenericHeader = () => {
 
   useEffect(() => {
     if (isLoading || !user?.id) return;
-  // Fetch notification counters - disabled for now (needs proxy routes)
-  useEffect(() => {
-    // TODO: Create /api/notifications and /api/messages proxy routes
-    // For now, notifications are disabled to avoid CORS errors
-  }, [role, userData?.id]);
-
-  // Fetch notification list when dropdown opens - disabled for now (needs proxy routes)
-  useEffect(() => {
-    // TODO: Create /api/offers and /api/messages proxy routes
-    // For now, notifications list is disabled to avoid CORS errors
-  }, [notifOpen, role, userData?.id]);
-
-  // Don't show header on admin pages - admin has its own layout
-  if (pathname?.startsWith("/admin")) {
-    return null;
-  }
-
     let timer: NodeJS.Timeout | null = null;
     async function fetchCounters() {
       if (!user?.id) return;
@@ -288,6 +272,11 @@ export const GenericHeader = () => {
     return (
       <div className="border-b border-border bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60 sticky top-0 z-50 h-16"></div>
     );
+  }
+
+  // Don't show header on admin pages - admin has its own layout
+  if (pathname?.startsWith("/admin")) {
+    return null;
   }
 
   return (
