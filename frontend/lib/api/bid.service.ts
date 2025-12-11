@@ -3,17 +3,32 @@ export interface Bid {
   item_id: number;
   user_id: number;
   amount: number;
-  max_amount: number | null;
+  min_amount?: number | null;
   type: "manual" | "auto";
   is_active: boolean;
   is_winning: boolean;
   created_at: string;
   updated_at: string;
+  item?: {
+    id: number;
+    name: string;
+    description: string;
+    auction_start_price?: number | null;
+    auction_end_date?: string | null;
+    created_at: string;
+    status: string;
+    sale_mode: string;
+    photos?: Array<{
+      id: number;
+      url: string;
+      is_primary: boolean;
+    }>;
+  };
 }
 
 export interface CreateBidDto {
   amount: number;
-  max_amount?: number;
+  min_amount?: number;
 }
 
 export async function getItemBids(itemId: number): Promise<Bid[]> {
@@ -39,7 +54,9 @@ export async function getItemBids(itemId: number): Promise<Bid[]> {
   return response.json();
 }
 
-export async function getCurrentWinningBid(itemId: number): Promise<Bid | null> {
+export async function getCurrentWinningBid(
+  itemId: number
+): Promise<Bid | null> {
   const response = await fetch(`/api/bids/items/${itemId}/winning`, {
     method: "GET",
     headers: {
@@ -57,7 +74,9 @@ export async function getCurrentWinningBid(itemId: number): Promise<Bid | null> 
     } catch {
       error = { message: "Erreur lors de la récupération de l'enchère" };
     }
-    throw new Error(error.message || "Erreur lors de la récupération de l'enchère");
+    throw new Error(
+      error.message || "Erreur lors de la récupération de l'enchère"
+    );
   }
 
   return response.json();
@@ -67,13 +86,12 @@ export async function createBid(
   itemId: number,
   dto: CreateBidDto
 ): Promise<Bid> {
-  // Ne pas inclure max_amount s'il est undefined
-  const body: { amount: number; max_amount?: number } = {
+  const body: { amount: number; min_amount?: number } = {
     amount: dto.amount,
   };
-  
-  if (dto.max_amount !== undefined && dto.max_amount !== null) {
-    body.max_amount = dto.max_amount;
+
+  if (dto.min_amount !== undefined && dto.min_amount !== null) {
+    body.min_amount = dto.min_amount;
   }
 
   const response = await fetch(`/api/bids/items/${itemId}`, {
@@ -92,13 +110,22 @@ export async function createBid(
       try {
         error = JSON.parse(errorText);
       } catch {
-        error = { message: errorText || "Erreur lors de la création de l'enchère" };
+        error = {
+          message: errorText || "Erreur lors de la création de l'enchère",
+        };
       }
     } catch {
       error = { message: "Erreur lors de la création de l'enchère" };
     }
-    console.error("Erreur création enchère:", error, "Status:", response.status);
-    throw new Error(error.message || error.error || "Erreur lors de la création de l'enchère");
+    console.error(
+      "Erreur création enchère:",
+      error,
+      "Status:",
+      response.status
+    );
+    throw new Error(
+      error.message || error.error || "Erreur lors de la création de l'enchère"
+    );
   }
 
   return response.json();
@@ -123,7 +150,9 @@ export async function getMyBids(): Promise<Bid[]> {
     } catch {
       error = { message: "Erreur lors de la récupération de vos enchères" };
     }
-    throw new Error(error.message || "Erreur lors de la récupération de vos enchères");
+    throw new Error(
+      error.message || "Erreur lors de la récupération de vos enchères"
+    );
   }
 
   return response.json();
@@ -149,4 +178,3 @@ export function getNextBidAmount(currentAmount: number): number {
   // Si le montant calculé est égal au montant actuel, ajouter l'incrément
   return nextAmount <= currentAmount ? currentAmount + increment : nextAmount;
 }
-

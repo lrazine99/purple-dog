@@ -48,10 +48,10 @@ export class Bid {
     type: 'decimal',
     precision: 10,
     scale: 2,
-    name: 'max_amount',
     nullable: true,
+    name: 'min_amount',
   })
-  max_amount: number | null;
+  min_amount: number | null;
 
   @Column({
     type: 'varchar',

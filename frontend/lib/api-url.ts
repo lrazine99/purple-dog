@@ -9,6 +9,6 @@
 export function getBackendUrl(): string {
   // API_URL is set in Docker to use internal network (http://backend:3001)
   // Falls back to NEXT_PUBLIC_API_URL for local development without Docker
-  return process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+  return process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 }
 
