@@ -29,10 +29,12 @@ export interface CreateOrderInput {
   billing_city?: string;
   billing_postal_code?: string;
   billing_country?: string;
+  billing_address_complement?: string;
   shipping_address_line?: string;
   shipping_city?: string;
   shipping_postal_code?: string;
   shipping_country?: string;
+  shipping_address_complement?: string;
 }
 
 /**

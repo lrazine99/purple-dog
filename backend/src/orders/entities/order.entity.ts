@@ -65,6 +65,9 @@ export class Order {
   billing_country: string;
 
   @Column({ type: 'varchar', length: 255, nullable: true })
+  billing_address_complement: string;
+
+  @Column({ type: 'varchar', length: 255, nullable: true })
   shipping_address_line: string;
 
   @Column({ type: 'varchar', length: 100, nullable: true })
@@ -75,6 +78,9 @@ export class Order {
 
   @Column({ type: 'varchar', length: 100, nullable: true })
   shipping_country: string;
+
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  shipping_address_complement: string;
 
   @OneToMany(() => OrderItem, (oi) => oi.order, { cascade: true })
   items: OrderItem[];
