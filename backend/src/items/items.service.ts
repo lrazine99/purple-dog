@@ -93,14 +93,11 @@ export class ItemsService {
       // This allows filtering by parent category to show items from subcategories
       queryBuilder.where(
         '(item.category_id = :categoryId OR mainCategory.parent_id = :categoryId)',
-        { categoryId }
+        { categoryId },
       );
     }
 
-    queryBuilder
-      .skip(offset)
-      .take(limit)
-      .orderBy('item.created_at', 'DESC');
+    queryBuilder.skip(offset).take(limit).orderBy('item.created_at', 'DESC');
 
     const items = await queryBuilder.getMany();
 

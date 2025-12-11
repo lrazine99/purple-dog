@@ -16,6 +16,8 @@ export const ROUTES = {
 
   AUTH_VERIFY: "/auth/verify",
 
+  PRODUITS: "/produits",
+
   MON_COMPTE: "/mon-compte",
   FAVORIS: "/favoris",
   PAIEMENTS: "/paiements",

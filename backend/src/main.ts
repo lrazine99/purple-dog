@@ -5,12 +5,15 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import cookieParser from 'cookie-parser';
 import { join } from 'path';
 import * as express from 'express';
+import cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
   app.use('/payments/webhook', express.raw({ type: 'application/json' }));
+  app.use(express.json());
+  app.use(express.urlencoded({ extended: true }));
 
   app.useGlobalPipes(
     new ValidationPipe({
