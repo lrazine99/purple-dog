@@ -68,8 +68,16 @@ export class BidsService {
     manager: any,
     itemId: number,
     newBidAmount: number,
+    itemMinAmountBid: number | null,
   ): Promise<void> {
     const bidRepo = manager.getRepository(Bid);
+    const itemRepo = manager.getRepository(Item);
+
+    // Récupérer l'item pour avoir le min_amount_bid
+    const item = await itemRepo.findOne({ where: { id: itemId } });
+    if (!item || !item.min_amount_bid) {
+      return; // Pas d'enchères automatiques si pas de min_amount_bid défini
+    }
 
     const autoBids = await bidRepo.find({
       where: {
@@ -79,7 +87,7 @@ export class BidsService {
         is_winning: false,
       },
       relations: ['user'],
-      order: { max_amount: 'DESC', created_at: 'ASC' },
+      order: { created_at: 'ASC' },
     });
 
     let currentAmount = newBidAmount;
@@ -89,7 +97,16 @@ export class BidsService {
       hasChanges = false;
 
       for (const autoBid of autoBids) {
-        if (!autoBid.max_amount || autoBid.max_amount <= currentAmount) {
+        // Utiliser le min_amount de l'enchère automatique si défini, sinon le min_amount_bid de l'item
+        const maxAmount = autoBid.min_amount || item.min_amount_bid;
+        
+        // Si aucune limite n'est définie, passer à l'enchère suivante
+        if (!maxAmount) {
+          continue;
+        }
+
+        // L'enchère automatique continue tant que le montant actuel est inférieur au montant maximum
+        if (currentAmount >= maxAmount) {
           continue;
         }
 
@@ -105,18 +122,15 @@ export class BidsService {
           Math.ceil(currentAmount / increment) * increment;
 
         // Déterminer le montant à utiliser :
-        // 1. Si le palier suivant est <= max_amount, utiliser le palier
-        // 2. Sinon, si max_amount > currentAmount, utiliser max_amount comme prix libre
+        // 1. Si le palier suivant est < maxAmount, utiliser le palier
+        // 2. Sinon, utiliser maxAmount directement pour atteindre le maximum
         let nextAmount: number;
-        if (nextBidByIncrement <= autoBid.max_amount) {
-          // Utiliser le palier
+        if (nextBidByIncrement < maxAmount) {
+          // Utiliser le palier tant qu'on n'a pas atteint le maxAmount
           nextAmount = nextBidByIncrement;
-        } else if (autoBid.max_amount > currentAmount) {
-          // Utiliser le montant libre (max_amount) si le palier dépasse le max
-          nextAmount = autoBid.max_amount;
         } else {
-          // Le max_amount n'est pas suffisant
-          continue;
+          // Atteindre directement le maxAmount
+          nextAmount = maxAmount;
         }
 
         if (nextAmount > currentAmount) {
@@ -125,7 +139,7 @@ export class BidsService {
             item_id: itemId,
             user_id: autoBid.user_id,
             amount: nextAmount,
-            max_amount: autoBid.max_amount,
+            min_amount: autoBid.min_amount, // Conserver le min_amount de l'enchère originale
             type: BidType.AUTO,
             is_active: true,
             is_winning: true,
@@ -150,12 +164,15 @@ export class BidsService {
           currentAmount = nextAmount;
           hasChanges = true;
 
-          // Envoyer une notification si le palier max est proche
-          if (autoBid.max_amount - nextAmount <= increment) {
+          // Envoyer une notification quand le montant maximum est atteint
+          if (nextAmount >= maxAmount && autoBid.user?.email) {
+            const maxAmountText = autoBid.min_amount 
+              ? `votre montant maximum de ${autoBid.min_amount}€`
+              : `le montant minimum requis de ${item.min_amount_bid}€`;
             await this.emailService.sendMail(
               autoBid.user.email,
-              'Votre enchère automatique atteint son maximum',
-              `Votre enchère automatique pour l'objet a atteint ${nextAmount}€ sur ${autoBid.max_amount}€. Une nouvelle enchère pourrait vous dépasser.`,
+              'Votre enchère automatique a atteint le montant maximum',
+              `Votre enchère automatique pour l'objet a atteint ${nextAmount}€, ${maxAmountText}. L'enchère peut maintenant être conclue ou vous pouvez augmenter votre montant maximum.`,
             );
           }
 
@@ -171,9 +188,15 @@ export class BidsService {
   private async processAutoBids(
     itemId: number,
     newBidAmount: number,
+    itemMinAmountBid: number | null,
   ): Promise<void> {
     return await this.dataSource.transaction(async (manager) => {
-      await this.processAutoBidsInTransaction(manager, itemId, newBidAmount);
+      await this.processAutoBidsInTransaction(
+        manager,
+        itemId,
+        newBidAmount,
+        itemMinAmountBid,
+      );
     });
   }
 
@@ -205,7 +228,6 @@ export class BidsService {
     // Utiliser une transaction pour garantir la cohérence
     return await this.dataSource.transaction(async (manager) => {
       const bidRepo = manager.getRepository(Bid);
-      const itemRepo = manager.getRepository(Item);
 
       const currentWinning = await bidRepo.findOne({
         where: { item_id: itemId, is_winning: true, is_active: true },
@@ -240,21 +262,36 @@ export class BidsService {
         await bidRepo.save(currentWinning);
       }
 
+      // Déterminer le type d'enchère : AUTO si min_amount est fourni, sinon MANUAL
+      const bidType = dto.min_amount ? BidType.AUTO : BidType.MANUAL;
+
+      // Si c'est une enchère automatique, vérifier que min_amount est supérieur à amount
+      if (bidType === BidType.AUTO && dto.min_amount && dto.min_amount <= dto.amount) {
+        throw new BadRequestException(
+          'Le montant maximum pour une enchère automatique doit être supérieur au montant initial',
+        );
+      }
+
       // Créer la nouvelle enchère
       const bid = bidRepo.create({
         item_id: itemId,
         user_id: userId,
         amount: dto.amount,
-        max_amount: dto.max_amount || null,
-        type: dto.max_amount ? BidType.AUTO : BidType.MANUAL,
+        min_amount: dto.min_amount || null,
+        type: bidType,
         is_active: true,
-        is_winning: true,
+        is_winning: bidType === BidType.MANUAL, // Les enchères auto ne sont pas gagnantes immédiatement
       });
 
       const savedBid = await bidRepo.save(bid);
 
       // Traiter les enchères automatiques dans la même transaction
-      await this.processAutoBidsInTransaction(manager, itemId, dto.amount);
+      await this.processAutoBidsInTransaction(
+        manager,
+        itemId,
+        dto.amount,
+        item.min_amount_bid,
+      );
 
       return this.toResponseDto(savedBid);
     });
@@ -269,14 +306,31 @@ export class BidsService {
     return bids.map((bid) => this.toResponseDto(bid));
   }
 
-  async getUserBids(userId: number): Promise<BidResponseDto[]> {
+  async getUserBids(userId: number): Promise<any[]> {
     const bids = await this.bidRepository.find({
       where: { user_id: userId, is_active: true },
-      relations: ['item'],
+      relations: ['item', 'item.photos', 'item.category'],
       order: { created_at: 'DESC' },
     });
 
-    return bids.map((bid) => this.toResponseDto(bid));
+    return bids.map((bid) => ({
+      ...this.toResponseDto(bid),
+      item: bid.item
+        ? {
+            id: bid.item.id,
+            name: bid.item.name,
+            description: bid.item.description,
+            auction_start_price: bid.item.auction_start_price
+              ? Number(bid.item.auction_start_price)
+              : null,
+            auction_end_date: bid.item.auction_end_date,
+            created_at: bid.item.created_at,
+            status: bid.item.status,
+            sale_mode: bid.item.sale_mode,
+            photos: bid.item.photos || [],
+          }
+        : null,
+    }));
   }
 
   async getCurrentWinningBid(itemId: number): Promise<BidResponseDto | null> {
@@ -295,7 +349,7 @@ export class BidsService {
       item_id: bid.item_id,
       user_id: bid.user_id,
       amount: Number(bid.amount),
-      max_amount: bid.max_amount ? Number(bid.max_amount) : null,
+      min_amount: bid.min_amount ? Number(bid.min_amount) : null,
       type: bid.type,
       is_active: bid.is_active,
       is_winning: bid.is_winning,

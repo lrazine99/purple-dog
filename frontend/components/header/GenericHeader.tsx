@@ -18,7 +18,7 @@ export const GenericHeader = () => {
 
   const isAuthenticated = !isLoading && !!user;
   const role = user?.role || null;
-  console.log("isLoading", isLoading);
+
   return (
     <header className="border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
       <div className="container mx-auto px-4">
@@ -34,6 +34,7 @@ export const GenericHeader = () => {
                 priority
               />
             </Link>
+            {/* Navigation - responsive avec classes Tailwind */}
             <nav className="hidden md:flex items-center gap-6">
               {isAuthenticated && (
                 <>
@@ -109,93 +110,31 @@ export const GenericHeader = () => {
           </div>
         </div>
 
-        {/* Menu mobile */}
+        {/* Menu mobile - réutilise les mêmes composants avec classes Tailwind */}
         {mobileMenuOpen && (
           <div className="md:hidden border-t border-border py-4 animate-in slide-in-from-top-2">
             <nav className="flex flex-col gap-4">
               {isAuthenticated && (
-                <>
-                  {role === "professional" && (
-                    <div className="flex flex-col gap-3">
-                      <Link
-                        href={ROUTES.PRODUITS}
-                        className="relative text-foreground hover:text-primary transition-colors font-medium pb-1 group py-2"
-                        onClick={() => setMobileMenuOpen(false)}
-                      >
-                        Produits
-                        <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-primary transition-all duration-300 group-hover:w-full"></span>
-                      </Link>
-                      <Link
-                        href={ROUTES.FAVORIS}
-                        className="relative text-foreground hover:text-primary transition-colors font-medium pb-1 group py-2"
-                        onClick={() => setMobileMenuOpen(false)}
-                      >
-                        Mes Favoris
-                        <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-primary transition-all duration-300 group-hover:w-full"></span>
-                      </Link>
-                      <Link
-                        href="#"
-                        className="relative text-foreground hover:text-primary transition-colors font-medium pb-1 group py-2"
-                        onClick={() => setMobileMenuOpen(false)}
-                      >
-                        Mes Enchères
-                        <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-primary transition-all duration-300 group-hover:w-full"></span>
-                      </Link>
-                      <Link
-                        href="#"
-                        className="relative text-foreground hover:text-primary transition-colors font-medium pb-1 group py-2"
-                        onClick={() => setMobileMenuOpen(false)}
-                      >
-                        Mes Achats
-                        <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-primary transition-all duration-300 group-hover:w-full"></span>
-                      </Link>
-                    </div>
-                  )}
+                <div className="flex flex-col gap-3">
                   {role === "particular" && (
-                    <div className="flex flex-col gap-3">
-                      <Link
-                        href={ROUTES.PRODUITS}
-                        className="relative text-foreground hover:text-primary transition-colors font-medium pb-1 group py-2"
-                        onClick={() => setMobileMenuOpen(false)}
-                      >
-                        Produits
-                        <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-primary transition-all duration-300 group-hover:w-full"></span>
-                      </Link>
-                      <Link
-                        href={ROUTES.FAVORIS}
-                        className="relative text-foreground hover:text-primary transition-colors font-medium pb-1 group py-2"
-                        onClick={() => setMobileMenuOpen(false)}
-                      >
-                        Mes Favoris
-                        <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-primary transition-all duration-300 group-hover:w-full"></span>
-                      </Link>
-                      <Link
-                        href="#"
-                        className="relative text-foreground hover:text-primary transition-colors font-medium pb-1 group py-2"
-                        onClick={() => setMobileMenuOpen(false)}
-                      >
-                        Mes Enchères
-                        <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-primary transition-all duration-300 group-hover:w-full"></span>
-                      </Link>
-                      <Link
-                        href="#"
-                        className="relative text-foreground hover:text-primary transition-colors font-medium pb-1 group py-2"
-                        onClick={() => setMobileMenuOpen(false)}
-                      >
-                        Mes Achats
-                        <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-primary transition-all duration-300 group-hover:w-full"></span>
-                      </Link>
-                      <Link
-                        href={ROUTES.MA_BOUTIQUE}
-                        className="relative text-foreground hover:text-primary transition-colors font-medium pb-1 group py-2"
-                        onClick={() => setMobileMenuOpen(false)}
-                      >
-                        Ma Boutique
-                        <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-primary transition-all duration-300 group-hover:w-full"></span>
-                      </Link>
-                    </div>
+                    <SellerNavbar 
+                      onLinkClick={() => setMobileMenuOpen(false)}
+                      className="py-2"
+                    />
                   )}
-                </>
+                  {role === "professional" && (
+                    <>
+                      <ProNavbar 
+                        onLinkClick={() => setMobileMenuOpen(false)}
+                        className="py-2"
+                      />
+                      <SellerNavbar 
+                        onLinkClick={() => setMobileMenuOpen(false)}
+                        className="py-2"
+                      />
+                    </>
+                  )}
+                </div>
               )}
 
               {/* Barre de recherche mobile */}
