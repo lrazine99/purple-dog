@@ -11,6 +11,9 @@ import { UploadModule } from './upload/upload.module';
 import { OrdersModule } from './orders/orders.module';
 import { UploadsModule } from './uploads/uploads.module';
 import { FavoritesModule } from './favorites/favorites.module';
+import { OffersModule } from './offers/offers.module';
+import { MessagesModule } from './messages/messages.module';
+import { NotificationsModule } from './notifications/notifications.module';
 
 @Module({
   imports: [
@@ -37,6 +40,9 @@ import { FavoritesModule } from './favorites/favorites.module';
     OrdersModule,
     UploadsModule,
     FavoritesModule,
+    OffersModule,
+    MessagesModule,
+    NotificationsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
