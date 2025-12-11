@@ -45,12 +45,12 @@ export default function Navbar() {
             </Button>
           ) : (
             <>
-              <Button variant="ghost" asChild>
-                <Link href={ROUTES.CONNEXION}>Se connecter</Link>
-              </Button>
-              <Button asChild>
-                <Link href={ROUTES.INSCRIPTION}>S&apos;inscrire</Link>
-              </Button>
+          <Button variant="ghost" asChild>
+            <Link href={ROUTES.CONNEXION}>Se connecter</Link>
+          </Button>
+          <Button asChild>
+            <Link href={ROUTES.INSCRIPTION}>S&apos;inscrire</Link>
+          </Button>
             </>
           )}
         </div>
@@ -93,15 +93,15 @@ export default function Navbar() {
                   asChild
                   className="w-full justify-start"
                 >
-                  <Link href={ROUTES.CONNEXION} onClick={toggleMenu}>
-                    Se connecter
-                  </Link>
-                </Button>
-                <Button asChild className="w-full">
-                  <Link href={ROUTES.INSCRIPTION} onClick={toggleMenu}>
-                    S&apos;inscrire
-                  </Link>
-                </Button>
+              <Link href={ROUTES.CONNEXION} onClick={toggleMenu}>
+                Se connecter
+              </Link>
+            </Button>
+            <Button asChild className="w-full">
+              <Link href={ROUTES.INSCRIPTION} onClick={toggleMenu}>
+                S&apos;inscrire
+              </Link>
+            </Button>
               </>
             )}
           </nav>

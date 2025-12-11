@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
       role: data.role,
       user: userData,
     });
-    setAuthCookies(res, data);
+    setAuthCookies(res, data)
 
     return res;
   } catch (error) {

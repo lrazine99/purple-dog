@@ -21,10 +21,19 @@ export enum ItemStatus {
   DELETED = "deleted",
 }
 
+export const itemPhotoSchema = z.object({
+  id: z.number(),
+  url: z.string(),
+  position: z.number().optional(),
+  is_primary: z.boolean().optional(),
+});
+
+export type ItemPhoto = z.infer<typeof itemPhotoSchema>;
+
 export const itemSchema = z.object({
   id: z.number(),
   seller_id: z.number(),
-  category_id: z.number(),
+  category_id: z.number().nullable(),
   name: z.string(),
   description: z.string(),
   width_cm: z.coerce.number(),
@@ -54,6 +63,7 @@ export const itemSchema = z.object({
   ]),
   auction_start_price: z.coerce.number().nullish(),
   auction_end_date: z.string().nullish(),
+  photos: z.array(itemPhotoSchema).optional(),
   created_at: z.string(),
   updated_at: z.string(),
 });
