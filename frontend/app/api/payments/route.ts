@@ -1,3 +1,4 @@
+import { getBackendUrl } from "@/lib/api-url";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
@@ -12,9 +13,10 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
+    const apiUrl = getBackendUrl();
 
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/payments`,
+      `${apiUrl}/payments`,
       {
         method: "POST",
         headers: {
@@ -56,9 +58,10 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const queryString = searchParams.toString();
+    const apiUrl = getBackendUrl();
 
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/payments${
+      `${apiUrl}/payments${
         queryString ? `?${queryString}` : ""
       }`,
       {

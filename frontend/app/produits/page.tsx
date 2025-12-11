@@ -92,8 +92,6 @@ export default function ProductsPage() {
             <h1 className=" text-center font-serif text-4xl md:text-5xl font-normal text-foreground mb-4">
               {selectedCategory?.name}
             </h1>
-            <p className="text-muted-foreground text-sm md:text-base lg:text-lg leading-relaxed max-w-2xl">
-            
           </div>
         </div>
       )}
