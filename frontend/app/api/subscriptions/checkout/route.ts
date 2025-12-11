@@ -1,3 +1,4 @@
+import { getBackendUrl } from "@/lib/api-url";
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 
@@ -10,7 +11,7 @@ export async function POST() {
       return NextResponse.json({ message: "Non authentifié" }, { status: 401 });
     }
 
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
+    const apiUrl = getBackendUrl();
     const checkoutUrl = `${apiUrl}/subscriptions/checkout`;
 
     const response = await fetch(checkoutUrl, {
@@ -32,6 +33,7 @@ export async function POST() {
     const data = await response.json();
     return NextResponse.json(data);
   } catch (error) {
+    console.error("Checkout API error:", error);
     return NextResponse.json({ message: "Erreur serveur" }, { status: 500 });
   }
 }

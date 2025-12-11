@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
         Authorization: `Bearer ${accessToken}`,
       },
     });
-
+console.log("response", response);
     if (response.status === 404) {
       return NextResponse.json(null, { status: 404 });
     }
@@ -25,9 +25,13 @@ export async function GET(request: NextRequest) {
     }
 
     const data = await response.json();
+    console.log("data", data);
+    
     return NextResponse.json(data);
+    
   } catch (error) {
     console.error("Error fetching subscription:", error);
+
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }

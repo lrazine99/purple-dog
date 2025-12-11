@@ -110,29 +110,52 @@ export class SubscriptionsController {
   @ApiOperation({
     summary: 'Verify payment and activate subscription (no auth)',
   })
-  async verifyPaymentSimple(@Request() req): Promise<{ success: boolean }> {
+  async verifyPaymentSimple(@Request() req): Promise<{ success: boolean; message?: string }> {
     const sessionId = req.body.sessionId;
 
     if (!sessionId) {
-      return { success: false };
+      return { success: false, message: 'Session ID is required' };
     }
 
     try {
       const session = await this.stripe.checkout.sessions.retrieve(sessionId);
 
-      if (
-        session.mode === 'subscription' &&
-        session.payment_status === 'paid' &&
-        session.metadata?.user_id
-      ) {
-        const userId = parseInt(session.metadata.user_id, 10);
-        await this.subscriptionsService.activatePaidSubscription(userId);
-        return { success: true };
+      if (!session) {
+        return { success: false, message: 'Session not found' };
       }
 
-      return { success: false };
-    } catch {
-      return { success: false };
+      // Vérifier que c'est bien une session d'abonnement
+      if (session.mode !== 'subscription') {
+        return { success: false, message: 'Invalid session mode' };
+      }
+
+      // Vérifier le statut du paiement
+      if (session.payment_status !== 'paid') {
+        return { 
+          success: false, 
+          message: `Payment status is ${session.payment_status}, expected 'paid'` 
+        };
+      }
+
+      // Vérifier que les métadonnées contiennent l'user_id
+      if (!session.metadata?.user_id) {
+        return { success: false, message: 'User ID not found in session metadata' };
+      }
+
+      const userId = parseInt(session.metadata.user_id, 10);
+      
+      if (isNaN(userId)) {
+        return { success: false, message: 'Invalid user ID in session metadata' };
+      }
+
+      await this.subscriptionsService.activatePaidSubscription(userId);
+      return { success: true };
+    } catch (error) {
+      console.error('Error verifying payment:', error);
+      return { 
+        success: false, 
+        message: error instanceof Error ? error.message : 'Unknown error during verification' 
+      };
     }
   }
 
