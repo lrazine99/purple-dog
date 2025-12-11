@@ -4,6 +4,8 @@ services:
   postgres:
     image: postgres:16-alpine
     container_name: purple-dog-postgres-dev
+    env_file:
+      - ./backend/.env
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
@@ -25,6 +27,8 @@ services:
       context: ./backend
       dockerfile: Dockerfile.dev
     container_name: purple-dog-backend-dev
+    env_file:
+      - ./backend/.env
     environment:
       NODE_ENV: development
       PORT: 3001
@@ -33,7 +37,7 @@ services:
       DATABASE_USER: ${POSTGRES_USER:-postgres}
       DATABASE_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
       DATABASE_NAME: ${POSTGRES_DB:-purple_dog_db}
-      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-your-super-secret-jwt-key-change-in-production}
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-OBymCYlQAAoqMRDvJyFbH2XlyeU5jbr6N3PKoMWHbJ3g/lTt1V5nQXxAkd7zZiOQzmuMa1Vlkc6sf4B9ibEXGQ==}
       JWT_ACCESS_EXPIRES_IN: ${JWT_ACCESS_EXPIRES_IN:-900}
     ports:
       - "${BACKEND_PORT:-3001}:3001"
@@ -55,6 +59,7 @@ services:
     environment:
       NODE_ENV: development
       NEXT_PUBLIC_API_URL: http://backend:3001
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-OBymCYlQAAoqMRDvJyFbH2XlyeU5jbr6N3PKoMWHbJ3g/lTt1V5nQXxAkd7zZiOQzmuMa1Vlkc6sf4B9ibEXGQ==}
     ports:
       - "${FRONTEND_PORT:-3000}:3000"
     volumes:

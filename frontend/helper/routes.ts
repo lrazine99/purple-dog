@@ -9,7 +9,6 @@ export const ROUTES = {
   CGU: "/cgu",
   CONTACT: "/contact",
 
-  PRO_PRODUITS: "/produits",
   PRODUITS: "/produits",
 
   AUTH_VERIFY: "/auth/verify",
@@ -18,6 +17,9 @@ export const ROUTES = {
   FAVORIS: "/favoris",
   ABONNEMENT: "/abonnement",
 
+  MA_BOUTIQUE: "/ma-boutique",
+  MES_ENCHERES: "/mes-enchères",
+
   ADMIN: "/admin",
   ADMIN_USERS: "/admin/users",
   ADMIN_ITEMS: "/admin/items",
@@ -25,15 +27,10 @@ export const ROUTES = {
   ADMIN_ORDERS: "/admin/orders",
 } as const;
 
-export const PUBLIC_ROUTES = [
-  ROUTES.HOME,
-  ROUTES.CONNEXION,
-  ROUTES.INSCRIPTION,
-  ROUTES.PRODUITS,
-] as const;
+export const PUBLIC_ROUTES = [ROUTES.HOME, ROUTES.PRODUITS] as const;
 
-export const PROFESSIONNEL_ROUTES = [ROUTES.PRO_PRODUITS] as const;
-export const PARTICULAR_ROUTES = [ROUTES.PRO_PRODUITS] as const;
+export const PROFESSIONNEL_ROUTES = [ROUTES.MA_BOUTIQUE] as const;
+export const PARTICULAR_ROUTES = [ROUTES.MA_BOUTIQUE] as const;
 
 export const ADMIN_ROUTES = [
   ROUTES.ADMIN,
@@ -44,7 +41,6 @@ export const ADMIN_ROUTES = [
 ] as const;
 
 export const PROTECTED_ROUTES = [
-  ROUTES.PRO_PRODUITS,
   ROUTES.MON_COMPTE,
   ROUTES.FAVORIS,
   ...ADMIN_ROUTES,
