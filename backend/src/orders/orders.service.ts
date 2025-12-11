@@ -42,10 +42,12 @@ export class OrdersService {
       billing_city: dto.billing_city,
       billing_postal_code: dto.billing_postal_code,
       billing_country: dto.billing_country,
+      billing_address_complement: dto.billing_address_complement,
       shipping_address_line: dto.shipping_address_line,
       shipping_city: dto.shipping_city,
       shipping_postal_code: dto.shipping_postal_code,
       shipping_country: dto.shipping_country,
+      shipping_address_complement: dto.shipping_address_complement,
     });
 
     const saved = await this.orderRepo.save(order);
@@ -97,10 +99,12 @@ export class OrdersService {
     if (dto.billing_city !== undefined) order.billing_city = dto.billing_city;
     if (dto.billing_postal_code !== undefined) order.billing_postal_code = dto.billing_postal_code;
     if (dto.billing_country !== undefined) order.billing_country = dto.billing_country;
+    if (dto.billing_address_complement !== undefined) order.billing_address_complement = dto.billing_address_complement;
     if (dto.shipping_address_line !== undefined) order.shipping_address_line = dto.shipping_address_line;
     if (dto.shipping_city !== undefined) order.shipping_city = dto.shipping_city;
     if (dto.shipping_postal_code !== undefined) order.shipping_postal_code = dto.shipping_postal_code;
     if (dto.shipping_country !== undefined) order.shipping_country = dto.shipping_country;
+    if (dto.shipping_address_complement !== undefined) order.shipping_address_complement = dto.shipping_address_complement;
 
     await this.orderRepo.save(order);
 
@@ -125,5 +129,48 @@ export class OrdersService {
     await this.orderItemRepo.delete({ order_id: id });
     // Then delete the order
     await this.orderRepo.remove(order);
+  }
+
+  /**
+   * Crée une commande depuis une enchère gagnante
+   */
+  async createOrderFromAuction(dto: {
+    buyer_id: number;
+    seller_id: number;
+    item_id: number;
+    amount: number;
+  }): Promise<Order> {
+    const item = await this.itemRepo.findOne({ where: { id: dto.item_id } });
+    if (!item) {
+      throw new NotFoundException(`Item ${dto.item_id} not found`);
+    }
+
+    const order = this.orderRepo.create({
+      buyer_id: dto.buyer_id,
+      seller_id: dto.seller_id,
+      total_amount: dto.amount.toFixed(2),
+      currency: 'EUR',
+      status: OrderStatus.DRAFT,
+    });
+
+    const saved = await this.orderRepo.save(order);
+
+    // Créer l'OrderItem avec le montant de l'enchère
+    const orderItem = this.orderItemRepo.create({
+      order_id: saved.id,
+      item_id: dto.item_id,
+      qty: 1,
+      unit_price: dto.amount.toFixed(2),
+    });
+    await this.orderItemRepo.save(orderItem);
+
+    const result = await this.orderRepo.findOne({
+      where: { id: saved.id },
+      relations: ['items', 'items.item', 'buyer', 'seller'],
+    });
+    if (!result) {
+      throw new NotFoundException(`Order ${saved.id} not found`);
+    }
+    return result;
   }
 }

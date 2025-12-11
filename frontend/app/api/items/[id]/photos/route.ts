@@ -1,3 +1,4 @@
+import { getBackendUrl } from "@/lib/api-url";
 import { NextRequest, NextResponse } from "next/server";
 
 // POST - Add photo to item
@@ -14,10 +15,7 @@ export async function POST(
   try {
     const { id } = await params;
     const body = await request.json();
-
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL?.includes("localhost")
-      ? "http://backend:3001"
-      : process.env.NEXT_PUBLIC_API_URL;
+    const apiUrl = getBackendUrl();
 
     const response = await fetch(`${apiUrl}/items/${id}/photos`, {
       method: "POST",
@@ -43,4 +41,3 @@ export async function POST(
     return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }
 }
-

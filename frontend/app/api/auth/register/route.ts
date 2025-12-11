@@ -1,3 +1,4 @@
+import { getBackendUrl } from "@/lib/api-url";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
@@ -23,7 +24,8 @@ export async function POST(request: NextRequest) {
       };
     }
 
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users`, {
+    const apiUrl = getBackendUrl();
+    const response = await fetch(`${apiUrl}/users`, {
       method: "POST",
       headers,
       body: body as BodyInit,

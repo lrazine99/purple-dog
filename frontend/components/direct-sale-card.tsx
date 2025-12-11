@@ -4,18 +4,19 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Heart } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { Heart, CreditCard } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import { Dialog, DialogContent } from "@radix-ui/react-dialog";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
-  DialogDescription,
-  DialogFooter,
+  Dialog,
+  DialogContent,
   DialogHeader,
   DialogTitle,
-} from "./ui/dialog";
-import { Input } from "./ui/input";
-import { Textarea } from "./ui/textarea";
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { CheckoutDialog } from "@/components/checkout/CheckoutDialog";
 
 interface DirectSaleCardProps {
   itemId: number;
@@ -25,36 +26,68 @@ interface DirectSaleCardProps {
 }
 
 export function DirectSaleCard({
-  price,
   itemId,
   sellerId,
+  price,
   itemName,
 }: DirectSaleCardProps) {
-  const [showCheckout, setShowCheckout] = useState(false);
-  const router = useRouter();
   const { data: user } = useAuth();
+  
+  // États pour le paiement (Stripe)
+  const [showCheckout, setShowCheckout] = useState(false);
+
+  // États pour les offres
   const [offerOpen, setOfferOpen] = useState(false);
   const [amount, setAmount] = useState<number>(price);
   const [message, setMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Gestion de l'achat immédiat
   const handleBuyNow = () => {
+    if (!user) {
+      alert("Veuillez vous connecter pour acheter cet article.");
+      return;
+    }
     setShowCheckout(true);
   };
 
+  // Gestion de l'ouverture du modal d'offre
   const handleMakeOffer = () => {
     // TODO: Implement make offer
 
-    const handleMakeOffer = () => {
-      if (!user) {
-        alert("Veuillez vous connecter pour faire une offre.");
-        return;
+  // Envoi de l'offre à l'API
+  const handleSubmitOffer = async () => {
+    if (!user) return;
+    const amt = Number(amount);
+    if (isNaN(amt) || amt <= 0) {
+      alert("Montant invalide");
+      return;
+    }
+    setIsSubmitting(true);
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/offers`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          item_id: itemId,
+          buyer_id: user.id,
+          amount: amt,
+          message: message || undefined,
+        }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.message || "Échec de la création de l'offre");
       }
-      if (user.id === sellerId) {
-        return;
-      }
-      setOfferOpen(true);
-    };
+      setOfferOpen(false);
+      setMessage("");
+      alert("Offre envoyée avec succès !");
+    } catch (e: any) {
+      alert(e.message || "Erreur lors de l'envoi de l'offre");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
     const handleSubmitOffer = async () => {
       if (!user) return;
@@ -88,83 +121,110 @@ export function DirectSaleCard({
       }
     };
 
-    const handleAddToFavorites = () => {
-      // TODO: Implement add to favorites
-    };
+  const isOwner = user?.id === sellerId;
 
-    return (
-      <>
-        <Card className="p-6 space-y-4 bg-muted/30">
-          <div>
-            <p className="text-sm text-muted-foreground mb-1">Prix</p>
-            <p className="font-serif text-4xl font-bold">
-              {price.toLocaleString("fr-FR")} €
-            </p>
-            <p className="text-xs text-muted-foreground mt-2">
-              TVA incluforegrivraison disponible
-            </p>
-          </div>
+  return (
+    <>
+      <Card className="p-6 space-y-4 bg-muted/30">
+        <div>
+          <p className="text-sm text-muted-foreground mb-1">Prix</p>
+          <p className="font-serif text-4xl font-bold">
+            {price.toLocaleString("fr-FR")} €
+          </p>
+          <p className="text-xs text-muted-foreground mt-2">
+            TVA incluse, livraison disponible
+          </p>
+        </div>
 
-          <div className="space-y-2">
-            {user?.id !== sellerId && (
-              <Button size="lg" className="w-full" onClick={handleMakeOffer}>
+        <Separator />
+
+        <div className="space-y-3">
+          {/* Boutons d'action (cachés si c'est le vendeur) */}
+          {!isOwner && (
+            <>
+              <Button 
+                size="lg" 
+                className="w-full bg-primary hover:bg-primary/90" 
+                onClick={handleBuyNow}
+              >
+                <CreditCard className="mr-2 h-4 w-4" />
+                Acheter maintenant
+              </Button>
+
+              <Button 
+                variant="secondary" 
+                className="w-full" 
+                onClick={handleMakeOffer}
+              >
                 Faire une offre
               </Button>
-            )}
+            </>
+          )}
+
+          <Button
+            variant="outline"
+            className="w-full bg-transparent"
+            onClick={handleAddToFavorites}
+          >
+            <Heart className="h-4 w-4 mr-2" />
+            Ajouter aux favoris
+          </Button>
+        </div>
+      </Card>
+
+      {/* Modal de Paiement Stripe */}
+      <CheckoutDialog
+        open={showCheckout}
+        onOpenChange={setShowCheckout}
+        itemId={itemId}
+        sellerId={sellerId}
+        price={price}
+        itemName={itemName}
+      />
+
+      {/* Modal de création d'offre */}
+      <Dialog open={offerOpen} onOpenChange={setOfferOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Faire une offre</DialogTitle>
+            <DialogDescription>
+              Proposez un montant et un message optionnel au vendeur.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <label className="block text-sm mb-1">Montant (€)</label>
+              <Input
+                type="number"
+                step="0.01"
+                value={amount}
+                onChange={(e) => setAmount(parseFloat(e.target.value || "0"))}
+              />
+            </div>
+            <div>
+              <label className="block text-sm mb-1">Message</label>
+              <Textarea
+                rows={3}
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                placeholder="Bonjour, je suis intéressé par..."
+              />
+            </div>
+          </div>
+          <DialogFooter className="gap-2 sm:gap-0">
             <Button
               variant="outline"
-              className="w-full bg-transparent"
-              onClick={handleAddToFavorites}
+              onClick={() => setOfferOpen(false)}
+              disabled={isSubmitting}
             >
-              <Heart className="h-4 w-4 mr-2" />
-              Ajouter aux favoris
+              Annuler
             </Button>
-          </div>
-
-          <Separator />
-        </Card>
-        <Dialog open={offerOpen} onOpenChange={setOfferOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Faire une offre</DialogTitle>
-              <DialogDescription>
-                Proposez un montant et un message optionnel
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-3">
-              <div>
-                <label className="block text-sm mb-1">Montant (€)</label>
-                <Input
-                  type="number"
-                  step="0.01"
-                  value={amount}
-                  onChange={(e) => setAmount(parseFloat(e.target.value || "0"))}
-                />
-              </div>
-              <div>
-                <label className="block text-sm mb-1">Message</label>
-                <Textarea
-                  rows={3}
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                />
-              </div>
-            </div>
-            <DialogFooter className="gap-2">
-              <Button
-                variant="outline"
-                onClick={() => setOfferOpen(false)}
-                disabled={isSubmitting}
-              >
-                Annuler
-              </Button>
-              <Button onClick={handleSubmitOffer} disabled={isSubmitting}>
-                {isSubmitting ? "Envoi..." : "Envoyer l'offre"}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      </>
-    );
-  };
+            <Button onClick={handleSubmitOffer} disabled={isSubmitting}>
+              {isSubmitting ? "Envoi..." : "Envoyer l'offre"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
 }

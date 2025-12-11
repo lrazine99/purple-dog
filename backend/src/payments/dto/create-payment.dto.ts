@@ -1,5 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsInt, IsOptional, IsString, IsUrl } from 'class-validator';
+import { IsEnum, IsInt, IsOptional, IsString, IsUrl } from 'class-validator';
+
+export enum PaymentMethodType {
+  CARD = 'card',
+  SEPA = 'sepa_debit',
+  BOTH = 'both',
+}
 
 export class CreatePaymentDto {
   @ApiProperty({ description: 'ID de la commande à payer' })
@@ -29,5 +35,15 @@ export class CreatePaymentDto {
   @IsString()
   @IsOptional()
   customer_id?: string;
+
+  @ApiProperty({
+    description: 'Type de méthode de paiement (card, sepa_debit, both)',
+    enum: PaymentMethodType,
+    default: PaymentMethodType.BOTH,
+    required: false,
+  })
+  @IsEnum(PaymentMethodType)
+  @IsOptional()
+  payment_method_type?: PaymentMethodType;
 }
 

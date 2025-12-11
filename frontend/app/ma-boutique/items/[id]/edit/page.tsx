@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import GenericHeader from "@/components/header/GenericHeader";
 import Footer from "@/components/homepage/footer";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
