@@ -15,6 +15,8 @@ export const ROUTES = {
 
   MON_COMPTE: "/mon-compte",
   FAVORIS: "/favoris",
+  ABONNEMENT: "/abonnement",
+
   MA_BOUTIQUE: "/ma-boutique",
   MES_ENCHERES: "/mes-encheres",
   ADMIN: "/admin",
@@ -24,11 +26,7 @@ export const ROUTES = {
   ADMIN_ORDERS: "/admin/orders",
 } as const;
 
-export const PUBLIC_ROUTES = [
-  ROUTES.HOME,
-
-  ROUTES.PRODUITS,
-] as const;
+export const PUBLIC_ROUTES = [ROUTES.HOME, ROUTES.PRODUITS] as const;
 
 export const PROFESSIONNEL_ROUTES = [ROUTES.MA_BOUTIQUE] as const;
 export const PARTICULAR_ROUTES = [ROUTES.MA_BOUTIQUE] as const;
