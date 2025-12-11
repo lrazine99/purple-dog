@@ -13,7 +13,12 @@ export async function GET(request: NextRequest) {
       ? 'http://backend:3001' 
       : process.env.NEXT_PUBLIC_API_URL;
 
-    const response = await fetch(`${apiUrl}/items`, {
+    // Forward query parameters
+    const searchParams = request.nextUrl.searchParams;
+    const queryString = searchParams.toString();
+    const url = queryString ? `${apiUrl}/items?${queryString}` : `${apiUrl}/items`;
+
+    const response = await fetch(url, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
