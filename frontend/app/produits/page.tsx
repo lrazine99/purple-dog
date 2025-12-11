@@ -85,12 +85,10 @@ export default function ProductsPage() {
       {selectedCategory && (
         <div className="container mx-auto px-4 py-12">
           <div className="max-w-4xl">
-            <h1 className="font-serif text-4xl md:text-5xl font-normal text-foreground mb-4">
+            <h1 className=" text-center font-serif text-4xl md:text-5xl font-normal text-foreground mb-4">
               {selectedCategory?.name}
             </h1>
-            <p className="text-muted-foreground text-base md:text-lg leading-relaxed max-w-2xl">
-              DESCRIPTION A AJOUTER DANS LADMINISTRATION DE LA CATEGORIE
-            </p>
+            
           </div>
         </div>
       )}
@@ -98,7 +96,7 @@ export default function ProductsPage() {
       {!selectedCategory && (
         <div className="container mx-auto px-4 py-12">
           <h1 className="font-serif text-4xl md:text-5xl font-normal text-foreground mb-8">
-            AFFICHER TOUT LES PRODUITS
+            LES PRODUITS
           </h1>
         </div>
       )}
