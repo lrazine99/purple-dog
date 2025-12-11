@@ -16,15 +16,22 @@ export const GenericHeader = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const logoutMutation = useLogout();
 
-  const isAuthenticated = !isLoading && !!user;
   const role = user?.role || null;
-  console.log("isLoading", isLoading);
+
+  if (isLoading)
+    return (
+      <div className="border-b border-border bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60 sticky top-0 z-50 h-16"></div>
+    );
+
   return (
-    <header className="border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
+    <header className="border-b border-border bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60 sticky top-0 z-50">
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
           <div className="flex items-center gap-8">
-            <Link href={ROUTES.HOME} className="flex w-20 items-center space-x-2">
+            <Link
+              href={ROUTES.HOME}
+              className="flex w-20 items-center space-x-2"
+            >
               <Image
                 src="/purple-dog-logo.png"
                 alt="Purple Dog Logo"
@@ -35,7 +42,7 @@ export const GenericHeader = () => {
               />
             </Link>
             <nav className="hidden md:flex items-center gap-6">
-              {isAuthenticated && (
+              {user && (
                 <>
                   {role === "particular" && <SellerNavbar />}
                   {role === "professional" && (
@@ -61,7 +68,7 @@ export const GenericHeader = () => {
             </div>
 
             <div className="hidden md:flex items-center gap-3">
-              {isAuthenticated ? (
+              {user ? (
                 <>
                   <Button asChild variant="default">
                     <Link
@@ -113,9 +120,9 @@ export const GenericHeader = () => {
         {mobileMenuOpen && (
           <div className="md:hidden border-t border-border py-4 animate-in slide-in-from-top-2">
             <nav className="flex flex-col gap-4">
-              {isAuthenticated && (
+              {user && (
                 <>
-                  {role === "professional" && (
+                  {user.role === "professional" && (
                     <div className="flex flex-col gap-3">
                       <Link
                         href={ROUTES.PRODUITS}
@@ -151,7 +158,7 @@ export const GenericHeader = () => {
                       </Link>
                     </div>
                   )}
-                  {role === "particular" && (
+                  {user.role === "particular" && (
                     <div className="flex flex-col gap-3">
                       <Link
                         href={ROUTES.PRODUITS}
@@ -211,7 +218,7 @@ export const GenericHeader = () => {
 
               {/* Boutons d'authentification mobile */}
               <div className="flex flex-col gap-2 pt-2">
-                {isAuthenticated ? (
+                {user ? (
                   <>
                     <Button asChild variant="default" className="w-full">
                       <Link

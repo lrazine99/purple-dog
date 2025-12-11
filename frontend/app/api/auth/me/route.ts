@@ -1,32 +1,27 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 
 export async function GET(request: NextRequest) {
-  const token = request.cookies.get("access_token")?.value;
-
-  if (!token) {
-    return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
-  }
-
   try {
-    // Use backend hostname when running inside Docker (frontend container)
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL?.includes("localhost")
-      ? "http://backend:3001"
-      : process.env.NEXT_PUBLIC_API_URL;
+    const accessToken = request.cookies.get("access_token")?.value;
 
-    const response = await fetch(`${apiUrl}/auth/me`, {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/me`, {
       headers: {
-        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
       },
     });
 
     if (!response.ok) {
-      return NextResponse.json({ error: "Token invalide" }, { status: 401 });
+      return Response.json(
+        { error: "Not authenticated" },
+        { status: response.status }
+      );
     }
 
-    const user = await response.json();
-    return NextResponse.json(user);
+    const data = await response.json();
+    return Response.json(data);
   } catch (error) {
-    console.error("Error in /api/auth/me:", error);
-    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
+    console.error("Error fetching user:", error);
+    return Response.json({ error: "Internal server error" }, { status: 500 });
   }
 }
