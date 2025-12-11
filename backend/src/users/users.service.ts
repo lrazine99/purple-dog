@@ -61,7 +61,7 @@ export class UsersService {
       if (!createUserDto.siret) {
         throw new BadRequestException('SIRET number is required');
       }
-      if (!file) {
+      if (!file && !createUserDto.official_document_url) {
         throw new BadRequestException('Official document is required');
       }
       if (!createUserDto.address_line) {

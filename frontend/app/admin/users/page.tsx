@@ -153,9 +153,8 @@ export default function UsersPage() {
       const formData = new FormData();
       formData.append("file", file);
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/upload`, {
+      const res = await fetch("/api/upload", {
         method: "POST",
-        credentials: "include", // Send http-only cookies
         body: formData,
       });
 
@@ -168,7 +167,7 @@ export default function UsersPage() {
       // Set the URL in the form
       setForm((prev) => ({
         ...prev,
-        official_document_url: `${process.env.NEXT_PUBLIC_API_URL}${data.url}`,
+        official_document_url: data.url,
       }));
       setUploadedFileName(data.originalname);
     } catch (err: any) {
@@ -196,9 +195,8 @@ export default function UsersPage() {
       const formData = new FormData();
       formData.append("file", file);
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/upload`, {
+      const res = await fetch("/api/upload", {
         method: "POST",
-        credentials: "include", // Send http-only cookies
         body: formData,
       });
 
