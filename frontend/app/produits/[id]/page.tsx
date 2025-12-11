@@ -57,6 +57,7 @@ interface Item {
   status: string;
   auction_start_price?: number | null;
   auction_end_date?: string | null;
+  min_amount_bid?: number | null;
   photos?: ItemPhoto[];
   created_at: string;
   updated_at: string;
