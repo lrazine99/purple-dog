@@ -56,7 +56,6 @@ export function ParticularRegisterForm() {
         router.push("/connexion");
       },
       onError: (error: Error) => {
-        console.log("erreor", error);
         toast({
           variant: "error",
           message: "Erreur lors de l'inscription",
