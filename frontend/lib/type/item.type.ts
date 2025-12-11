@@ -10,7 +10,14 @@ export enum SaleMode {
 export enum ItemStatus {
   DRAFT = "draft",
   PUBLISHED = "published",
+  FOR_SALE = "for_sale",
   SOLD = "sold",
+  PENDING = "pending",
+  APPROVED = "approved",
+  CANCELLED = "cancelled",
+  EXPIRED = "expired",
+  BLOCKED = "blocked",
+  DELETED = "deleted",
   PENDING_EXPERTISE = "pending_expertise",
 }
 
@@ -26,18 +33,8 @@ export const itemSchema = z.object({
   weight_kg: z.coerce.number().nullish(),
   price_desired: z.coerce.number(),
   price_min: z.coerce.number().nullish(),
-  sale_mode: z.enum([
-    SaleMode.AUCTION,
-    SaleMode.FAST,
-    SaleMode.FIXED,
-    SaleMode.NEGOTIABLE,
-  ]),
-  status: z.enum([
-    ItemStatus.DRAFT,
-    ItemStatus.PUBLISHED,
-    ItemStatus.SOLD,
-    ItemStatus.PENDING_EXPERTISE,
-  ]),
+  sale_mode: z.string(), // Accept any string for sale_mode
+  status: z.string(), // Accept any string for status
   auction_start_price: z.coerce.number().nullish(),
   auction_end_date: z.string().nullish(),
   created_at: z.string(),
