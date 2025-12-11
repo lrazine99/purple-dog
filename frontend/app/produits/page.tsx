@@ -1,5 +1,4 @@
 "use client";
-import { ProHeader } from "@/components/header/ProHeader";
 import { CategorySlider } from "@/components/categories/CategorySlider";
 import { ProductCard } from "@/components/products/ProductCard";
 import { ProductFilters } from "@/components/products/ProductFilters";
@@ -69,7 +68,6 @@ export default function ProductsPage() {
 
   return (
     <Fragment>
-      <ProHeader />
       <CategorySlider />
 
       {selectedCategory && (

@@ -51,6 +51,7 @@ export class AuthService {
     const access_token = await this.signAccessToken(user);
     const refresh_token = await this.signRefreshToken(user);
     const refresh_token_hash = await bcrypt.hash(refresh_token, 10);
+
     await this.userRepository.update({ id: user.id }, { refresh_token_hash });
 
     return { access_token, refresh_token, role: user.role };
