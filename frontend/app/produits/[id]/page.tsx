@@ -1,5 +1,6 @@
 import { AuctionBidding } from "@/components/auction-bidding";
 import { DirectSaleCard } from "@/components/direct-sale-card";
+import { ItemOffersSection } from "@/components/offers/ItemOffersSection";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -229,8 +230,12 @@ export default async function ProduitPage({
                 createdAt={item.created_at}
               />
             ) : (
-              <DirectSaleCard price={item.price_desired} />
+              <DirectSaleCard itemId={item.id} sellerId={item.seller_id} price={item.price_desired} />
             )}
+
+            <section id="offres">
+              <ItemOffersSection itemId={item.id} sellerId={item.seller_id} />
+            </section>
 
             {/* Trust Badges */}
             <div className="grid grid-cols-3 gap-3">

@@ -60,6 +60,8 @@ export const itemSchema = z.object({
     ItemStatus.EXPIRED,
     ItemStatus.BLOCKED,
     ItemStatus.DELETED,
+    ItemStatus.PUBLISHED,
+    ItemStatus.PENDING_EXPERTISE,
   ]),
   auction_start_price: z.coerce.number().nullish(),
   auction_end_date: z.string().nullish(),

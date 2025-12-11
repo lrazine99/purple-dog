@@ -9,7 +9,8 @@ export const ROUTES = {
   CGU: "/cgu",
   CONTACT: "/contact",
 
-  PRODUITS: "/produits",
+  MY_SHOP_NEW: "/ma-boutique/new",
+  MY_SHOP_ITEMS_EDIT: "/ma-boutique/items/[id]/edit",
 
   AUTH_VERIFY: "/auth/verify",
 
