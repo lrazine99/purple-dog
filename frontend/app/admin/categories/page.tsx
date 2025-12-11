@@ -84,9 +84,8 @@ export default function CategoriesPage() {
   const fetchCategories = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem("access_token");
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/categories`, {
-        headers: { Authorization: `Bearer ${token}` },
+      const res = await fetch('/api/categories', {
+        credentials: "include",
       });
       if (res.ok) {
         const data = await res.json();
@@ -101,9 +100,8 @@ export default function CategoriesPage() {
 
   const fetchAllItems = async () => {
     try {
-      const token = localStorage.getItem("access_token");
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/items`, {
-        headers: { Authorization: `Bearer ${token}` },
+      const res = await fetch('/api/items', {
+        credentials: "include",
       });
       if (res.ok) {
         const data = await res.json();
@@ -302,18 +300,17 @@ export default function CategoriesPage() {
     if (!newCategory.trim()) return;
 
     try {
-      const token = localStorage.getItem("access_token");
       const body: any = { name: newCategory };
       if (selectedParent) {
         body.parent_id = selectedParent;
       }
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/categories`, {
+      const res = await fetch('/api/categories', {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
+        credentials: "include",
         body: JSON.stringify(body),
       });
       if (res.ok) {
@@ -338,10 +335,9 @@ export default function CategoriesPage() {
     if (!confirm("Êtes-vous sûr de vouloir supprimer cette catégorie ?\n\nLes articles de cette catégorie seront automatiquement déplacés vers \"Autre\".")) return;
 
     try {
-      const token = localStorage.getItem("access_token");
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/categories/${id}`, {
+      const res = await fetch(`/api/categories/${id}`, {
         method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
+        credentials: "include",
       });
       if (res.ok) {
         setCategories(categories.filter((c) => c.id !== id));
@@ -353,7 +349,7 @@ export default function CategoriesPage() {
         fetchCategories();
       } else {
         const error = await res.json();
-        alert(error.message || "Erreur lors de la suppression");
+        alert(error.error || error.message || "Erreur lors de la suppression");
       }
     } catch (error) {
       console.error("Failed to delete category:", error);
@@ -456,7 +452,7 @@ export default function CategoriesPage() {
                   e.stopPropagation();
                   toggleExpand(category.id);
                 }}
-                className="w-6 h-6 flex items-center justify-center text-slate-400 hover:text-white"
+                className="w-6 h-6 flex items-center justify-center text-gray-600 hover:text-gray-900"
               >
                 {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
               </button>
@@ -476,7 +472,7 @@ export default function CategoriesPage() {
             </div>
             <div className="flex items-center gap-2">
               <div>
-                <p className="text-white font-medium flex items-center gap-2">
+                <p className="text-gray-900 font-medium flex items-center gap-2">
                   {category.name}
                   {isDefault && (
                     <span className="px-2 py-0.5 text-xs bg-emerald-500/20 text-emerald-400 rounded-full">
@@ -551,16 +547,16 @@ export default function CategoriesPage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-white flex items-center gap-3">
-              <FolderTree className="w-8 h-8 text-orange-400" />
+            <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
+              <FolderTree className="w-8 h-8 text-orange-600" />
               Gestion des Catégories
             </h1>
-            <p className="text-slate-400 mt-1">{categories.length} catégories</p>
+            <p className="text-gray-600 mt-1">{categories.length} catégories</p>
           </div>
           <Button
             onClick={fetchCategories}
             variant="outline"
-            className="bg-slate-800 border-slate-700 text-white hover:bg-slate-700"
+            className="border-gray-300 text-gray-700 hover:bg-gray-100"
           >
             <RefreshCw className={`w-4 h-4 mr-2 ${loading ? "animate-spin" : ""}`} />
             Actualiser
@@ -568,20 +564,20 @@ export default function CategoriesPage() {
         </div>
 
         {/* Add Category */}
-        <div className="bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-6">
-          <h2 className="text-lg font-semibold text-white mb-4">
+        <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">
             Ajouter {selectedParent ? "une sous-catégorie" : "une catégorie"}
           </h2>
 
           {selectedParent && (
             <div className="mb-4 flex items-center gap-2">
-              <span className="text-slate-400 text-sm">Parent :</span>
-              <span className="px-3 py-1 bg-purple-500/20 text-purple-400 rounded-full text-sm font-medium">
+              <span className="text-gray-600 text-sm">Parent :</span>
+              <span className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm font-medium">
                 {categories.find((c) => c.id === selectedParent)?.name}
               </span>
               <button
                 onClick={() => setSelectedParent(null)}
-                className="text-slate-400 hover:text-white text-sm underline"
+                className="text-gray-600 hover:text-gray-900 text-sm underline"
               >
                 Effacer
               </button>
@@ -596,13 +592,13 @@ export default function CategoriesPage() {
                 value={newCategory}
                 onChange={(e) => setNewCategory(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleCreate()}
-                className="h-12 bg-slate-900/50 border-slate-700 text-white placeholder:text-slate-500 focus:border-purple-500"
+                className="h-12 bg-white border-gray-300 text-gray-900 placeholder:text-gray-400 focus:border-purple-500 focus:ring-purple-500"
               />
             </div>
             <select
               value={selectedParent || ""}
               onChange={(e) => setSelectedParent(e.target.value ? Number(e.target.value) : null)}
-              className="h-12 px-4 bg-slate-900/50 border border-slate-700 rounded-lg text-white focus:border-purple-500 focus:outline-none"
+              className="h-12 px-4 bg-white border border-gray-300 rounded-lg text-gray-900 focus:border-purple-500 focus:outline-none"
             >
               <option value="">Sans parent (catégorie racine)</option>
               {/* Only show root categories as parents (max 2 levels) */}
@@ -624,26 +620,26 @@ export default function CategoriesPage() {
 
         {/* Search */}
         <div className="relative">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
           <Input
             placeholder="Rechercher des catégories..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="h-12 pl-12 bg-slate-800/50 border-slate-700 text-white placeholder:text-slate-500 focus:border-purple-500"
+            className="h-12 pl-12 bg-white border-gray-300 text-gray-900 placeholder:text-gray-400 focus:border-purple-500 focus:ring-purple-500"
           />
         </div>
 
         {/* Categories Tree */}
-        <div className="bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-2xl overflow-hidden">
+        <div className="bg-white border border-gray-200 shadow-sm rounded-2xl overflow-hidden">
           {loading ? (
             <div className="p-6 space-y-4">
               {[...Array(5)].map((_, i) => (
                 <div key={i} className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-slate-700 rounded-xl animate-pulse" />
-                    <div className="w-40 h-5 bg-slate-700 rounded animate-pulse" />
+                    <div className="w-10 h-10 bg-gray-200 rounded-xl animate-pulse" />
+                    <div className="w-40 h-5 bg-gray-200 rounded animate-pulse" />
                   </div>
-                  <div className="w-8 h-8 bg-slate-700 rounded animate-pulse" />
+                  <div className="w-8 h-8 bg-gray-200 rounded animate-pulse" />
                 </div>
               ))}
             </div>
@@ -670,7 +666,7 @@ export default function CategoriesPage() {
                         <FolderTree className="w-5 h-5 text-white" />
                       </div>
                       <div>
-                        <p className="text-white font-medium">{category.name}</p>
+                        <p className="text-gray-900 font-medium">{category.name}</p>
                         <p className="text-slate-400 text-sm">
                           ID: {category.id}
                           {category.parent_id && ` • Parent: ${category.parent_id}`}
@@ -753,7 +749,7 @@ export default function CategoriesPage() {
                     setSelectedCategory(null);
                     setCategoryItems([]);
                   }}
-                  className="w-10 h-10 rounded-xl bg-slate-700 hover:bg-slate-600 flex items-center justify-center text-slate-400 hover:text-white transition-colors"
+                  className="w-10 h-10 rounded-xl bg-slate-700 hover:bg-slate-600 flex items-center justify-center text-gray-600 hover:text-gray-900 transition-colors"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -832,7 +828,7 @@ export default function CategoriesPage() {
                             )}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h3 className="text-white font-semibold truncate">{item.name}</h3>
+                            <h3 className="text-gray-900 font-semibold truncate">{item.name}</h3>
                             <p className="text-slate-400 text-sm line-clamp-2 mt-1">{item.description}</p>
                             <div className="flex items-center justify-between mt-3">
                               <div className="flex items-center gap-1 text-green-400 font-semibold">
@@ -889,7 +885,7 @@ export default function CategoriesPage() {
               </div>
               <button
                 onClick={() => setShowAddArticles(false)}
-                className="w-10 h-10 rounded-xl bg-slate-700 hover:bg-slate-600 flex items-center justify-center text-slate-400 hover:text-white transition-colors"
+                className="w-10 h-10 rounded-xl bg-slate-700 hover:bg-slate-600 flex items-center justify-center text-gray-600 hover:text-gray-900 transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -903,7 +899,7 @@ export default function CategoriesPage() {
                   placeholder="Rechercher des articles..."
                   value={searchArticles}
                   onChange={(e) => setSearchArticles(e.target.value)}
-                  className="h-12 pl-12 bg-slate-900/50 border-slate-700 text-white placeholder:text-slate-500 focus:border-green-500"
+                  className="h-12 pl-12 bg-slate-900/50 border-gray-300 text-gray-900 placeholder:text-gray-400 focus:border-green-500"
                 />
               </div>
               {selectedItemIds.size > 0 && (
@@ -913,7 +909,7 @@ export default function CategoriesPage() {
                   </span>
                   <button
                     onClick={() => setSelectedItemIds(new Set())}
-                    className="text-slate-400 hover:text-white text-sm underline"
+                    className="text-gray-600 hover:text-gray-900 text-sm underline"
                   >
                     Tout désélectionner
                   </button>
@@ -971,7 +967,7 @@ export default function CategoriesPage() {
 
                           {/* Info */}
                           <div className="flex-1 min-w-0">
-                            <h3 className="text-white font-medium truncate">{item.name}</h3>
+                            <h3 className="text-gray-900 font-medium truncate">{item.name}</h3>
                             <p className="text-slate-400 text-sm truncate">{item.description}</p>
                             <div className="flex items-center gap-3 mt-2">
                               <span className="text-green-400 font-medium">{item.price_desired} €</span>
@@ -1022,19 +1018,19 @@ export default function CategoriesPage() {
       {/* Move Article Modal */}
       {showMoveModal && itemToMove && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
-          <div className="bg-slate-800 border border-slate-700 rounded-2xl w-full max-w-md overflow-hidden">
+          <div className="bg-white border border-gray-200 rounded-2xl w-full max-w-md overflow-hidden shadow-xl">
             {/* Header */}
-            <div className="flex items-center justify-between p-6 border-b border-slate-700">
+            <div className="flex items-center justify-between p-6 border-b border-gray-200">
               <div>
-                <h2 className="text-xl font-bold text-white">Déplacer l'article</h2>
-                <p className="text-slate-400 text-sm mt-1">"{itemToMove.name}"</p>
+                <h2 className="text-xl font-bold text-gray-900">Déplacer l'article</h2>
+                <p className="text-gray-600 text-sm mt-1">"{itemToMove.name}"</p>
               </div>
               <button
                 onClick={() => {
                   setShowMoveModal(false);
                   setItemToMove(null);
                 }}
-                className="w-10 h-10 rounded-xl bg-slate-700 hover:bg-slate-600 flex items-center justify-center text-slate-400 hover:text-white transition-colors"
+                className="w-10 h-10 rounded-xl bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-600 hover:text-gray-900 transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -1042,13 +1038,13 @@ export default function CategoriesPage() {
 
             {/* Content */}
             <div className="p-6">
-              <label className="block text-sm font-medium text-slate-400 mb-3">
+              <label className="block text-sm font-medium text-gray-700 mb-3">
                 Sélectionnez la nouvelle catégorie
               </label>
               <select
                 value={targetCategoryId || ""}
                 onChange={(e) => setTargetCategoryId(e.target.value ? Number(e.target.value) : null)}
-                className="w-full h-12 px-4 bg-slate-900/50 border border-slate-700 rounded-lg text-white focus:border-purple-500 focus:outline-none"
+                className="w-full h-12 px-4 bg-white border border-gray-300 rounded-lg text-gray-900 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 focus:outline-none"
               >
                 <option value="">-- Choisir une catégorie --</option>
                 {categories
@@ -1062,8 +1058,8 @@ export default function CategoriesPage() {
               </select>
 
               {targetCategoryId && (
-                <div className="mt-4 p-4 bg-blue-500/10 border border-blue-500/30 rounded-xl">
-                  <p className="text-blue-400 text-sm">
+                <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+                  <p className="text-blue-700 text-sm">
                     <ArrowRightLeft className="w-4 h-4 inline mr-2" />
                     L'article sera déplacé de "{selectedCategory?.name}" vers "
                     {categories.find((c) => c.id === targetCategoryId)?.name}"
@@ -1073,14 +1069,14 @@ export default function CategoriesPage() {
             </div>
 
             {/* Footer */}
-            <div className="p-4 border-t border-slate-700 flex justify-end gap-3 bg-slate-900/50">
+            <div className="p-4 border-t border-gray-200 flex justify-end gap-3 bg-gray-50">
               <Button
                 variant="outline"
                 onClick={() => {
                   setShowMoveModal(false);
                   setItemToMove(null);
                 }}
-                className="bg-slate-700 border-slate-600 text-white hover:bg-slate-600"
+                className="bg-white border-gray-300 text-gray-700 hover:bg-gray-100"
               >
                 Annuler
               </Button>
