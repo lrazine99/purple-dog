@@ -304,6 +304,17 @@ export class ItemsService {
   }
 
   // Photo management methods
+  async listPhotos(itemId: number): Promise<ItemPhoto[]> {
+    const item = await this.itemRepository.findOne({ where: { id: itemId } });
+    if (!item) {
+      throw new NotFoundException(`Item with ID ${itemId} not found`);
+    }
+    return this.itemPhotoRepository.find({
+      where: { item_id: itemId },
+      order: { position: 'ASC' },
+    });
+  }
+
   async addPhoto(
     itemId: number,
     url: string,
