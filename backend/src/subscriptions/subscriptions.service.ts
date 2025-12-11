@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  InternalServerErrorException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ConfigService } from '@nestjs/config';
@@ -162,15 +163,14 @@ export class SubscriptionsService {
       );
     }
 
-    // Vérifier que l'utilisateur a une subscription
-    const subscription = await this.subscriptionRepository.findOne({
+    // Vérifier que l'utilisateur a une subscription, sinon en créer une
+    let subscription = await this.subscriptionRepository.findOne({
       where: { user_id: userId },
     });
 
     if (!subscription) {
-      throw new NotFoundException(
-        `No subscription found for user ID ${userId}`,
-      );
+      // Créer automatiquement une subscription de trial si elle n'existe pas
+      subscription = await this.createTrialSubscription(userId);
     }
 
     // Vérifier que l'utilisateur n'est pas déjà sur un plan payant actif
@@ -184,24 +184,31 @@ export class SubscriptionsService {
     // Créer ou récupérer le client Stripe
     let stripeCustomerId: string;
 
-    // Chercher un customer_id existant dans les paiements précédents
-    const existingCustomer = await this.stripe.customers.list({
-      email: user.email,
-      limit: 1,
-    });
-
-    if (existingCustomer.data.length > 0) {
-      stripeCustomerId = existingCustomer.data[0].id;
-    } else {
-      // Créer un nouveau client Stripe
-      const customer = await this.stripe.customers.create({
+    try {
+      // Chercher un customer_id existant dans les paiements précédents
+      const existingCustomer = await this.stripe.customers.list({
         email: user.email,
-        name: `${user.first_name} ${user.last_name}`,
-        metadata: {
-          user_id: userId.toString(),
-        },
+        limit: 1,
       });
-      stripeCustomerId = customer.id;
+
+      if (existingCustomer.data.length > 0) {
+        stripeCustomerId = existingCustomer.data[0].id;
+      } else {
+        // Créer un nouveau client Stripe
+        const customer = await this.stripe.customers.create({
+          email: user.email,
+          name: `${user.first_name || ''} ${user.last_name || ''}`.trim() || user.email,
+          metadata: {
+            user_id: userId.toString(),
+          },
+        });
+        stripeCustomerId = customer.id;
+      }
+    } catch (error) {
+      console.error('Stripe customer creation/retrieval error:', error);
+      throw new InternalServerErrorException(
+        `Failed to create or retrieve Stripe customer: ${error.message || 'Unknown error'}`,
+      );
     }
 
     const frontendUrl =
@@ -217,7 +224,7 @@ export class SubscriptionsService {
       const productId = this.config.get<string>('STRIPE_PRODUCT_ID');
 
       if (!productId) {
-        throw new Error(
+        throw new InternalServerErrorException(
           'Either STRIPE_PRICE_ID or STRIPE_PRODUCT_ID must be configured. Please create a product in Stripe Dashboard and set the price ID or product ID.',
         );
       }
@@ -230,7 +237,7 @@ export class SubscriptionsService {
       });
 
       if (prices.data.length === 0) {
-        throw new Error(
+        throw new InternalServerErrorException(
           `No active price found for product ${productId}. Please create a price in Stripe Dashboard.`,
         );
       }
@@ -239,27 +246,43 @@ export class SubscriptionsService {
     }
 
     // Créer la session de checkout Stripe pour l'abonnement
-    const session = await this.stripe.checkout.sessions.create({
-      customer: stripeCustomerId,
-      payment_method_types: ['card'],
-      line_items: [
-        {
-          price: priceId, // Utiliser le Price ID de Stripe
-          quantity: 1,
+    try {
+      const session = await this.stripe.checkout.sessions.create({
+        customer: stripeCustomerId,
+        payment_method_types: ['card'],
+        line_items: [
+          {
+            price: priceId, // Utiliser le Price ID de Stripe
+            quantity: 1,
+          },
+        ],
+        mode: 'subscription',
+        success_url: successUrl,
+        cancel_url: cancelUrl,
+        metadata: {
+          user_id: userId.toString(),
+          subscription_id: subscription.id.toString(),
         },
-      ],
-      mode: 'subscription',
-      success_url: successUrl,
-      cancel_url: cancelUrl,
-      metadata: {
-        user_id: userId.toString(),
-        subscription_id: subscription.id.toString(),
-      },
-    });
+      });
 
-    return {
-      checkoutUrl: session.url as string,
-    };
+      if (!session.url) {
+        throw new InternalServerErrorException(
+          'Failed to create checkout session: no URL returned',
+        );
+      }
+
+      return {
+        checkoutUrl: session.url,
+      };
+    } catch (error) {
+      console.error('Stripe checkout session creation error:', error);
+      if (error instanceof BadRequestException || error instanceof InternalServerErrorException) {
+        throw error;
+      }
+      throw new InternalServerErrorException(
+        `Failed to create checkout session: ${error.message || 'Unknown error'}`,
+      );
+    }
   }
 
   private toResponseDto(subscription: Subscription): SubscriptionResponseDto {
