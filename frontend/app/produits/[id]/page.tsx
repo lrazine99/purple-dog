@@ -1,23 +1,23 @@
-import { notFound } from "next/navigation";
-import Image from "next/image";
-import Link from "next/link";
-import { Header } from "@/components/header";
-import { AuctionCard } from "@/components/auction-card";
+import { AuctionBidding } from "@/components/auction-bidding";
 import { DirectSaleCard } from "@/components/direct-sale-card";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import {
+  Award,
+  Calendar,
+  ChevronLeft,
   Gavel,
   Heart,
   Share2,
   Shield,
   Truck,
-  Award,
-  ChevronLeft,
   User,
-  Calendar,
 } from "lucide-react";
+import { headers } from "next/headers";
+import Image from "next/image";
+import Link from "next/link";
+import { notFound } from "next/navigation";
 
 interface ItemPhoto {
   id: number;
@@ -62,9 +62,10 @@ interface Item {
   updated_at: string;
 }
 
-async function getItem(id: string): Promise<Item | null> {
+async function getItem(id: string, baseUrl: string): Promise<Item | null> {
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/items/${id}`, {
+    const url = `${baseUrl}/api/items/${id}`;
+    const res = await fetch(url, {
       cache: "no-store",
     });
 
@@ -85,7 +86,14 @@ export default async function ProduitPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const item = await getItem(id);
+
+  // Obtenir l'URL de base depuis les headers
+  const headersList = await headers();
+  const host = headersList.get("host") || "localhost:3000";
+  const protocol = process.env.NODE_ENV === "production" ? "https" : "http";
+  const baseUrl = `${protocol}://${host}`;
+
+  const item = await getItem(id, baseUrl);
 
   if (!item) {
     notFound();
@@ -108,8 +116,6 @@ export default async function ProduitPage({
 
   return (
     <div className="min-h-screen">
-      <Header />
-
       <main className="container mx-auto px-4 py-6">
         {/* Breadcrumb */}
         <Link
@@ -216,13 +222,11 @@ export default async function ProduitPage({
 
             {/* Pricing Section */}
             {isAuction ? (
-              <AuctionCard
+              <AuctionBidding
                 itemId={item.id}
-                currentBid={item.auction_start_price || item.price_min}
-                startingBid={item.auction_start_price || item.price_min}
-                bidCount={0}
-                endDate={formatDate(item.auction_end_date || "")}
-                priceMin={item.price_min}
+                startingPrice={item.auction_start_price || item.price_min || 0}
+                priceMin={item.price_min || 0}
+                createdAt={item.created_at}
               />
             ) : (
               <DirectSaleCard

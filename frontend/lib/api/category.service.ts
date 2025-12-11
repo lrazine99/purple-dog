@@ -2,15 +2,12 @@ import { CategoriesResponse } from "../type/category.type";
 import { categoriesResponseSchema } from "../validation/category.schema";
 
 export async function getCategories(): Promise<CategoriesResponse> {
-  const response = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/categories`,
-    {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    }
-  );
+  const response = await fetch("/api/categories", {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
 
   if (!response.ok) {
     let error;

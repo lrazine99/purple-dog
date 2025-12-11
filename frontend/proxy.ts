@@ -12,7 +12,9 @@ import { decodeJWTPayload } from "@/lib/jwt";
 export async function proxy(request: NextRequest) {
   const token = request.cookies.get("access_token")?.value;
   const payload = token ? await decodeJWTPayload(token) : null;
-
+  console.log('payload', payload);
+  console.log('token', token);
+  
   const isProtectedRoute = PROTECTED_ROUTES.some((route) =>
     request.nextUrl.pathname.startsWith(route)
   );
@@ -21,24 +23,10 @@ export async function proxy(request: NextRequest) {
     request.nextUrl.pathname.startsWith(route)
   );
 
-  const isPublicRoute = PUBLIC_ROUTES.some(
-    (route) =>
-      request.nextUrl.pathname === route ||
-      request.nextUrl.pathname.startsWith(route + "/")
-  );
-
   const isAdminRoute = ADMIN_ROUTES.some((route) =>
     request.nextUrl.pathname.startsWith(route)
   );
 
-  if (token && !payload) {
-    if (isPublicRoute) {
-      const response = NextResponse.next();
-      response.cookies.delete("access_token");
-      return response;
-    }
-    return NextResponse.redirect(new URL(ROUTES.CONNEXION, request.url));
-  }
 
   // Si la route est protégée et l'utilisateur n'est pas connecté, rediriger vers la connexion
   if (isProtectedRoute && !token) {

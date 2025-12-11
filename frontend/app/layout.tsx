@@ -1,10 +1,11 @@
 import type React from "react";
 import type { Metadata } from "next";
-import { Playfair_Display, Geist } from "next/font/google";
+import { Playfair_Display } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
 import { Toaster } from "@/components/ui/sonner";
 import { CategoryProvider } from "@/contexts/CategoryContext";
+import GenericHeader from "@/components/header/GenericHeader";
 
 const _playfair = Playfair_Display({
   subsets: ["latin"],
@@ -43,6 +44,7 @@ export default function RootLayout({
     <html lang="fr">
       <body className={`${_playfair.variable} font-sans antialiased`}>
         <Providers>
+          <GenericHeader />
           <CategoryProvider>{children}</CategoryProvider>
           <Toaster />
         </Providers>

@@ -1,8 +1,5 @@
-import Link from "next/link";
-import { Search, Menu } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { ROUTES } from "@/helper/routes";
+import Link from "next/link";
 
 export function SellerNavbar() {
   return (
