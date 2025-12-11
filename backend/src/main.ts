@@ -5,6 +5,7 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
 import * as express from 'express';
+import cookieParser from 'cookie-parser';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
@@ -12,7 +13,6 @@ async function bootstrap() {
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
 
-  // Enable validation globally
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -20,6 +20,8 @@ async function bootstrap() {
       transform: true,
     }),
   );
+
+  app.use(cookieParser());
 
   app.enableCors({
     origin: process.env.FRONTEND_URL || 'http://localhost:3001',
@@ -41,6 +43,6 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
 
-  await app.listen(process.env.PORT ?? 3001);
+  await app.listen(process.env.PORT ?? 3000, '0.0.0.0');
 }
 bootstrap();

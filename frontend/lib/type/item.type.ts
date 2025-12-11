@@ -9,8 +9,8 @@ export enum SaleMode {
 
 export enum ItemStatus {
   DRAFT = "draft",
-  PUBLISHED = "published",
   FOR_SALE = "for_sale",
+  PUBLISHED = "published", // Added to match backend
   SOLD = "sold",
   PENDING = "pending",
   APPROVED = "approved",
@@ -21,10 +21,19 @@ export enum ItemStatus {
   PENDING_EXPERTISE = "pending_expertise",
 }
 
+export const itemPhotoSchema = z.object({
+  id: z.number(),
+  url: z.string(),
+  position: z.number().optional(),
+  is_primary: z.boolean().optional(),
+});
+
+export type ItemPhoto = z.infer<typeof itemPhotoSchema>;
+
 export const itemSchema = z.object({
   id: z.number(),
   seller_id: z.number(),
-  category_id: z.number().nullish(),
+  category_id: z.number().nullable(),
   name: z.string(),
   description: z.string(),
   width_cm: z.coerce.number().nullish(),
@@ -32,11 +41,31 @@ export const itemSchema = z.object({
   depth_cm: z.coerce.number().nullish(),
   weight_kg: z.coerce.number().nullish(),
   price_desired: z.coerce.number(),
-  price_min: z.coerce.number().nullish(),
-  sale_mode: z.string(), // Accept any string for sale_mode
-  status: z.string(), // Accept any string for status
+  price_min: z.coerce.number(),
+  sale_mode: z.enum([
+    SaleMode.AUCTION,
+    SaleMode.FAST,
+    SaleMode.FIXED,
+    SaleMode.NEGOTIABLE,
+  ]),
+  status: z.enum([
+    ItemStatus.DRAFT,
+    ItemStatus.FOR_SALE,
+    ItemStatus.PUBLISHED,
+    ItemStatus.SOLD,
+    ItemStatus.PENDING,
+    ItemStatus.PENDING_EXPERTISE,
+    ItemStatus.APPROVED,
+    ItemStatus.CANCELLED,
+    ItemStatus.EXPIRED,
+    ItemStatus.BLOCKED,
+    ItemStatus.DELETED,
+    ItemStatus.PUBLISHED,
+    ItemStatus.PENDING_EXPERTISE,
+  ]),
   auction_start_price: z.coerce.number().nullish(),
   auction_end_date: z.string().nullish(),
+  photos: z.array(itemPhotoSchema).optional(),
   created_at: z.string(),
   updated_at: z.string(),
 });

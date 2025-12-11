@@ -4,12 +4,14 @@ import { ProductCard } from "@/components/products/ProductCard";
 import { ProductFilters } from "@/components/products/ProductFilters";
 import { useSelectedCategory } from "@/contexts/CategoryContext";
 import { useItems } from "@/hooks/useItems";
+import { useAuth } from "@/hooks/useAuth";
 import { Fragment, useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { SlidersHorizontal, X } from "lucide-react";
 
 export default function ProductsPage() {
   const { selectedCategory } = useSelectedCategory();
+  const { data: currentUser } = useAuth();
 
   const categoryKey = useMemo(
     () => selectedCategory?.id ?? "all",
@@ -40,10 +42,20 @@ export default function ProductsPage() {
     limit: 100,
   });
 
+  const currentUserId = currentUser?.id;
+
   const filteredItems = useMemo(() => {
     if (!items) return [];
 
-    let filtered = items;
+    // Only show publicly visible items (published, for_sale)
+    // Hide: draft, pending, pending_expertise, cancelled, expired, blocked, deleted, sold
+    const publicStatuses = ["published", "for_sale"];
+    let filtered = items.filter((item) => publicStatuses.includes(item.status));
+
+    // Exclude items owned by the current user
+    if (currentUserId) {
+      filtered = filtered.filter((item) => item.seller_id !== currentUserId);
+    }
 
     if (selectedSaleTypes.length > 0) {
       filtered = filtered.filter((item) =>
@@ -52,13 +64,15 @@ export default function ProductsPage() {
     }
 
     if (selectedSubCategories.length > 0) {
-      filtered = filtered.filter((item) =>
-        item.category_id !== null && item.category_id !== undefined && selectedSubCategories.includes(item.category_id)
+      filtered = filtered.filter(
+        (item) =>
+          item.category_id !== null &&
+          selectedSubCategories.includes(item.category_id)
       );
     }
 
     return filtered;
-  }, [items, selectedSaleTypes, selectedSubCategories]);
+  }, [items, selectedSaleTypes, selectedSubCategories, currentUserId]);
 
   const paginatedItems = filteredItems.slice(0, limit);
 
