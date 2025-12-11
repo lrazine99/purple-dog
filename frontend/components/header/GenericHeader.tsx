@@ -16,15 +16,22 @@ export const GenericHeader = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const logoutMutation = useLogout();
 
-  const isAuthenticated = !isLoading && !!user;
   const role = user?.role || null;
-  console.log("isLoading", isLoading);
+
+  if (isLoading)
+    return (
+      <div className="border-b border-border bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60 sticky top-0 z-50 h-16"></div>
+    );
+
   return (
     <header className="border-b border-border bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60 sticky top-0 z-50">
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
           <div className="flex items-center gap-8">
-            <Link href={ROUTES.HOME} className="flex w-20 items-center space-x-2">
+            <Link
+              href={ROUTES.HOME}
+              className="flex w-20 items-center space-x-2"
+            >
               <Image
                 src="/purple-dog-logo.png"
                 alt="Purple Dog Logo"
