@@ -3,12 +3,13 @@ import { categoriesResponseSchema } from "../validation/category.schema";
 
 export async function getCategories(): Promise<CategoriesResponse> {
   const response = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/categories`,
+    `/api/categories`,
     {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
       },
+      credentials: "include",
     }
   );
 

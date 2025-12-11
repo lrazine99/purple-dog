@@ -1018,19 +1018,19 @@ export default function CategoriesPage() {
       {/* Move Article Modal */}
       {showMoveModal && itemToMove && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
-          <div className="bg-slate-800 border border-slate-700 rounded-2xl w-full max-w-md overflow-hidden">
+          <div className="bg-white border border-gray-200 rounded-2xl w-full max-w-md overflow-hidden shadow-xl">
             {/* Header */}
-            <div className="flex items-center justify-between p-6 border-b border-slate-700">
+            <div className="flex items-center justify-between p-6 border-b border-gray-200">
               <div>
-                <h2 className="text-xl font-bold text-white">Déplacer l'article</h2>
-                <p className="text-slate-400 text-sm mt-1">"{itemToMove.name}"</p>
+                <h2 className="text-xl font-bold text-gray-900">Déplacer l'article</h2>
+                <p className="text-gray-600 text-sm mt-1">"{itemToMove.name}"</p>
               </div>
               <button
                 onClick={() => {
                   setShowMoveModal(false);
                   setItemToMove(null);
                 }}
-                className="w-10 h-10 rounded-xl bg-slate-700 hover:bg-slate-600 flex items-center justify-center text-gray-600 hover:text-gray-900 transition-colors"
+                className="w-10 h-10 rounded-xl bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-600 hover:text-gray-900 transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -1038,13 +1038,13 @@ export default function CategoriesPage() {
 
             {/* Content */}
             <div className="p-6">
-              <label className="block text-sm font-medium text-slate-400 mb-3">
+              <label className="block text-sm font-medium text-gray-700 mb-3">
                 Sélectionnez la nouvelle catégorie
               </label>
               <select
                 value={targetCategoryId || ""}
                 onChange={(e) => setTargetCategoryId(e.target.value ? Number(e.target.value) : null)}
-                className="w-full h-12 px-4 bg-white border border-gray-300 rounded-lg text-white focus:border-purple-500 focus:outline-none"
+                className="w-full h-12 px-4 bg-white border border-gray-300 rounded-lg text-gray-900 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 focus:outline-none"
               >
                 <option value="">-- Choisir une catégorie --</option>
                 {categories
@@ -1058,8 +1058,8 @@ export default function CategoriesPage() {
               </select>
 
               {targetCategoryId && (
-                <div className="mt-4 p-4 bg-blue-500/10 border border-blue-500/30 rounded-xl">
-                  <p className="text-blue-400 text-sm">
+                <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+                  <p className="text-blue-700 text-sm">
                     <ArrowRightLeft className="w-4 h-4 inline mr-2" />
                     L'article sera déplacé de "{selectedCategory?.name}" vers "
                     {categories.find((c) => c.id === targetCategoryId)?.name}"
@@ -1069,14 +1069,14 @@ export default function CategoriesPage() {
             </div>
 
             {/* Footer */}
-            <div className="p-4 border-t border-slate-700 flex justify-end gap-3 bg-slate-900/50">
+            <div className="p-4 border-t border-gray-200 flex justify-end gap-3 bg-gray-50">
               <Button
                 variant="outline"
                 onClick={() => {
                   setShowMoveModal(false);
                   setItemToMove(null);
                 }}
-                className="bg-slate-700 border-slate-600 text-white hover:bg-slate-600"
+                className="bg-white border-gray-300 text-gray-700 hover:bg-gray-100"
               >
                 Annuler
               </Button>
