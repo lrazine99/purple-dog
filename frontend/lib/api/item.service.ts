@@ -30,6 +30,7 @@ export async function getItems(
       headers: {
         "Content-Type": "application/json",
       },
+      credentials: "include",
     }
   );
 

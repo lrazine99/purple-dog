@@ -127,9 +127,8 @@ export default function ItemDetailPage() {
   const fetchItem = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem("access_token");
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/items/${itemId}`, {
-        headers: { Authorization: `Bearer ${token}` },
+      const res = await fetch(`/api/items/${itemId}`, {
+        credentials: "include",
       });
       if (res.ok) {
         const data = await res.json();
@@ -147,9 +146,8 @@ export default function ItemDetailPage() {
 
   const fetchCategories = async () => {
     try {
-      const token = localStorage.getItem("access_token");
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/categories`, {
-        headers: { Authorization: `Bearer ${token}` },
+      const res = await fetch('/api/categories', {
+        credentials: "include",
       });
       if (res.ok) {
         setCategories(await res.json());
@@ -161,9 +159,8 @@ export default function ItemDetailPage() {
 
   const fetchUsers = async () => {
     try {
-      const token = localStorage.getItem("access_token");
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users`, {
-        headers: { Authorization: `Bearer ${token}` },
+      const res = await fetch('/api/users', {
+        credentials: "include",
       });
       if (res.ok) {
         setUsers(await res.json());
@@ -339,8 +336,8 @@ export default function ItemDetailPage() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <Package className="w-16 h-16 text-slate-600 mx-auto mb-4" />
-          <p className="text-slate-400 text-lg">{error}</p>
+          <Package className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+          <p className="text-gray-600 text-lg">{error}</p>
           <Button
             onClick={() => router.push("/admin/items")}
             className="mt-4"
@@ -357,7 +354,7 @@ export default function ItemDetailPage() {
   if (!item) return null;
 
   const primaryPhoto = item.photos?.find((p) => p.is_primary) || item.photos?.[0];
-  const status = STATUSES[item.status] || { label: item.status, color: "bg-slate-500/20 text-slate-400" };
+  const status = STATUSES[item.status] || { label: item.status, color: "bg-gray-100 text-gray-600 border-gray-300" };
 
   return (
     <div className="space-y-6">
@@ -367,13 +364,13 @@ export default function ItemDetailPage() {
           <Button
             variant="ghost"
             onClick={() => router.push("/admin/items")}
-            className="text-slate-400 hover:text-white"
+            className="text-gray-600 hover:text-gray-900"
           >
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <div>
-            <h1 className="text-2xl font-bold text-white">{item.name}</h1>
-            <p className="text-slate-400">ID: {item.id}</p>
+            <h1 className="text-2xl font-bold text-gray-900">{item.name}</h1>
+            <p className="text-gray-600">ID: {item.id}</p>
           </div>
         </div>
         <div className="flex items-center gap-3">
@@ -385,7 +382,7 @@ export default function ItemDetailPage() {
                   setIsEditing(false);
                   initEditForm(item);
                 }}
-                className="bg-slate-700 border-slate-600 text-white hover:bg-slate-600"
+                className="border-gray-300 text-gray-700 hover:bg-gray-100"
               >
                 <X className="w-4 h-4 mr-2" />
                 Annuler
@@ -393,7 +390,7 @@ export default function ItemDetailPage() {
               <Button
                 onClick={handleSave}
                 disabled={saving}
-                className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
+                className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white"
               >
                 {saving ? (
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -408,7 +405,7 @@ export default function ItemDetailPage() {
               <Button
                 variant="outline"
                 onClick={() => setIsEditing(true)}
-                className="bg-slate-700 border-slate-600 text-white hover:bg-slate-600"
+                className="bg-gray-800 border-gray-700 text-white hover:bg-gray-700"
               >
                 <Edit className="w-4 h-4 mr-2" />
                 Modifier
@@ -416,7 +413,7 @@ export default function ItemDetailPage() {
               <Button
                 variant="outline"
                 onClick={() => setShowDeleteConfirm(true)}
-                className="bg-red-500/10 border-red-500/50 text-red-400 hover:bg-red-500/20"
+                className="bg-red-50 border-red-300 text-red-700 hover:bg-red-100"
               >
                 <Trash2 className="w-4 h-4 mr-2" />
                 Supprimer
@@ -427,7 +424,7 @@ export default function ItemDetailPage() {
       </div>
 
       {error && (
-        <div className="p-4 bg-red-500/10 border border-red-500/50 rounded-xl text-red-400">
+        <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-red-700">
           {error}
         </div>
       )}
@@ -436,7 +433,7 @@ export default function ItemDetailPage() {
         {/* Left Column - Photos */}
         <div className="lg:col-span-1 space-y-4">
           {/* Main Photo */}
-          <div className="bg-slate-800/50 border border-slate-700 rounded-2xl overflow-hidden">
+          <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
             {item.photos && item.photos.length > 0 ? (
               <div className="relative aspect-square">
                 <img
@@ -472,15 +469,15 @@ export default function ItemDetailPage() {
                   </>
                 )}
                 {item.photos[currentPhotoIndex]?.is_primary && (
-                  <div className="absolute top-4 left-4 px-2 py-1 bg-purple-500 rounded-full text-white text-xs flex items-center gap-1">
+                  <div className="absolute top-4 left-4 px-2 py-1 bg-purple-600 rounded-full text-gray-900 text-xs flex items-center gap-1 shadow-md">
                     <Star className="w-3 h-3 fill-current" />
                     Principale
                   </div>
                 )}
               </div>
             ) : (
-              <div className="aspect-square flex items-center justify-center bg-slate-900">
-                <ImageIcon className="w-16 h-16 text-slate-600" />
+              <div className="aspect-square flex items-center justify-center bg-gray-100">
+                <ImageIcon className="w-16 h-16 text-gray-400" />
               </div>
             )}
           </div>
@@ -503,13 +500,13 @@ export default function ItemDetailPage() {
           )}
 
           {/* Status */}
-          <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-4">
-            <h3 className="text-sm font-medium text-slate-400 mb-3">Statut</h3>
+          <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
+            <h3 className="text-sm font-medium text-gray-600 mb-3">Statut</h3>
             {isEditing ? (
               <select
                 value={editForm.status}
                 onChange={(e) => setEditForm({ ...editForm, status: e.target.value })}
-                className="w-full h-10 px-3 bg-slate-900/50 border border-slate-700 rounded-lg text-white"
+                className="w-full h-10 px-3 bg-white border border-gray-300 rounded-lg text-gray-900"
               >
                 {Object.entries(STATUSES).map(([value, { label }]) => (
                   <option key={value} value={value}>{label}</option>
@@ -526,45 +523,45 @@ export default function ItemDetailPage() {
         {/* Right Column - Details */}
         <div className="lg:col-span-2 space-y-6">
           {/* Basic Info */}
-          <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-6">
-            <h2 className="text-lg font-semibold text-white mb-4">Informations générales</h2>
+          <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Informations générales</h2>
             
             {isEditing ? (
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-400 mb-2">Nom</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Nom</label>
                   <Input
                     value={editForm.name}
                     onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
-                    className="bg-slate-900/50 border-slate-700 text-white"
+                    className="bg-white border-gray-300 text-gray-900"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-400 mb-2">Description</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
                   <Textarea
                     value={editForm.description}
                     onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
                     rows={4}
-                    className="bg-slate-900/50 border-slate-700 text-white"
+                    className="bg-white border-gray-300 text-gray-900"
                   />
                 </div>
               </div>
             ) : (
               <div className="space-y-4">
                 <div>
-                  <h3 className="text-2xl font-bold text-white">{item.name}</h3>
+                  <h3 className="text-2xl font-bold text-gray-900">{item.name}</h3>
                 </div>
                 <div>
-                  <p className="text-slate-300 whitespace-pre-wrap">{item.description}</p>
+                  <p className="text-gray-700 whitespace-pre-wrap">{item.description}</p>
                 </div>
               </div>
             )}
           </div>
 
           {/* Categories */}
-          <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-6">
-            <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-              <FolderTree className="w-5 h-5 text-orange-400" />
+          <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+              <FolderTree className="w-5 h-5 text-orange-600" />
               Catégories
             </h2>
             
@@ -649,9 +646,9 @@ export default function ItemDetailPage() {
           </div>
 
           {/* Prices */}
-          <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-6">
-            <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-              <DollarSign className="w-5 h-5 text-green-400" />
+          <div className="bg-white border border-gray-200 shadow-sm rounded-2xl p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+              <DollarSign className="w-5 h-5 text-green-600" />
               Prix
             </h2>
             
@@ -707,7 +704,7 @@ export default function ItemDetailPage() {
                       
                       setEditForm({ ...editForm, ...updates });
                     }}
-                    className="w-full h-10 px-3 bg-slate-900/50 border border-slate-700 rounded-lg text-white"
+                    className="w-full h-10 px-3 bg-white border border-gray-300 rounded-lg text-white"
                   >
                     {Object.entries(SALE_MODES).map(([value, label]) => (
                       <option key={value} value={value}>{label}</option>
@@ -742,22 +739,22 @@ export default function ItemDetailPage() {
               </div>
             ) : (
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="p-4 bg-green-500/10 rounded-xl">
-                  <p className="text-green-400 text-sm mb-1">Prix souhaité</p>
-                  <p className="text-2xl font-bold text-white">{item.price_desired} €</p>
+                <div className="p-4 bg-green-50 border border-green-200 rounded-xl">
+                  <p className="text-green-700 text-sm mb-1 font-medium">Prix souhaité</p>
+                  <p className="text-2xl font-bold text-gray-900">{item.price_desired} €</p>
                 </div>
-                <div className="p-4 bg-slate-700/30 rounded-xl">
-                  <p className="text-slate-400 text-sm mb-1">Prix minimum</p>
-                  <p className="text-xl font-semibold text-white">{item.price_min || "-"} €</p>
+                <div className="p-4 bg-gray-100 border border-gray-200 rounded-xl">
+                  <p className="text-gray-600 text-sm mb-1 font-medium">Prix minimum</p>
+                  <p className="text-xl font-semibold text-gray-900">{item.price_min || "-"} €</p>
                 </div>
-                <div className="p-4 bg-slate-700/30 rounded-xl">
-                  <p className="text-slate-400 text-sm mb-1">Mode de vente</p>
-                  <p className="text-lg font-medium text-white">{SALE_MODES[item.sale_mode] || item.sale_mode}</p>
+                <div className="p-4 bg-gray-100 border border-gray-200 rounded-xl">
+                  <p className="text-gray-600 text-sm mb-1 font-medium">Mode de vente</p>
+                  <p className="text-lg font-medium text-gray-900">{SALE_MODES[item.sale_mode] || item.sale_mode}</p>
                 </div>
                 {item.sale_mode === "auction" && (
-                  <div className="p-4 bg-purple-500/10 rounded-xl">
-                    <p className="text-purple-400 text-sm mb-1">Prix départ enchère</p>
-                    <p className="text-xl font-semibold text-white">{item.auction_start_price || "-"} €</p>
+                  <div className="p-4 bg-purple-50 border border-purple-200 rounded-xl">
+                    <p className="text-purple-700 text-sm mb-1 font-medium">Prix départ enchère</p>
+                    <p className="text-xl font-semibold text-gray-900">{item.auction_start_price || "-"} €</p>
                   </div>
                 )}
               </div>
@@ -765,9 +762,9 @@ export default function ItemDetailPage() {
           </div>
 
           {/* Dimensions */}
-          <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-6">
-            <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-              <Ruler className="w-5 h-5 text-blue-400" />
+          <div className="bg-white border border-gray-200 shadow-sm rounded-2xl p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+              <Ruler className="w-5 h-5 text-blue-600" />
               Dimensions & Poids
             </h2>
             
@@ -816,40 +813,40 @@ export default function ItemDetailPage() {
               </div>
             ) : (
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="flex items-center gap-3 p-3 bg-slate-700/30 rounded-xl">
-                  <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
-                    <Ruler className="w-5 h-5 text-blue-400" />
+                <div className="flex items-center gap-3 p-3 bg-blue-50 border border-blue-200 rounded-xl">
+                  <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <Ruler className="w-5 h-5 text-blue-600" />
                   </div>
                   <div>
-                    <p className="text-slate-400 text-xs">Largeur</p>
-                    <p className="text-white font-medium">{item.width_cm || "-"} cm</p>
+                    <p className="text-gray-600 text-xs font-medium">Largeur</p>
+                    <p className="text-gray-900 font-semibold">{item.width_cm || "-"} cm</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-3 p-3 bg-slate-700/30 rounded-xl">
-                  <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
-                    <Ruler className="w-5 h-5 text-blue-400 rotate-90" />
+                <div className="flex items-center gap-3 p-3 bg-blue-50 border border-blue-200 rounded-xl">
+                  <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <Ruler className="w-5 h-5 text-blue-600 rotate-90" />
                   </div>
                   <div>
-                    <p className="text-slate-400 text-xs">Hauteur</p>
-                    <p className="text-white font-medium">{item.height_cm || "-"} cm</p>
+                    <p className="text-gray-600 text-xs font-medium">Hauteur</p>
+                    <p className="text-gray-900 font-semibold">{item.height_cm || "-"} cm</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-3 p-3 bg-slate-700/30 rounded-xl">
-                  <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
-                    <Package className="w-5 h-5 text-blue-400" />
+                <div className="flex items-center gap-3 p-3 bg-blue-50 border border-blue-200 rounded-xl">
+                  <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <Package className="w-5 h-5 text-blue-600" />
                   </div>
                   <div>
-                    <p className="text-slate-400 text-xs">Profondeur</p>
-                    <p className="text-white font-medium">{item.depth_cm || "-"} cm</p>
+                    <p className="text-gray-600 text-xs font-medium">Profondeur</p>
+                    <p className="text-gray-900 font-semibold">{item.depth_cm || "-"} cm</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-3 p-3 bg-slate-700/30 rounded-xl">
-                  <div className="w-10 h-10 bg-amber-500/20 rounded-lg flex items-center justify-center">
-                    <Weight className="w-5 h-5 text-amber-400" />
+                <div className="flex items-center gap-3 p-3 bg-amber-50 border border-amber-200 rounded-xl">
+                  <div className="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center">
+                    <Weight className="w-5 h-5 text-amber-600" />
                   </div>
                   <div>
-                    <p className="text-slate-400 text-xs">Poids</p>
-                    <p className="text-white font-medium">{item.weight_kg || "-"} kg</p>
+                    <p className="text-gray-600 text-xs font-medium">Poids</p>
+                    <p className="text-gray-900 font-semibold">{item.weight_kg || "-"} kg</p>
                   </div>
                 </div>
               </div>
@@ -858,41 +855,44 @@ export default function ItemDetailPage() {
 
           {/* Seller & Dates */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-6">
-              <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                <User className="w-5 h-5 text-purple-400" />
+            <div className="bg-white border border-gray-200 shadow-sm rounded-2xl p-6">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <User className="w-5 h-5 text-purple-600" />
                 Vendeur
               </h2>
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-indigo-500 rounded-xl flex items-center justify-center text-white font-bold">
+                <div className="w-12 h-12 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-xl flex items-center justify-center text-white font-bold shadow-md">
                   {item.seller ? `${item.seller.first_name[0]}${item.seller.last_name[0]}` : "?"}
                 </div>
                 <div>
-                  <p className="text-white font-medium">
+                  <p className="text-gray-900 font-semibold">
                     {item.seller ? `${item.seller.first_name} ${item.seller.last_name}` : getSellerName(item.seller_id)}
                   </p>
-                  <p className="text-slate-400 text-sm">{item.seller?.email || `ID: ${item.seller_id}`}</p>
+                  <p className="text-gray-600 text-sm">
+                    {item.seller?.email || `Vendeur #${item.seller_id}`}
+                    {!item.seller && <span className="ml-2 text-xs text-purple-600">(ID: {item.seller_id})</span>}
+                  </p>
                 </div>
               </div>
             </div>
 
-            <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-6">
-              <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                <Calendar className="w-5 h-5 text-cyan-400" />
+            <div className="bg-white border border-gray-200 shadow-sm rounded-2xl p-6">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <Calendar className="w-5 h-5 text-cyan-600" />
                 Dates
               </h2>
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-slate-400 text-sm">Créé le</span>
-                  <span className="text-white text-sm">{formatDate(item.created_at)}</span>
+                  <span className="text-gray-600 text-sm">Créé le</span>
+                  <span className="text-gray-900 text-sm">{formatDate(item.created_at)}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-slate-400 text-sm">Modifié le</span>
-                  <span className="text-white text-sm">{formatDate(item.updated_at)}</span>
+                  <span className="text-gray-600 text-sm">Modifié le</span>
+                  <span className="text-gray-900 text-sm">{formatDate(item.updated_at)}</span>
                 </div>
                 {item.auction_end_date && (
                   <div className="flex items-center justify-between">
-                    <span className="text-slate-400 text-sm">Fin enchère</span>
+                    <span className="text-gray-600 text-sm">Fin enchère</span>
                     <span className="text-orange-400 text-sm">{formatDate(item.auction_end_date)}</span>
                   </div>
                 )}
@@ -912,7 +912,7 @@ export default function ItemDetailPage() {
               </div>
               <div>
                 <h2 className="text-xl font-bold text-white">Supprimer l'article</h2>
-                <p className="text-slate-400 text-sm">Cette action est irréversible</p>
+                <p className="text-gray-600 text-sm">Cette action est irréversible</p>
               </div>
             </div>
             

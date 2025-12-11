@@ -1,106 +1,121 @@
 import { NextRequest, NextResponse } from "next/server";
 
+// GET single item (public access)
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id } = await params;
+    const token = request.cookies.get("access_token")?.value;
+    
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL?.includes('localhost') 
+      ? 'http://backend:3001' 
+      : process.env.NEXT_PUBLIC_API_URL;
 
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/items/${id}`,
-      {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
-    );
-
-    if (!response.ok) {
-      const error = await response.json();
-      return NextResponse.json(error, { status: response.status });
+    const headers: HeadersInit = {};
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
     }
 
-    const data = await response.json();
-    return NextResponse.json(data);
+    const response = await fetch(`${apiUrl}/items/${id}`, { headers });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      return NextResponse.json(
+        { error: errorText || "Failed to fetch item" },
+        { status: response.status }
+      );
+    }
+
+    const item = await response.json();
+    return NextResponse.json(item);
   } catch (error) {
-    console.error("API route error:", error);
+    console.error("Error in /api/items/[id] GET:", error);
     return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }
 }
 
+// PATCH - Update item
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const token = request.cookies.get("access_token")?.value;
+
+  if (!token) {
+    return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
+  }
+
   try {
-    const accessToken = request.cookies.get("access_token")?.value;
-
-    if (!accessToken) {
-      return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
-    }
-
     const { id } = await params;
     const body = await request.json();
 
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/items/${id}`,
-      {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken}`,
-        },
-        body: JSON.stringify(body),
-      }
-    );
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL?.includes("localhost")
+      ? "http://backend:3001"
+      : process.env.NEXT_PUBLIC_API_URL;
 
-    if (!response.ok) {
-      const error = await response.json();
-      return NextResponse.json(error, { status: response.status });
-    }
+    const response = await fetch(`${apiUrl}/items/${id}`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(body),
+    });
 
     const data = await response.json();
+
+    if (!response.ok) {
+      return NextResponse.json(
+        { error: data.message || "Failed to update item" },
+        { status: response.status }
+      );
+    }
+
     return NextResponse.json(data);
   } catch (error) {
-    console.error("API route error:", error);
+    console.error("Error in /api/items/[id] PATCH:", error);
     return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }
 }
 
+// DELETE item
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const token = request.cookies.get("access_token")?.value;
+
+  if (!token) {
+    return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
+  }
+
   try {
-    const accessToken = request.cookies.get("access_token")?.value;
-
-    if (!accessToken) {
-      return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
-    }
-
     const { id } = await params;
 
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/items/${id}`,
-      {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken}`,
-        },
-      }
-    );
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL?.includes("localhost")
+      ? "http://backend:3001"
+      : process.env.NEXT_PUBLIC_API_URL;
+
+    const response = await fetch(`${apiUrl}/items/${id}`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
 
     if (!response.ok) {
-      const error = await response.json();
-      return NextResponse.json(error, { status: response.status });
+      const errorText = await response.text();
+      return NextResponse.json(
+        { error: errorText || "Failed to delete item" },
+        { status: response.status }
+      );
     }
 
-    return new NextResponse(null, { status: 204 });
+    return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("API route error:", error);
+    console.error("Error in /api/items/[id] DELETE:", error);
     return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }
 }

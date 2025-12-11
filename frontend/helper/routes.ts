@@ -9,12 +9,12 @@ export const ROUTES = {
   CGU: "/cgu",
   CONTACT: "/contact",
 
-  PRODUITS: "/produits",
-  MY_SHOP: "/ma-boutique",
   MY_SHOP_NEW: "/ma-boutique/new",
   MY_SHOP_ITEMS_EDIT: "/ma-boutique/items/[id]/edit",
 
   AUTH_VERIFY: "/auth/verify",
+
+  PRODUITS: "/produits",
 
   MON_COMPTE: "/mon-compte",
   FAVORIS: "/favoris",
@@ -34,8 +34,8 @@ export const ROUTES = {
 
 export const PUBLIC_ROUTES = [ROUTES.HOME, ROUTES.PRODUITS] as const;
 
-export const PROFESSIONNEL_ROUTES = [ROUTES.PRODUITS, ROUTES.MY_SHOP] as const;
-export const PARTICULAR_ROUTES = [ROUTES.PRODUITS, ROUTES.MY_SHOP] as const;
+export const PROFESSIONNEL_ROUTES = [ROUTES.MA_BOUTIQUE] as const;
+export const PARTICULAR_ROUTES = [ROUTES.MA_BOUTIQUE] as const;
 
 export const ADMIN_ROUTES = [
   ROUTES.ADMIN,
@@ -46,8 +46,6 @@ export const ADMIN_ROUTES = [
 ] as const;
 
 export const PROTECTED_ROUTES = [
-  ROUTES.PRODUITS,
-  ROUTES.MY_SHOP,
   ROUTES.MON_COMPTE,
   ROUTES.FAVORIS,
   ...ADMIN_ROUTES,

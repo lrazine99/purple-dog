@@ -8,14 +8,8 @@ import { Textarea } from "@/components/ui/textarea";
 import Link from "next/link";
 import GenericHeader from "@/components/header/GenericHeader";
 import Footer from "@/components/homepage/footer";
-import {
-  Upload,
-  Image as ImageIcon,
-  FolderTree,
-  Star,
-  DollarSign,
-  Loader2,
-} from "lucide-react";
+import { ProductCard } from "@/components/products/ProductCard";
+import { Upload, FolderTree, Star, DollarSign, Loader2 } from "lucide-react";
 import { ROUTES } from "@/helper/routes";
 
 interface ItemPhoto {
@@ -90,17 +84,22 @@ export default function MyShopPage() {
   const [form, setForm] = useState<ItemForm>(initialForm);
   const [photos, setPhotos] = useState<ItemPhoto[]>([]);
   const [documents, setDocuments] = useState<string[]>([]);
-  const [selectedCategoryIds, setSelectedCategoryIds] = useState<Set<number>>(new Set());
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState<Set<number>>(
+    new Set()
+  );
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [uploadingDocument, setUploadingDocument] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
 
-  const SALE_MODES = useMemo(() => ([
-    { value: "fast", label: "Vente rapide" },
-    { value: "auction", label: "Enchères" },
-  ]), []);
+  const SALE_MODES = useMemo(
+    () => [
+      { value: "fast", label: "Vente rapide" },
+      { value: "auction", label: "Enchères" },
+    ],
+    []
+  );
 
   useEffect(() => {
     const run = async () => {
@@ -123,7 +122,11 @@ export default function MyShopPage() {
       });
       if (!res.ok) return;
       const all = await res.json();
-      setItems(Array.isArray(all) ? all.filter((i: Item) => i.seller_id === user.id) : []);
+      setItems(
+        Array.isArray(all)
+          ? all.filter((i: Item) => i.seller_id === user.id)
+          : []
+      );
     } catch (e) {
       console.error("Failed to fetch items:", e);
     }
@@ -148,11 +151,15 @@ export default function MyShopPage() {
       next.delete(categoryId);
       if (form.category_id === categoryId.toString()) {
         const remaining = Array.from(next);
-        setForm({ ...form, category_id: remaining.length ? remaining[0].toString() : "" });
+        setForm({
+          ...form,
+          category_id: remaining.length ? remaining[0].toString() : "",
+        });
       }
     } else {
       next.add(categoryId);
-      if (!form.category_id) setForm({ ...form, category_id: categoryId.toString() });
+      if (!form.category_id)
+        setForm({ ...form, category_id: categoryId.toString() });
     }
     setSelectedCategoryIds(next);
   };
@@ -171,7 +178,10 @@ export default function MyShopPage() {
         const file = files[i];
         const formData = new FormData();
         formData.append("file", file);
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/upload`, { method: "POST", body: formData });
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/upload`, {
+          method: "POST",
+          body: formData,
+        });
         const data = await res.json();
         if (!res.ok) throw new Error(data.message || "Échec du téléchargement");
         const newPhoto: ItemPhoto = {
@@ -190,7 +200,9 @@ export default function MyShopPage() {
     }
   };
 
-  const handleDocumentUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleDocumentUpload = async (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
     setUploadingDocument(true);
@@ -200,10 +212,16 @@ export default function MyShopPage() {
         const file = files[i];
         const formData = new FormData();
         formData.append("file", file);
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/upload`, { method: "POST", body: formData });
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/upload`, {
+          method: "POST",
+          body: formData,
+        });
         const data = await res.json();
         if (!res.ok) throw new Error(data.message || "Échec du téléchargement");
-        setDocuments((prev) => [...prev, `${process.env.NEXT_PUBLIC_API_URL}${data.url}`]);
+        setDocuments((prev) => [
+          ...prev,
+          `${process.env.NEXT_PUBLIC_API_URL}${data.url}`,
+        ]);
       }
     } catch (err: any) {
       setError(err.message || "Échec du téléchargement");
@@ -216,13 +234,16 @@ export default function MyShopPage() {
   const handleRemovePhoto = (index: number) => {
     setPhotos((prev) => {
       const updated = prev.filter((_, i) => i !== index);
-      if (prev[index]?.is_primary && updated.length > 0) updated[0].is_primary = true;
+      if (prev[index]?.is_primary && updated.length > 0)
+        updated[0].is_primary = true;
       return updated;
     });
   };
 
   const handleSetPrimary = (index: number) => {
-    setPhotos((prev) => prev.map((p, i) => ({ ...p, is_primary: i === index })));
+    setPhotos((prev) =>
+      prev.map((p, i) => ({ ...p, is_primary: i === index }))
+    );
   };
 
   const handleRemoveDocument = (index: number) => {
@@ -235,7 +256,9 @@ export default function MyShopPage() {
     try {
       if (!user) throw new Error("Non authentifié");
       if (photos.length < 10) {
-        setError("Veuillez ajouter au moins 10 photos (avant, arrière, dessus, dessous, signature, tranches, etc.)");
+        setError(
+          "Veuillez ajouter au moins 10 photos (avant, arrière, dessus, dessous, signature, tranches, etc.)"
+        );
         setSaving(false);
         return;
       }
@@ -251,10 +274,16 @@ export default function MyShopPage() {
         height_cm: form.height_cm ? parseFloat(form.height_cm) : undefined,
         depth_cm: form.depth_cm ? parseFloat(form.depth_cm) : undefined,
         weight_kg: form.weight_kg ? parseFloat(form.weight_kg) : undefined,
-        price_desired: form.price_desired ? parseFloat(form.price_desired) : undefined,
+        price_desired: form.price_desired
+          ? parseFloat(form.price_desired)
+          : undefined,
         price_min: form.price_min ? parseFloat(form.price_min) : undefined,
-        auction_start_price: form.auction_start_price ? parseFloat(form.auction_start_price) : undefined,
-        auction_end_date: form.auction_end_date ? new Date(form.auction_end_date).toISOString() : undefined,
+        auction_start_price: form.auction_start_price
+          ? parseFloat(form.auction_start_price)
+          : undefined,
+        auction_end_date: form.auction_end_date
+          ? new Date(form.auction_end_date).toISOString()
+          : undefined,
         document_urls: documents.length ? documents : undefined,
         status: "draft",
       };
@@ -267,26 +296,46 @@ export default function MyShopPage() {
 
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/items`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify(body),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Échec de la création");
 
       for (const photo of photos) {
-        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/items/${data.id}/photos`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-          body: JSON.stringify({ url: photo.url, is_primary: photo.is_primary }),
-        });
+        await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/items/${data.id}/photos`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+              url: photo.url,
+              is_primary: photo.is_primary,
+            }),
+          }
+        );
       }
 
       if (selectedCategoryIds.size > 0) {
-        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/items/${data.id}/categories`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-          body: JSON.stringify({ category_ids: Array.from(selectedCategoryIds) }),
-        });
+        await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/items/${data.id}/categories`,
+          {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+              category_ids: Array.from(selectedCategoryIds),
+            }),
+          }
+        );
       }
 
       setForm(initialForm);
@@ -313,215 +362,414 @@ export default function MyShopPage() {
     <main className="min-h-screen">
       <GenericHeader />
       <div className="container mx-auto px-4 py-6 space-y-8">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Ma Boutique</h1>
-          <p className="text-muted-foreground">Ajoutez vos objets et gérez vos annonces</p>
-        </div>
-        <Button asChild className="bg-purple-600 hover:bg-purple-700">
-          <Link href={ROUTES.MY_SHOP_NEW}>Ajouter un produit</Link>
-        </Button>
-      </div>
-
-      {error && (
-        <div className="p-4 border border-red-300 rounded text-red-600 bg-red-50">
-          {error}
-        </div>
-      )}
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-6 hidden">
-          <div className="space-y-4">
-            <h3 className="text-sm font-medium border-b pb-2">Photos (10 minimum)</h3>
-            <div className="grid grid-cols-5 gap-3">
-              {photos.map((photo, index) => (
-                <div key={photo.id} className={`relative aspect-square rounded-xl overflow-hidden border-2 ${photo.is_primary ? "border-purple-500" : "border-slate-300"}`}>
-                  <img src={photo.url} alt={`Photo ${index + 1}`} className="w-full h-full object-cover" />
-                  <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center gap-1">
-                    <button onClick={() => handleSetPrimary(index)} className={`p-1.5 rounded ${photo.is_primary ? "bg-purple-600 text-white" : "bg-white/20 text-white hover:bg-white/40"}`} title="Définir comme principale">
-                      <Star className="w-4 h-4" />
-                    </button>
-                    <button onClick={() => handleRemovePhoto(index)} className="p-1.5 rounded bg-red-500/80 text-white hover:bg-red-500" title="Supprimer">
-                      ✕
-                    </button>
-                  </div>
-                  {photo.is_primary && (
-                    <div className="absolute top-1 left-1 px-1.5 py-0.5 bg-purple-600 rounded text-white text-xs">Principal</div>
-                  )}
-                </div>
-              ))}
-              {photos.length < 10 && (
-                <label className="relative aspect-square rounded-xl border-2 border-dashed border-slate-300 hover:border-purple-500 cursor-pointer flex flex-col items-center justify-center gap-1 transition-colors">
-                  <input type="file" accept="image/*" multiple onChange={handlePhotoUpload} className="absolute inset-0 opacity-0 cursor-pointer" disabled={uploadingPhoto} />
-                  {uploadingPhoto ? <Loader2 className="w-6 h-6 text-purple-600 animate-spin" /> : (<><Upload className="w-6 h-6 text-slate-500" /><span className="text-slate-500 text-xs">Ajouter</span></>)}
-                </label>
-              )}
-            </div>
-            <p className="text-xs text-muted-foreground">{photos.length}/10 photos • Minimum 10 • Cliquez sur ⭐ pour définir la photo principale</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold">Ma Boutique</h1>
+            <p className="text-muted-foreground">
+              Ajoutez vos objets et gérez vos annonces
+            </p>
           </div>
+          <Button asChild className="bg-purple-600 hover:bg-purple-700">
+            <Link href={ROUTES.MY_SHOP_NEW}>Ajouter un produit</Link>
+          </Button>
+        </div>
 
-          <div className="space-y-4">
-            <h3 className="text-sm font-medium border-b pb-2">Informations générales</h3>
-            <div>
-              <label className="block text-sm font-medium mb-2">Nom de l’objet</label>
-              <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Ex: Montre ancienne..." />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-2">Description</label>
-              <Textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={4} placeholder="Décrivez votre objet..." />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-2">Catégories (plusieurs possibles)</label>
-              <div className="border rounded p-3 max-h-48 overflow-y-auto space-y-1">
-                {categories.filter((c) => !c.parent_id).map((root) => {
-                  const subs = categories.filter((c) => c.parent_id === root.id);
-                  const isRootSelected = selectedCategoryIds.has(root.id);
-                  return (
-                    <div key={root.id}>
-                      <button type="button" onClick={() => toggleCategory(root.id)} className={`w-full flex items-center gap-2 px-2 py-1.5 rounded text-left ${isRootSelected ? "bg-purple-100 text-purple-700" : "hover:bg-slate-100 text-slate-700"}`}>
-                        <FolderTree className="w-4 h-4" />
-                        {root.name}
-                        {form.category_id === root.id.toString() && <Star className="w-3 h-3 ml-auto text-purple-600" />}
+        {error && (
+          <div className="p-4 border border-red-300 rounded text-red-600 bg-red-50">
+            {error}
+          </div>
+        )}
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 space-y-6 hidden">
+            <div className="space-y-4">
+              <h3 className="text-sm font-medium border-b pb-2">
+                Photos (10 minimum)
+              </h3>
+              <div className="grid grid-cols-5 gap-3">
+                {photos.map((photo, index) => (
+                  <div
+                    key={photo.id}
+                    className={`relative aspect-square rounded-xl overflow-hidden border-2 ${
+                      photo.is_primary
+                        ? "border-purple-500"
+                        : "border-slate-300"
+                    }`}
+                  >
+                    <img
+                      src={photo.url}
+                      alt={`Photo ${index + 1}`}
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center gap-1">
+                      <button
+                        onClick={() => handleSetPrimary(index)}
+                        className={`p-1.5 rounded ${
+                          photo.is_primary
+                            ? "bg-purple-600 text-white"
+                            : "bg-white/20 text-white hover:bg-white/40"
+                        }`}
+                        title="Définir comme principale"
+                      >
+                        <Star className="w-4 h-4" />
                       </button>
-                      {subs.map((sub) => {
-                        const isSel = selectedCategoryIds.has(sub.id);
-                        return (
-                          <button key={sub.id} type="button" onClick={() => toggleCategory(sub.id)} className={`w-full flex items-center gap-2 px-2 py-1.5 pl-8 rounded text-left ${isSel ? "bg-purple-100 text-purple-700" : "hover:bg-slate-100 text-slate-600"}`}>
-                            <FolderTree className="w-4 h-4" />
-                            {sub.name}
-                            {form.category_id === sub.id.toString() && <Star className="w-3 h-3 ml-auto text-purple-600" />}
-                          </button>
-                        );
-                      })}
+                      <button
+                        onClick={() => handleRemovePhoto(index)}
+                        className="p-1.5 rounded bg-red-500/80 text-white hover:bg-red-500"
+                        title="Supprimer"
+                      >
+                        ✕
+                      </button>
                     </div>
-                  );
-                })}
+                    {photo.is_primary && (
+                      <div className="absolute top-1 left-1 px-1.5 py-0.5 bg-purple-600 rounded text-white text-xs">
+                        Principal
+                      </div>
+                    )}
+                  </div>
+                ))}
+                {photos.length < 10 && (
+                  <label className="relative aspect-square rounded-xl border-2 border-dashed border-slate-300 hover:border-purple-500 cursor-pointer flex flex-col items-center justify-center gap-1 transition-colors">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      onChange={handlePhotoUpload}
+                      className="absolute inset-0 opacity-0 cursor-pointer"
+                      disabled={uploadingPhoto}
+                    />
+                    {uploadingPhoto ? (
+                      <Loader2 className="w-6 h-6 text-purple-600 animate-spin" />
+                    ) : (
+                      <>
+                        <Upload className="w-6 h-6 text-slate-500" />
+                        <span className="text-slate-500 text-xs">Ajouter</span>
+                      </>
+                    )}
+                  </label>
+                )}
               </div>
-              {selectedCategoryIds.size > 0 && <p className="text-xs text-muted-foreground mt-1"><Star className="w-3 h-3 inline text-purple-600" /> = Catégorie principale</p>}
+              <p className="text-xs text-muted-foreground">
+                {photos.length}/10 photos • Minimum 10 • Cliquez sur ⭐ pour
+                définir la photo principale
+              </p>
             </div>
-          </div>
 
-          <div className="space-y-4">
-            <h3 className="text-sm font-medium border-b pb-2">Dimensions & Poids</h3>
-            <div className="grid grid-cols-4 gap-4">
-              <div><label className="block text-sm mb-2">Largeur (cm)</label><Input type="number" step="0.1" value={form.width_cm} onChange={(e) => setForm({ ...form, width_cm: e.target.value })} /></div>
-              <div><label className="block text-sm mb-2">Hauteur (cm)</label><Input type="number" step="0.1" value={form.height_cm} onChange={(e) => setForm({ ...form, height_cm: e.target.value })} /></div>
-              <div><label className="block text-sm mb-2">Profondeur (cm)</label><Input type="number" step="0.1" value={form.depth_cm} onChange={(e) => setForm({ ...form, depth_cm: e.target.value })} /></div>
-              <div><label className="block text-sm mb-2">Poids (kg)</label><Input type="number" step="0.1" value={form.weight_kg} onChange={(e) => setForm({ ...form, weight_kg: e.target.value })} /></div>
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            <h3 className="text-sm font-medium border-b pb-2">Prix & Mode de vente</h3>
-            <div className="grid grid-cols-3 gap-4">
+            <div className="space-y-4">
+              <h3 className="text-sm font-medium border-b pb-2">
+                Informations générales
+              </h3>
               <div>
-                <label className="block text-sm mb-2">Prix souhaité (€) <span className="text-red-500">*</span></label>
-                <Input type="number" step="0.01" value={form.price_desired} onChange={(e) => setForm({ ...form, price_desired: e.target.value })} placeholder="0.00" />
-              </div>
-              <div>
-                <label className="block text-sm mb-2">Prix minimum (€)</label>
+                <label className="block text-sm font-medium mb-2">
+                  Nom de l’objet
+                </label>
                 <Input
-                  type="number"
-                  step="0.01"
-                  value={form.price_min}
-                  onChange={(e) => {
-                    const newMin = e.target.value;
-                    const updates: any = { price_min: newMin };
-                    if (form.sale_mode === "auction" && newMin) {
-                      const n = parseFloat(newMin.replace(",", "."));
-                      if (!isNaN(n) && n > 0) updates.auction_start_price = (Math.round(n * 0.9 * 100) / 100).toString();
-                    }
-                    setForm({ ...form, ...updates });
-                  }}
-                  placeholder="0.00"
+                  value={form.name}
+                  onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  placeholder="Ex: Montre ancienne..."
                 />
               </div>
               <div>
-                <label className="block text-sm mb-2">Mode de vente</label>
-                <select
-                  value={form.sale_mode}
-                  onChange={(e) => {
-                    const newMode = e.target.value as "fast" | "auction";
-                    const updates: any = { sale_mode: newMode };
-                    if (newMode === "auction" && form.price_min) {
-                      const n = parseFloat(form.price_min.replace(",", "."));
-                      if (!isNaN(n) && n > 0) updates.auction_start_price = (Math.round(n * 0.9 * 100) / 100).toString();
+                <label className="block text-sm font-medium mb-2">
+                  Description
+                </label>
+                <Textarea
+                  value={form.description}
+                  onChange={(e) =>
+                    setForm({ ...form, description: e.target.value })
+                  }
+                  rows={4}
+                  placeholder="Décrivez votre objet..."
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  Catégories (plusieurs possibles)
+                </label>
+                <div className="border rounded p-3 max-h-48 overflow-y-auto space-y-1">
+                  {categories
+                    .filter((c) => !c.parent_id)
+                    .map((root) => {
+                      const subs = categories.filter(
+                        (c) => c.parent_id === root.id
+                      );
+                      const isRootSelected = selectedCategoryIds.has(root.id);
+                      return (
+                        <div key={root.id}>
+                          <button
+                            type="button"
+                            onClick={() => toggleCategory(root.id)}
+                            className={`w-full flex items-center gap-2 px-2 py-1.5 rounded text-left ${
+                              isRootSelected
+                                ? "bg-purple-100 text-purple-700"
+                                : "hover:bg-slate-100 text-slate-700"
+                            }`}
+                          >
+                            <FolderTree className="w-4 h-4" />
+                            {root.name}
+                            {form.category_id === root.id.toString() && (
+                              <Star className="w-3 h-3 ml-auto text-purple-600" />
+                            )}
+                          </button>
+                          {subs.map((sub) => {
+                            const isSel = selectedCategoryIds.has(sub.id);
+                            return (
+                              <button
+                                key={sub.id}
+                                type="button"
+                                onClick={() => toggleCategory(sub.id)}
+                                className={`w-full flex items-center gap-2 px-2 py-1.5 pl-8 rounded text-left ${
+                                  isSel
+                                    ? "bg-purple-100 text-purple-700"
+                                    : "hover:bg-slate-100 text-slate-600"
+                                }`}
+                              >
+                                <FolderTree className="w-4 h-4" />
+                                {sub.name}
+                                {form.category_id === sub.id.toString() && (
+                                  <Star className="w-3 h-3 ml-auto text-purple-600" />
+                                )}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      );
+                    })}
+                </div>
+                {selectedCategoryIds.size > 0 && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    <Star className="w-3 h-3 inline text-purple-600" /> =
+                    Catégorie principale
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <h3 className="text-sm font-medium border-b pb-2">
+                Dimensions & Poids
+              </h3>
+              <div className="grid grid-cols-4 gap-4">
+                <div>
+                  <label className="block text-sm mb-2">Largeur (cm)</label>
+                  <Input
+                    type="number"
+                    step="0.1"
+                    value={form.width_cm}
+                    onChange={(e) =>
+                      setForm({ ...form, width_cm: e.target.value })
                     }
-                    setForm({ ...form, ...updates });
-                  }}
-                  className="w-full h-10 px-3 border rounded"
-                >
-                  {SALE_MODES.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
-                </select>
-              </div>
-            </div>
-            {form.sale_mode === "auction" && (
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm mb-2">Prix de départ enchère (€)</label>
-                  <Input type="number" step="0.01" value={form.auction_start_price} onChange={(e) => setForm({ ...form, auction_start_price: e.target.value })} placeholder="0.00" />
+                  />
                 </div>
                 <div>
-                  <label className="block text-sm mb-2">Date de fin d’enchère</label>
-                  <Input type="datetime-local" value={form.auction_end_date} onChange={(e) => setForm({ ...form, auction_end_date: e.target.value })} />
+                  <label className="block text-sm mb-2">Hauteur (cm)</label>
+                  <Input
+                    type="number"
+                    step="0.1"
+                    value={form.height_cm}
+                    onChange={(e) =>
+                      setForm({ ...form, height_cm: e.target.value })
+                    }
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm mb-2">Profondeur (cm)</label>
+                  <Input
+                    type="number"
+                    step="0.1"
+                    value={form.depth_cm}
+                    onChange={(e) =>
+                      setForm({ ...form, depth_cm: e.target.value })
+                    }
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm mb-2">Poids (kg)</label>
+                  <Input
+                    type="number"
+                    step="0.1"
+                    value={form.weight_kg}
+                    onChange={(e) =>
+                      setForm({ ...form, weight_kg: e.target.value })
+                    }
+                  />
                 </div>
               </div>
-            )}
-          </div>
-
-          <div className="space-y-4">
-            <h3 className="text-sm font-medium border-b pb-2">Déposer des documents (certificat, preuve d’achat…)</h3>
-            <div className="grid grid-cols-3 gap-3">
-              {documents.map((doc, index) => (
-                <div key={index} className="flex items-center justify-between p-3 border rounded">
-                  <a href={doc} target="_blank" rel="noreferrer" className="text-sm truncate mr-2">{doc}</a>
-                  <button onClick={() => handleRemoveDocument(index)} className="p-1 rounded bg-red-500/80 text-white">✕</button>
-                </div>
-              ))}
-              <label className="relative col-span-1 rounded-xl border-2 border-dashed border-slate-300 hover:border-purple-500 cursor-pointer flex flex-col items-center justify-center gap-1 transition-colors">
-                <input type="file" accept=".pdf,.jpg,.jpeg,.png,.gif,.webp" multiple onChange={handleDocumentUpload} className="absolute inset-0 opacity-0 cursor-pointer" disabled={uploadingDocument} />
-                {uploadingDocument ? <Loader2 className="w-6 h-6 text-purple-600 animate-spin" /> : (<><Upload className="w-6 h-6 text-slate-500" /><span className="text-slate-500 text-xs">Ajouter</span></>)}
-              </label>
             </div>
-            <p className="text-xs text-muted-foreground">Formats acceptés: PDF, JPG, PNG (max 10Mo)</p>
-          </div>
-        </div>
 
-        <div className="lg:col-span-1 space-y-4">
-          <div className="border rounded p-4">
-            <h3 className="text-sm font-medium mb-2 flex items-center gap-2"><DollarSign className="w-4 h-4" /> Vos produits</h3>
-            {items.length === 0 ? (
-              <div className="text-sm text-muted-foreground">Aucun produit pour le moment</div>
-            ) : (
-              <div className="space-y-3">
-                {items.map((item) => (
-                  <div key={item.id} className="rounded border p-3 flex gap-3 items-center">
-                    <div className="w-16 h-16 bg-slate-100 rounded overflow-hidden flex items-center justify-center">
-                      {item.photos && item.photos.length ? (
-                        <img src={item.photos.find((p) => p.is_primary)?.url || item.photos[0].url} alt={item.name} className="w-full h-full object-cover" />
-                      ) : (
-                        <ImageIcon className="w-6 h-6 text-slate-400" />
-                      )}
-                    </div>
-                    <div className="flex-1">
-                      <div className="text-sm font-medium">{item.name}</div>
-                      <div className="text-xs text-muted-foreground">{item.sale_mode === "auction" ? "Enchères" : "Vente rapide"} • {item.price_desired} €</div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="text-xs text-muted-foreground">{item.status}</div>
-                      <Button asChild variant="outline" size="sm">
-                        <Link href={ROUTES.MY_SHOP_ITEMS_EDIT.replace("[id]", item.id.toString())}>Modifier</Link>
-                      </Button>
-                    </div>
+            <div className="space-y-4">
+              <h3 className="text-sm font-medium border-b pb-2">
+                Prix & Mode de vente
+              </h3>
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm mb-2">
+                    Prix souhaité (€) <span className="text-red-500">*</span>
+                  </label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    value={form.price_desired}
+                    onChange={(e) =>
+                      setForm({ ...form, price_desired: e.target.value })
+                    }
+                    placeholder="0.00"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm mb-2">Prix minimum (€)</label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    value={form.price_min}
+                    onChange={(e) => {
+                      const newMin = e.target.value;
+                      const updates: any = { price_min: newMin };
+                      if (form.sale_mode === "auction" && newMin) {
+                        const n = parseFloat(newMin.replace(",", "."));
+                        if (!isNaN(n) && n > 0)
+                          updates.auction_start_price = (
+                            Math.round(n * 0.9 * 100) / 100
+                          ).toString();
+                      }
+                      setForm({ ...form, ...updates });
+                    }}
+                    placeholder="0.00"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm mb-2">Mode de vente</label>
+                  <select
+                    value={form.sale_mode}
+                    onChange={(e) => {
+                      const newMode = e.target.value as "fast" | "auction";
+                      const updates: any = { sale_mode: newMode };
+                      if (newMode === "auction" && form.price_min) {
+                        const n = parseFloat(form.price_min.replace(",", "."));
+                        if (!isNaN(n) && n > 0)
+                          updates.auction_start_price = (
+                            Math.round(n * 0.9 * 100) / 100
+                          ).toString();
+                      }
+                      setForm({ ...form, ...updates });
+                    }}
+                    className="w-full h-10 px-3 border rounded"
+                  >
+                    {SALE_MODES.map((m) => (
+                      <option key={m.value} value={m.value}>
+                        {m.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              {form.sale_mode === "auction" && (
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm mb-2">
+                      Prix de départ enchère (€)
+                    </label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      value={form.auction_start_price}
+                      onChange={(e) =>
+                        setForm({
+                          ...form,
+                          auction_start_price: e.target.value,
+                        })
+                      }
+                      placeholder="0.00"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm mb-2">
+                      Date de fin d’enchère
+                    </label>
+                    <Input
+                      type="datetime-local"
+                      value={form.auction_end_date}
+                      onChange={(e) =>
+                        setForm({ ...form, auction_end_date: e.target.value })
+                      }
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-4">
+              <h3 className="text-sm font-medium border-b pb-2">
+                Déposer des documents (certificat, preuve d’achat…)
+              </h3>
+              <div className="grid grid-cols-3 gap-3">
+                {documents.map((doc, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center justify-between p-3 border rounded"
+                  >
+                    <a
+                      href={doc}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-sm truncate mr-2"
+                    >
+                      {doc}
+                    </a>
+                    <button
+                      onClick={() => handleRemoveDocument(index)}
+                      className="p-1 rounded bg-red-500/80 text-white"
+                    >
+                      ✕
+                    </button>
                   </div>
                 ))}
+                <label className="relative col-span-1 rounded-xl border-2 border-dashed border-slate-300 hover:border-purple-500 cursor-pointer flex flex-col items-center justify-center gap-1 transition-colors">
+                  <input
+                    type="file"
+                    accept=".pdf,.jpg,.jpeg,.png,.gif,.webp"
+                    multiple
+                    onChange={handleDocumentUpload}
+                    className="absolute inset-0 opacity-0 cursor-pointer"
+                    disabled={uploadingDocument}
+                  />
+                  {uploadingDocument ? (
+                    <Loader2 className="w-6 h-6 text-purple-600 animate-spin" />
+                  ) : (
+                    <>
+                      <Upload className="w-6 h-6 text-slate-500" />
+                      <span className="text-slate-500 text-xs">Ajouter</span>
+                    </>
+                  )}
+                </label>
               </div>
-            )}
+              <p className="text-xs text-muted-foreground">
+                Formats acceptés: PDF, JPG, PNG (max 10Mo)
+              </p>
+            </div>
+          </div>
+
+          <div className="lg:col-span-3 space-y-4">
+            <div className="border rounded p-4">
+              <h3 className="text-sm font-medium mb-2 flex items-center gap-2">
+                <DollarSign className="w-4 h-4" /> Vos produits
+              </h3>
+              {items.length === 0 ? (
+                <div className="text-sm text-muted-foreground">
+                  Aucun produit pour le moment
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {items.map((item) => (
+                    <ProductCard key={item.id} product={item} />
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
-    </div>
-    <Footer />
+      <Footer />
     </main>
   );
 }
