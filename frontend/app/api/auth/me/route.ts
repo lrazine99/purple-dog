@@ -8,9 +8,12 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    // Hardcode to backend container for Docker networking
-    // This runs server-side in the frontend container
-    const response = await fetch(`http://backend:3001/auth/me`, {
+    // Use backend hostname when running inside Docker (frontend container)
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL?.includes("localhost")
+      ? "http://backend:3001"
+      : process.env.NEXT_PUBLIC_API_URL;
+
+    const response = await fetch(`${apiUrl}/auth/me`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
