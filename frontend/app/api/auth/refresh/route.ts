@@ -1,5 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
 import { setAuthCookies } from "@/lib/auth/cookies";
+import { decodeJWTPayload } from "@/lib/jwt";
+import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
   try {
@@ -36,19 +37,35 @@ export async function POST(request: NextRequest) {
     }
 
     const data = await response.json();
-    const res = NextResponse.json({ success: true });
+
+    // Décoder le nouveau access_token pour obtenir les infos utilisateur
+    const payload = await decodeJWTPayload(data.access_token);
+
+    if (!payload) {
+      const res = NextResponse.json(
+        { error: "Erreur lors du décodage du token" },
+        { status: 500 }
+      );
+      res.cookies.delete("access_token");
+      res.cookies.delete("refresh_token");
+      res.cookies.delete("user_role");
+      return res;
+    }
+
+    const res = NextResponse.json({
+      success: true,
+      id: payload.sub,
+      email: payload.email,
+      role: data.role,
+    });
     setAuthCookies(res, data);
 
     return res;
   } catch (error) {
-    const res = NextResponse.json(
-      { error: "Erreur serveur" },
-      { status: 500 }
-    );
+    const res = NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
     res.cookies.delete("access_token");
     res.cookies.delete("refresh_token");
     res.cookies.delete("user_role");
     return res;
   }
 }
-

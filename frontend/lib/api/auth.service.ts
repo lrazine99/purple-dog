@@ -61,7 +61,7 @@ export async function registerProfessional(
     "official_document"
   );
 
-  const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users`, {
+  const response = await fetch(`/api/auth/register`, {
     method: "POST",
     body: formData,
   });
@@ -92,7 +92,7 @@ export async function registerParticular(
 ): Promise<UserResponse> {
   const { confirmPassword, ...payload } = data;
 
-  const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users`, {
+  const response = await fetch('/api/auth/register', {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -130,7 +130,7 @@ export async function login(
   password: string
 ): Promise<LoginResponse> {
   const response = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/auth/login`,
+    '/api/auth/login',
     {
       method: "POST",
       headers: {
@@ -155,6 +155,8 @@ export async function login(
 }
 
 export async function loginWithCookies(email: string, password: string) {
+  console.log('loginWithCookies', email, password);
+  
   const response = await fetch("/api/auth/login", {
     method: "POST",
     headers: {
@@ -178,7 +180,7 @@ export async function loginWithCookies(email: string, password: string) {
 
 export async function verifyEmail(token: string): Promise<{ message: string }> {
   const response = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/auth/verify?token=${token}`,
+    `/api/auth/verify?token=${token}`,
     {
       method: "GET",
     }

@@ -3,47 +3,22 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ROUTES } from "@/helper/routes";
-import { useLogout } from "@/hooks/useAuth";
+import { useAuth, useLogout } from "@/hooks/useAuth";
 import { Menu, Search, User, X } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { ProNavbar } from "./ProNavbar";
 import { SellerNavbar } from "./SellerNavbar";
-import { useAuth } from "@/hooks/useAuth";
-
-function getUserRoleFromCookie(): string | null {
-  if (typeof document === "undefined") return null;
-  const role = document.cookie
-    .split("; ")
-    .find((row) => row.startsWith("user_role="))
-    ?.split("=")[1];
-  return role ? decodeURIComponent(role) : null;
-}
 
 export const GenericHeader = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [role, setRole] = useState<string | null>(null);
+  const { data: user, isLoading } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const logoutMutation = useLogout();
-  const user = useAuth();
 
-  useEffect(() => {
-    function checkAuth() {
-      // Le cookie access_token est httpOnly, donc inaccessible depuis JavaScript
-      // On vérifie uniquement user_role qui est accessible côté client
-      const userRole = getUserRoleFromCookie();
-      setIsAuthenticated(!!userRole);
-      setRole(userRole);
-    }
-
-    checkAuth();
-
-    // Vérifier périodiquement les cookies
-    const interval = setInterval(checkAuth, 1000);
-    return () => clearInterval(interval);
-  }, []);
-
+  const isAuthenticated = !isLoading && !!user;
+  const role = user?.role || null;
+  console.log("isLoading", isLoading);
   return (
     <header className="border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
       <div className="container mx-auto px-4">
@@ -62,7 +37,7 @@ export const GenericHeader = () => {
             <nav className="hidden md:flex items-center gap-6">
               {isAuthenticated && (
                 <>
-                  {role === "particular" && <ProNavbar />}
+                  {role === "particular" && <SellerNavbar />}
                   {role === "professional" && (
                     <>
                       <ProNavbar />
@@ -144,31 +119,35 @@ export const GenericHeader = () => {
                     <div className="flex flex-col gap-3">
                       <Link
                         href={ROUTES.PRODUITS}
-                        className="text-foreground hover:text-primary transition-colors font-medium py-2"
+                        className="relative text-foreground hover:text-primary transition-colors font-medium pb-1 group py-2"
                         onClick={() => setMobileMenuOpen(false)}
                       >
                         Produits
+                        <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-primary transition-all duration-300 group-hover:w-full"></span>
                       </Link>
                       <Link
-                        href="#"
-                        className="text-sm font-medium hover:text-accent transition-colors py-2"
+                        href={ROUTES.FAVORIS}
+                        className="relative text-foreground hover:text-primary transition-colors font-medium pb-1 group py-2"
                         onClick={() => setMobileMenuOpen(false)}
                       >
                         Mes Favoris
+                        <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-primary transition-all duration-300 group-hover:w-full"></span>
                       </Link>
                       <Link
                         href="#"
-                        className="text-sm font-medium hover:text-accent transition-colors py-2"
+                        className="relative text-foreground hover:text-primary transition-colors font-medium pb-1 group py-2"
                         onClick={() => setMobileMenuOpen(false)}
                       >
                         Mes Enchères
+                        <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-primary transition-all duration-300 group-hover:w-full"></span>
                       </Link>
                       <Link
                         href="#"
-                        className="text-sm font-medium hover:text-accent transition-colors py-2"
+                        className="relative text-foreground hover:text-primary transition-colors font-medium pb-1 group py-2"
                         onClick={() => setMobileMenuOpen(false)}
                       >
                         Mes Achats
+                        <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-primary transition-all duration-300 group-hover:w-full"></span>
                       </Link>
                     </div>
                   )}
@@ -176,38 +155,43 @@ export const GenericHeader = () => {
                     <div className="flex flex-col gap-3">
                       <Link
                         href={ROUTES.PRODUITS}
-                        className="text-foreground hover:text-primary transition-colors font-medium py-2"
+                        className="relative text-foreground hover:text-primary transition-colors font-medium pb-1 group py-2"
                         onClick={() => setMobileMenuOpen(false)}
                       >
                         Produits
+                        <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-primary transition-all duration-300 group-hover:w-full"></span>
                       </Link>
                       <Link
-                        href="#"
-                        className="text-sm font-medium hover:text-accent transition-colors py-2"
+                        href={ROUTES.FAVORIS}
+                        className="relative text-foreground hover:text-primary transition-colors font-medium pb-1 group py-2"
                         onClick={() => setMobileMenuOpen(false)}
                       >
                         Mes Favoris
+                        <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-primary transition-all duration-300 group-hover:w-full"></span>
                       </Link>
                       <Link
                         href="#"
-                        className="text-sm font-medium hover:text-accent transition-colors py-2"
+                        className="relative text-foreground hover:text-primary transition-colors font-medium pb-1 group py-2"
                         onClick={() => setMobileMenuOpen(false)}
                       >
                         Mes Enchères
+                        <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-primary transition-all duration-300 group-hover:w-full"></span>
                       </Link>
                       <Link
                         href="#"
-                        className="text-sm font-medium hover:text-accent transition-colors py-2"
+                        className="relative text-foreground hover:text-primary transition-colors font-medium pb-1 group py-2"
                         onClick={() => setMobileMenuOpen(false)}
                       >
                         Mes Achats
+                        <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-primary transition-all duration-300 group-hover:w-full"></span>
                       </Link>
                       <Link
-                        href={ROUTES.PRODUITS}
-                        className="text-foreground hover:text-primary transition-colors font-medium py-2"
+                        href={ROUTES.MA_BOUTIQUE}
+                        className="relative text-foreground hover:text-primary transition-colors font-medium pb-1 group py-2"
                         onClick={() => setMobileMenuOpen(false)}
                       >
                         Ma Boutique
+                        <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-primary transition-all duration-300 group-hover:w-full"></span>
                       </Link>
                     </div>
                   )}
