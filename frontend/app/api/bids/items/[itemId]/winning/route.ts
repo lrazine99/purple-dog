@@ -1,3 +1,4 @@
+import { getBackendUrl } from "@/lib/api-url";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
@@ -6,15 +7,13 @@ export async function GET(
 ) {
   try {
     const { itemId } = await params;
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/bids/items/${itemId}/winning`,
-      {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
-    );
+    const apiUrl = getBackendUrl();
+    const response = await fetch(`${apiUrl}/bids/items/${itemId}/winning`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
 
     if (!response.ok) {
       // Si c'est une erreur 404 (pas d'enchère gagnante), retourner null

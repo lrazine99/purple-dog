@@ -31,116 +31,28 @@ export const GenericHeader = () => {
 
   const role = user?.role || null;
 
+  // Fetch notification counters - disabled for now (needs proxy routes)
+  useEffect(() => {
+    // TODO: Create /api/notifications and /api/messages proxy routes
+    // For now, notifications are disabled to avoid CORS errors
+  }, [role, userData?.id]);
+
+  // Fetch notification list when dropdown opens - disabled for now (needs proxy routes)
+  useEffect(() => {
+    // TODO: Create /api/offers and /api/messages proxy routes
+    // For now, notifications list is disabled to avoid CORS errors
+  }, [notifOpen, role, userData?.id]);
+
   // Don't show header on admin pages - admin has its own layout
   if (pathname?.startsWith("/admin")) {
     return null;
   }
 
-  if (isLoading)
+  if (isLoading) {
     return (
       <div className="border-b border-border bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60 sticky top-0 z-50 h-16"></div>
     );
-
-  useEffect(() => {
-    let timer: any;
-    async function fetchCounters() {
-      if (!userData?.id) return;
-      try {
-        if (role === "professional") {
-          const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/notifications?sellerId=${userData.id}`);
-          if (res.ok) {
-            const data = await res.json();
-            setNotif({ newOffers: data.newOffers ?? 0, unreadMessages: data.unreadMessages ?? 0 });
-          }
-        } else {
-          const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/messages/user/${userData.id}`);
-          if (res.ok) {
-            const msgs = await res.json();
-            const unread = Array.isArray(msgs) ? msgs.filter((m: any) => !m.is_read).length : 0;
-            setNotif({ newOffers: 0, unreadMessages: unread });
-          }
-        }
-      } catch {}
-    }
-    fetchCounters();
-    timer = setInterval(fetchCounters, 30000);
-    return () => { if (timer) clearInterval(timer); };
-  }, [role, userData?.id]);
-
-  useEffect(() => {
-    async function fetchList() {
-      if (!notifOpen || !userData?.id) return;
-      const token = typeof window !== "undefined" ? localStorage.getItem("access_token") : null;
-      const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
-      try {
-        if (role === "professional") {
-          const [offersRes, messagesRes] = await Promise.all([
-            fetch(`${process.env.NEXT_PUBLIC_API_URL}/offers/seller/${userData.id}`, { headers }),
-            fetch(`${process.env.NEXT_PUBLIC_API_URL}/messages/user/${userData.id}`, { headers }),
-          ]);
-          const offers = offersRes.ok ? await offersRes.json() : [];
-          const messages = messagesRes.ok ? await messagesRes.json() : [];
-          const oItems = Array.isArray(offers) ? offers.map((o: any) => ({ type: "offer", id: o.id, item_id: o.item_id, item_name: o.item?.name, amount: o.amount, status: o.status, text: `Offre ${o.amount}€ sur \"${o.item?.name || `Objet ${o.item_id}`}\"` , created_at: o.created_at, href: `/paiement/offre/${o.id}` })) : [];
-          const mItems = Array.isArray(messages) ? messages.map((m: any) => {
-            const content = typeof m.content === "string" ? m.content : "";
-            let href: string | undefined;
-            const marker = "/paiement/offre/";
-            const idx = content.indexOf(marker);
-            if (idx >= 0) {
-              const rest = content.slice(idx + marker.length);
-              const idMatch = rest.match(/^\d+/);
-              if (idMatch) href = `/paiement/offre/${idMatch[0]}`;
-            }
-            const displayText = href || content.includes("Lien de paiement Stripe")
-              ? "Votre offre a été acceptée. Confirmez et payez."
-              : content;
-            return { type: "message", text: content, displayText, created_at: m.created_at, href };
-          }) : [];
-          const combined = [...oItems, ...mItems]
-            .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-            .slice(0, 10);
-          setNotifItems(combined);
-        } else {
-          const [offersRes, messagesRes] = await Promise.all([
-            fetch(`${process.env.NEXT_PUBLIC_API_URL}/offers/buyer/${userData.id}`, { headers }),
-            fetch(`${process.env.NEXT_PUBLIC_API_URL}/messages/user/${userData.id}`, { headers }),
-          ]);
-          const offers = offersRes.ok ? await offersRes.json() : [];
-          const messages = messagesRes.ok ? await messagesRes.json() : [];
-          const acceptedByItem: Record<number, number> = {};
-          (Array.isArray(offers) ? offers : []).forEach((o: any) => {
-            if (o.status === "accepted") acceptedByItem[o.item_id] = o.id;
-          });
-          const oItems = Array.isArray(offers) ? offers.map((o: any) => ({ type: "offer", id: o.id, item_id: o.item_id, item_name: o.item?.name, amount: o.amount, status: o.status, text: `Offre ${o.amount}€ sur \"${o.item?.name || `Objet ${o.item_id}`}\"` , created_at: o.created_at, href: o.status === "accepted" ? `/paiement/offre/${o.id}` : undefined })) : [];
-          const mItems = Array.isArray(messages) ? messages.map((m: any) => {
-            const content = typeof m.content === "string" ? m.content : "";
-            let href: string | undefined;
-            const marker = "/paiement/offre/";
-            const idx = content.indexOf(marker);
-            if (idx >= 0) {
-              const rest = content.slice(idx + marker.length);
-              const idMatch = rest.match(/^\d+/);
-              if (idMatch) href = `/paiement/offre/${idMatch[0]}`;
-            }
-            if (!href && typeof m.item_id === "number" && acceptedByItem[m.item_id]) {
-              href = `/paiement/offre/${acceptedByItem[m.item_id]}`;
-            }
-            const displayText = href || content.includes("Lien de paiement Stripe")
-              ? "Votre offre a été acceptée. Confirmez et payez."
-              : content;
-            return { type: "message", text: content, displayText, created_at: m.created_at, href };
-          }) : [];
-          const combined = [...oItems, ...mItems]
-            .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-            .slice(0, 10);
-          setNotifItems(combined);
-        }
-      } catch {
-        setNotifItems([]);
-      }
-    }
-    fetchList();
-  }, [notifOpen, role, userData?.id]);
+  }
 
   return (
     <header className="border-b border-border bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60 sticky top-0 z-50">

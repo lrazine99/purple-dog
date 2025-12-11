@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import GenericHeader from "@/components/header/GenericHeader";
 import Footer from "@/components/homepage/footer";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -154,7 +153,6 @@ export default function EditItemPage() {
 
   return (
     <main className="min-h-screen">
-      <GenericHeader />
       <div className="container mx-auto px-4 py-6 space-y-6">
         <div className="flex items-center justify-between">
           <div>
