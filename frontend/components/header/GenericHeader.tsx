@@ -24,7 +24,7 @@ export const GenericHeader = () => {
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
           <div className="flex items-center gap-8">
-            <Link href={ROUTES.HOME} className="flex items-center space-x-2">
+            <Link href={ROUTES.HOME} className="flex w-20 items-center space-x-2">
               <Image
                 src="/purple-dog-logo.png"
                 alt="Purple Dog Logo"
