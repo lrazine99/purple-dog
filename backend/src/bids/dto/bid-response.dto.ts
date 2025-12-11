@@ -13,8 +13,8 @@ export class BidResponseDto {
   @ApiProperty()
   amount: number;
 
-  @ApiProperty({ nullable: true })
-  max_amount: number | null;
+  @ApiProperty({ required: false, nullable: true })
+  min_amount: number | null;
 
   @ApiProperty()
   type: string;

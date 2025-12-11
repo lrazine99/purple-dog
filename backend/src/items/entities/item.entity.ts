@@ -138,6 +138,15 @@ export class Item {
   })
   auction_end_date: Date;
 
+  @Column({
+    type: 'decimal',
+    precision: 10,
+    scale: 2,
+    name: 'min_amount_bid',
+    nullable: true,
+  })
+  min_amount_bid: number | null;
+
   @OneToMany(() => ItemPhoto, (photo) => photo.item, { cascade: true, eager: true })
   photos: ItemPhoto[];
 

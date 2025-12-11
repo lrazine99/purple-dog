@@ -11,6 +11,6 @@ export class CreateBidDto {
   @IsOptional()
   @IsNumber()
   @Min(0.01)
-  max_amount?: number;
+  min_amount?: number;
 }
 

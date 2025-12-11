@@ -12,7 +12,7 @@ import {
 import { useToast } from "@/hooks/useToast";
 import { getBidIncrement, getNextBidAmount } from "@/lib/api/bid.service";
 import { Gavel, Loader2, TrendingUp } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { CountdownTimer } from "./countdown-timer";
 
 interface AuctionBiddingProps {
@@ -20,15 +20,14 @@ interface AuctionBiddingProps {
   startingPrice: number;
   priceMin: number;
   createdAt: string;
+  minAmountBid: number | null;
 }
 
 export function AuctionBidding({
   itemId,
   startingPrice,
-  priceMin,
   createdAt,
 }: AuctionBiddingProps) {
-  // Calculer la date de fin (une semaine après created_at)
   const endDate = new Date(createdAt);
   endDate.setDate(endDate.getDate() + 7);
 
@@ -36,31 +35,45 @@ export function AuctionBidding({
   const { toast } = useToast();
   const { data: winningBid, isLoading: isLoadingWinning } =
     useCurrentWinningBid(itemId);
-  const { data: bids, isLoading: isLoadingBids } = useItemBids(itemId);
+
   const createBidMutation = useCreateBid(itemId);
+  const { data: bids, isLoading: isLoadingBids } = useItemBids(itemId);
 
-  const currentPrice = Number(
-    winningBid ? winningBid.amount : startingPrice || priceMin || 0
-  );
+  // Récupérer le montant de la dernière enchère (peut être 0 si pas d'enchères)
+  const lastBidPrice =
+    bids && bids.length > 0 ? Number(bids[bids.length - 1].amount) : 0;
 
-  // Si c'est le prix de départ (pas encore d'enchère), l'utilisateur peut enchérir au prix de départ (prix libre)
-  // Sinon, calculer selon les paliers
-  const nextBidAmount = winningBid
+  const winningBidAmount = winningBid?.amount ? Number(winningBid.amount) : 0;
+  const startPrice = startingPrice ? Number(startingPrice) : 0;
+
+  const currentPrice = Math.max(winningBidAmount, lastBidPrice, startPrice);
+
+  const hasExistingBids = winningBid || (bids && bids.length > 0);
+  const nextBidAmount = hasExistingBids
     ? getNextBidAmount(currentPrice)
-    : currentPrice; // Si pas d'enchère, on peut enchérir au prix de départ (prix libre)
-
-  // Montant minimum : soit le palier calculé, soit 1€ de plus que la dernière enchère
-  const minBidAmount = winningBid
-    ? Math.max(nextBidAmount, currentPrice + 1)
     : currentPrice;
+
+  const minBidAmount = currentPrice + 1;
 
   const increment = getBidIncrement(currentPrice);
 
-  const [bidAmount, setBidAmount] = useState(nextBidAmount);
-  const [maxAmount, setMaxAmount] = useState<number | null>(null);
+  const [bidAmount, setBidAmount] = useState<number>(nextBidAmount);
+  const [minAmount, setMinAmount] = useState<number | null>(null);
   const [isAutoBid, setIsAutoBid] = useState(false);
 
+  useEffect(() => {
+    setBidAmount(nextBidAmount);
+  }, [nextBidAmount]);
+
   const handleBid = async () => {
+    if (!bidAmount) {
+      toast({
+        variant: "error",
+        message: "Montant invalide",
+        description: "Veuillez entrer un montant valide",
+      });
+      return;
+    }
     if (!user) {
       toast({
         variant: "error",
@@ -71,17 +84,15 @@ export function AuctionBidding({
     }
 
     // Une enchère doit être strictement supérieure à la dernière enchère (minimum 1€ de plus)
-    const absoluteMinAmount = winningBid
-      ? Number(winningBid.amount) + 1
-      : currentPrice;
+    const absoluteMinAmount = minBidAmount;
 
-    if (winningBid && bidAmount <= winningBid.amount) {
+    if (lastBidPrice && bidAmount <= lastBidPrice) {
       toast({
         variant: "error",
         message: "Montant invalide",
         description: `Le montant doit être supérieur à ${Number(
-          winningBid.amount
-        ).toFixed(2)}€. Le minimum est de ${absoluteMinAmount.toFixed(2)}€`,
+          lastBidPrice
+        ).toFixed(2)}€. Le minimum est de ${(lastBidPrice + 1).toFixed(2)}€`,
       });
       return;
     }
@@ -97,22 +108,24 @@ export function AuctionBidding({
       return;
     }
 
-    if (isAutoBid && maxAmount && maxAmount < bidAmount) {
+    if (isAutoBid && minAmount && minAmount <= bidAmount) {
       toast({
         variant: "error",
-        message: "Montant maximum invalide",
-        description: `Le montant maximum doit être supérieur ou égal à ${bidAmount}€`,
+        message: "Montant minimum invalide",
+        description: `Le montant minimum requis doit être supérieur à votre enchère actuelle (${bidAmount.toFixed(
+          2
+        )}€)`,
       });
       return;
     }
 
     try {
-      const bidData: { amount: number; max_amount?: number } = {
+      const bidData: { amount: number; min_amount?: number } = {
         amount: Number(bidAmount),
       };
 
-      if (isAutoBid && maxAmount) {
-        bidData.max_amount = Number(maxAmount);
+      if (isAutoBid && minAmount) {
+        bidData.min_amount = Number(minAmount);
       }
 
       await createBidMutation.mutateAsync(bidData);
@@ -121,12 +134,12 @@ export function AuctionBidding({
         variant: "success",
         message: "Enchère placée",
         description: isAutoBid
-          ? `Enchère automatique placée jusqu'à ${maxAmount}€`
-          : `Votre enchère de ${bidAmount}€ a été placée`,
+          ? `Enchère automatique placée jusqu'à ce que le montant minimum de ${minAmount}€ soit atteint`
+          : `Votre enchère de ${bidAmount.toFixed(2)}€ a été placée`,
       });
 
       setBidAmount(nextBidAmount);
-      setMaxAmount(null);
+      setMinAmount(null);
       setIsAutoBid(false);
     } catch (error) {
       console.error("Erreur lors de la création de l'enchère:", error);
@@ -193,22 +206,15 @@ export function AuctionBidding({
                     type="number"
                     min={minBidAmount}
                     step="any"
-                    value={bidAmount}
+                    value={bidAmount || ""}
                     onChange={(e) => setBidAmount(Number(e.target.value))}
                     className="flex-1"
-                    placeholder={
-                      winningBid
-                        ? `Minimum: ${minBidAmount.toFixed(
-                            2
-                          )}€ (suggesté: ${nextBidAmount.toFixed(2)}€)`
-                        : `Minimum: ${currentPrice.toFixed(2)}€`
-                    }
                   />
                   <span className="flex items-center text-muted-foreground">
                     €
                   </span>
                 </div>
-                {winningBid ? (
+                {hasExistingBids ? (
                   <p className="text-xs text-muted-foreground">
                     Prix libre : minimum {minBidAmount.toFixed(2)}€ (1€ de plus
                     que la dernière enchère). Montant suggéré selon les paliers
@@ -230,7 +236,7 @@ export function AuctionBidding({
                   onChange={(e) => {
                     setIsAutoBid(e.target.checked);
                     if (!e.target.checked) {
-                      setMaxAmount(null);
+                      setMinAmount(null);
                     }
                   }}
                   className="h-4 w-4"
@@ -246,48 +252,39 @@ export function AuctionBidding({
 
               {isAutoBid && (
                 <div className="space-y-2">
-                  <Label htmlFor="max-amount">
-                    Montant maximum (l&apos;enchère se fera automatiquement
-                    jusqu&apos;à ce montant)
+                  <Label htmlFor="min-amount">
+                    Montant minimum requis (l&apos;enchère automatique
+                    continuera jusqu&apos;à ce que ce montant soit atteint)
                   </Label>
                   <div className="flex gap-2">
                     <Input
-                      id="max-amount"
+                      id="min-amount"
                       type="number"
-                      min={bidAmount}
+                      min={minBidAmount}
                       step="any"
-                      value={maxAmount || getNextBidAmount(bidAmount).toString()}
+                      value={minAmount || ""}
                       onChange={(e) =>
-                        setMaxAmount(
+                        setMinAmount(
                           e.target.value ? Number(e.target.value) : null
                         )
                       }
                       className="flex-1"
-                      placeholder="Montant libre ou selon paliers"
+                      placeholder={`Minimum: ${(bidAmount + 1).toFixed(2)}€`}
                     />
                     <span className="flex items-center text-muted-foreground">
                       €
                     </span>
                   </div>
-                  {maxAmount && (
+                  {minAmount && (
                     <div className="space-y-1">
                       <p className="text-xs text-muted-foreground">
-                        L&apos;enchère sera automatiquement augmentée
-                        jusqu&apos;à {maxAmount}€
+                        L&apos;enchère automatique continuera jusqu&apos;à ce
+                        que le montant de {minAmount.toFixed(2)}€ soit atteint
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        {maxAmount >= getNextBidAmount(bidAmount) ? (
-                          <span>
-                            Les enchères suivront les paliers ({increment}€)
-                            quand possible, ou utiliseront un prix libre
-                            jusqu&apos;à {maxAmount}€
-                          </span>
-                        ) : (
-                          <span className="text-amber-600 dark:text-amber-400">
-                            Le montant maximum doit être supérieur ou égal à{" "}
-                            {getNextBidAmount(bidAmount)}€
-                          </span>
-                        )}
+                        Les enchères suivront les paliers (
+                        {increment.toFixed(2)}€) jusqu&apos;à atteindre{" "}
+                        {minAmount.toFixed(2)}€
                       </p>
                     </div>
                   )}
