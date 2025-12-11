@@ -6,16 +6,19 @@ export async function POST(request: NextRequest) {
   try {
     const { email, password } = await request.json();
 
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/auth/login`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email, password }),
-      }
-    );
+    // Use backend hostname for server-side API calls (Docker network)
+    // NEXT_PUBLIC_API_URL is often http://localhost:3001 which doesn't work inside Docker
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL?.includes("localhost")
+      ? "http://backend:3001"
+      : process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+
+    const response = await fetch(`${apiUrl}/auth/login`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ email, password }),
+    });
 
     if (!response.ok) {
       let error;
@@ -42,7 +45,6 @@ export async function POST(request: NextRequest) {
     }
 
     const payload = await decodeJWTPayload(data.access_token);
-    console.log("PAYLOAD LOGIN", payload);
     if (!payload) {
       return NextResponse.json(
         { error: "Erreur lors du décodage du token" },
@@ -50,11 +52,28 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Fetch user data to return it for role-based redirect
+    let userData: unknown = null;
+    try {
+      const userResponse = await fetch(`${apiUrl}/auth/me`, {
+        headers: {
+          Authorization: `Bearer ${data.access_token}`,
+        },
+      });
+
+      if (userResponse.ok) {
+        userData = await userResponse.json();
+      }
+    } catch (error) {
+      console.error("Error fetching /auth/me:", error);
+    }
+
     const res = NextResponse.json({
       success: true,
       id: payload.sub,
       email: payload.email,
       role: data.role,
+      user: userData,
     });
     setAuthCookies(res, data);
 

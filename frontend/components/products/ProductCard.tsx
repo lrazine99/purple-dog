@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,8 +11,11 @@ import { useFavoriteMutation } from "@/hooks/useFavoriteMutation";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useMemo } from "react";
 
+type ProductWithPhotos = Item & {
+  photos?: { url: string; is_primary: boolean }[];
+};
 interface ProductCardProps {
-  product: Item;
+  product: ProductWithPhotos;
 }
 
 export function ProductCard({ product }: ProductCardProps) {
@@ -25,6 +29,12 @@ export function ProductCard({ product }: ProductCardProps) {
     if (!favorites) return false;
     return favorites.some((fav) => fav.item_id === product.id);
   }, [favorites, product.id]);
+
+  const primaryPhotoUrl = useMemo(() => {
+    if (!product.photos || product.photos.length === 0) return null;
+    const primary = product.photos.find((p) => p.is_primary) || product.photos[0];
+    return primary.url;
+  }, [product.photos]);
 
   const handleFavoriteClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -53,13 +63,26 @@ export function ProductCard({ product }: ProductCardProps) {
     return `dans ${hours}h`;
   };
 
+  // Get primary photo or first photo
+  const primaryPhoto = product.photos?.find((p) => p.is_primary) || product.photos?.[0];
+
   return (
     <Link href={`/produits/${product.id}`}>
       <Card className="group overflow-hidden border-border hover:shadow-lg transition-all duration-300 cursor-pointer h-full flex flex-col">
         <div className="relative aspect-[3/4] overflow-hidden bg-muted">
-          <div className="absolute inset-0 flex items-center justify-center">
-            <span className="text-muted-foreground text-sm">Image à venir</span>
-          </div>
+          {primaryPhoto ? (
+            <Image
+              src={primaryPhoto.url}
+              alt={product.name}
+              fill
+              className="object-cover group-hover:scale-105 transition-transform duration-300"
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            />
+          ) : (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <span className="text-muted-foreground text-sm">Image à venir</span>
+            </div>
+          )}
 
           <Button
             variant="ghost"

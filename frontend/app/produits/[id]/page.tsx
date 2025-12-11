@@ -1,5 +1,6 @@
 import { AuctionBidding } from "@/components/auction-bidding";
 import { DirectSaleCard } from "@/components/direct-sale-card";
+import { ItemOffersSection } from "@/components/offers/ItemOffersSection";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -57,6 +58,7 @@ interface Item {
   status: string;
   auction_start_price?: number | null;
   auction_end_date?: string | null;
+  min_amount_bid?: number | null;
   photos?: ItemPhoto[];
   created_at: string;
   updated_at: string;
@@ -236,6 +238,10 @@ export default async function ProduitPage({
                 itemName={item.name}
               />
             )}
+
+            <section id="offres">
+              <ItemOffersSection itemId={item.id} sellerId={item.seller_id} />
+            </section>
 
             {/* Trust Badges */}
             <div className="grid grid-cols-3 gap-3">

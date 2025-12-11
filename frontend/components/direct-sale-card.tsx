@@ -4,38 +4,97 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { CreditCard, Heart } from "lucide-react";
-import { CheckoutDialog } from "@/components/checkout/CheckoutDialog";
-import { useRouter } from "next/navigation";
+import { Heart, CreditCard } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import { useSubscriptionStatus } from "@/hooks/useSubscription";
-import Link from "next/link";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { CheckoutDialog } from "@/components/checkout/CheckoutDialog";
 
 interface DirectSaleCardProps {
-  price: number;
   itemId: number;
   sellerId: number;
+  price: number;
   itemName: string;
 }
 
 export function DirectSaleCard({
-  price,
   itemId,
   sellerId,
+  price,
   itemName,
 }: DirectSaleCardProps) {
-  const [showCheckout, setShowCheckout] = useState(false);
-  const router = useRouter();
   const { data: user } = useAuth();
-  const { canAccessPro } = useSubscriptionStatus();
+  
+  // États pour le paiement (Stripe)
+  const [showCheckout, setShowCheckout] = useState(false);
 
+  // États pour les offres
+  const [offerOpen, setOfferOpen] = useState(false);
+  const [amount, setAmount] = useState<number>(price);
+  const [message, setMessage] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Gestion de l'achat immédiat
   const handleBuyNow = () => {
+    if (!user) {
+      alert("Veuillez vous connecter pour acheter cet article.");
+      return;
+    }
     setShowCheckout(true);
   };
 
+  // Gestion de l'ouverture du modal d'offre
   const handleMakeOffer = () => {
-    // TODO: Implement make offer
-    console.log("Making offer for item");
+    if (!user) {
+      alert("Veuillez vous connecter pour faire une offre.");
+      return;
+    }
+    if (user.id === sellerId) {
+      return;
+    }
+    setOfferOpen(true);
+  };
+
+  // Envoi de l'offre à l'API
+  const handleSubmitOffer = async () => {
+    if (!user) return;
+    const amt = Number(amount);
+    if (isNaN(amt) || amt <= 0) {
+      alert("Montant invalide");
+      return;
+    }
+    setIsSubmitting(true);
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/offers`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          item_id: itemId,
+          buyer_id: user.id,
+          amount: amt,
+          message: message || undefined,
+        }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.message || "Échec de la création de l'offre");
+      }
+      setOfferOpen(false);
+      setMessage("");
+      alert("Offre envoyée avec succès !");
+    } catch (e: any) {
+      alert(e.message || "Erreur lors de l'envoi de l'offre");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleAddToFavorites = () => {
@@ -43,68 +102,110 @@ export function DirectSaleCard({
     console.log("Adding to favorites");
   };
 
-  return (
-    <Card className="p-6 space-y-4 bg-muted/30">
-      <div>
-        <p className="text-sm text-muted-foreground mb-1">Prix</p>
-        <p className="font-serif text-4xl font-bold">
-          {price.toLocaleString("fr-FR")} €
-        </p>
-        <p className="text-xs text-muted-foreground mt-2">
-          TVA incluse • Livraison disponible
-        </p>
-      </div>
+  const isOwner = user?.id === sellerId;
 
-      {/* Check if professional user with expired subscription */}
-      {user && user.role === "professional" && !canAccessPro ? (
-        <div className="space-y-3">
-          <div className="p-4 bg-destructive/10 border border-destructive/20 rounded-lg">
-            <p className="text-sm font-medium text-destructive mb-2">
-              Abonnement expiré
-            </p>
-            <p className="text-xs text-muted-foreground mb-3">
-              Vous devez souscrire à un abonnement pour acheter ce produit.
-            </p>
-            <Button asChild variant="default" size="sm" className="w-full">
-              <Link href="/abonnement">
-                <CreditCard className="h-4 w-4 mr-2" />
-                S&apos;abonner maintenant
-              </Link>
-            </Button>
-          </div>
+  return (
+    <>
+      <Card className="p-6 space-y-4 bg-muted/30">
+        <div>
+          <p className="text-sm text-muted-foreground mb-1">Prix</p>
+          <p className="font-serif text-4xl font-bold">
+            {price.toLocaleString("fr-FR")} €
+          </p>
+          <p className="text-xs text-muted-foreground mt-2">
+            TVA incluse, livraison disponible
+          </p>
         </div>
-      ) : (
-        <>
-          <div className="space-y-2">
-            <Button size="lg" className="w-full" onClick={handleBuyNow}>
-              Acheter maintenant
-            </Button>
+
+        <Separator />
+
+        <div className="space-y-3">
+          {/* Boutons d'action (cachés si c'est le vendeur) */}
+          {!isOwner && (
+            <>
+              <Button 
+                size="lg" 
+                className="w-full bg-primary hover:bg-primary/90" 
+                onClick={handleBuyNow}
+              >
+                <CreditCard className="mr-2 h-4 w-4" />
+                Acheter maintenant
+              </Button>
+
+              <Button 
+                variant="secondary" 
+                className="w-full" 
+                onClick={handleMakeOffer}
+              >
+                Faire une offre
+              </Button>
+            </>
+          )}
+
+          <Button
+            variant="outline"
+            className="w-full bg-transparent"
+            onClick={handleAddToFavorites}
+          >
+            <Heart className="h-4 w-4 mr-2" />
+            Ajouter aux favoris
+          </Button>
+        </div>
+      </Card>
+
+      {/* Modal de Paiement Stripe */}
+      <CheckoutDialog
+        open={showCheckout}
+        onOpenChange={setShowCheckout}
+        itemId={itemId}
+        sellerId={sellerId}
+        price={price}
+        itemName={itemName}
+      />
+
+      {/* Modal de création d'offre */}
+      <Dialog open={offerOpen} onOpenChange={setOfferOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Faire une offre</DialogTitle>
+            <DialogDescription>
+              Proposez un montant et un message optionnel au vendeur.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <label className="block text-sm mb-1">Montant (€)</label>
+              <Input
+                type="number"
+                step="0.01"
+                value={amount}
+                onChange={(e) => setAmount(parseFloat(e.target.value || "0"))}
+              />
+            </div>
+            <div>
+              <label className="block text-sm mb-1">Message</label>
+              <Textarea
+                rows={3}
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                placeholder="Bonjour, je suis intéressé par..."
+              />
+            </div>
+          </div>
+          <DialogFooter className="gap-2 sm:gap-0">
             <Button
               variant="outline"
-              className="w-full bg-transparent"
-              onClick={handleAddToFavorites}
+              onClick={() => setOfferOpen(false)}
+              disabled={isSubmitting}
             >
-              <Heart className="h-4 w-4 mr-2" />
-              Ajouter aux favoris
+              Annuler
             </Button>
-          </div>
-
-          <Separator />
-
-          <Button variant="ghost" className="w-full" onClick={handleMakeOffer}>
-            Faire une offre
-          </Button>
-
-          <CheckoutDialog
-            open={showCheckout}
-            onOpenChange={setShowCheckout}
-            itemId={itemId}
-            sellerId={sellerId}
-            price={price}
-            itemName={itemName}
-          />
-        </>
-      )}
-    </Card>
+            <Button onClick={handleSubmitOffer} disabled={isSubmitting}>
+              {isSubmitting ? "Envoi..." : "Envoyer l'offre"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

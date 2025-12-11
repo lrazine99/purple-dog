@@ -12,8 +12,7 @@ import { decodeJWTPayload } from "@/lib/jwt";
 export async function proxy(request: NextRequest) {
   const token = request.cookies.get("access_token")?.value;
   const payload = token ? await decodeJWTPayload(token) : null;
-  console.log('payload', payload);
-  console.log('token', token);
+ 
   
   const isProtectedRoute = PROTECTED_ROUTES.some((route) =>
     request.nextUrl.pathname.startsWith(route)

@@ -7,6 +7,7 @@ export async function getCategories(): Promise<CategoriesResponse> {
     headers: {
       "Content-Type": "application/json",
     },
+    credentials: "include",
   });
 
   if (!response.ok) {

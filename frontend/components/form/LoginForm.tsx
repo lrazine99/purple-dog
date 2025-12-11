@@ -31,7 +31,6 @@ export function LoginForm() {
   function onSubmit(data: LoginFormType) {
     loginMutation.mutate(data, {
       onSuccess: (data: any) => {
-        localStorage.setItem("access_token", data.access_token);
         toast({
           variant: "success",
           message: "Connexion réussie !",

@@ -84,10 +84,17 @@ export class ItemsService {
       .createQueryBuilder('item')
       .leftJoinAndSelect('item.photos', 'photos')
       .leftJoinAndSelect('item.itemCategories', 'itemCategories')
-      .leftJoinAndSelect('itemCategories.category', 'category');
+      .leftJoinAndSelect('itemCategories.category', 'category')
+      .leftJoin('item.category', 'mainCategory')
+      .orderBy('item.created_at', 'DESC');
 
     if (categoryId) {
-      queryBuilder.where('item.category_id = :categoryId', { categoryId });
+      // Find items where category_id matches OR where the category's parent_id matches
+      // This allows filtering by parent category to show items from subcategories
+      queryBuilder.where(
+        '(item.category_id = :categoryId OR mainCategory.parent_id = :categoryId)',
+        { categoryId }
+      );
     }
 
     queryBuilder
@@ -300,6 +307,17 @@ export class ItemsService {
   }
 
   // Photo management methods
+  async listPhotos(itemId: number): Promise<ItemPhoto[]> {
+    const item = await this.itemRepository.findOne({ where: { id: itemId } });
+    if (!item) {
+      throw new NotFoundException(`Item with ID ${itemId} not found`);
+    }
+    return this.itemPhotoRepository.find({
+      where: { item_id: itemId },
+      order: { position: 'ASC' },
+    });
+  }
+
   async addPhoto(
     itemId: number,
     url: string,

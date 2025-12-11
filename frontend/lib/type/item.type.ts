@@ -13,17 +13,27 @@ export enum ItemStatus {
   FOR_SALE = "for_sale",
   SOLD = "sold",
   PENDING = "pending",
+  PENDING_EXPERTISE = "pending_expertise",
   APPROVED = "approved",
   CANCELLED = "cancelled",
   EXPIRED = "expired",
   BLOCKED = "blocked",
   DELETED = "deleted",
-  PENDING_EXPERTISE = "pending_expertise",
 }
+
+export const itemPhotoSchema = z.object({
+  id: z.number(),
+  url: z.string(),
+  position: z.number().optional(),
+  is_primary: z.boolean().optional(),
+});
+
+export type ItemPhoto = z.infer<typeof itemPhotoSchema>;
 
 export const itemSchema = z.object({
   id: z.number(),
   seller_id: z.number(),
+  // Utilisation de nullish() (feature) pour accepter null ou undefined
   category_id: z.number().nullish(),
   name: z.string(),
   description: z.string(),
@@ -33,10 +43,11 @@ export const itemSchema = z.object({
   weight_kg: z.coerce.number().nullish(),
   price_desired: z.coerce.number(),
   price_min: z.coerce.number().nullish(),
-  sale_mode: z.string(), // Accept any string for sale_mode
-  status: z.string(), // Accept any string for status
+  sale_mode: z.nativeEnum(SaleMode),
+  status: z.nativeEnum(ItemStatus),
   auction_start_price: z.coerce.number().nullish(),
   auction_end_date: z.string().nullish(),
+  photos: z.array(itemPhotoSchema).optional(),
   created_at: z.string(),
   updated_at: z.string(),
 });

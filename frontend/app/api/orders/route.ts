@@ -1,90 +1,81 @@
 import { NextRequest, NextResponse } from "next/server";
 
-export async function POST(request: NextRequest) {
-  try {
-    const accessToken = request.cookies.get("access_token")?.value;
-
-    if (!accessToken) {
-      return NextResponse.json(
-        { error: "Non authentifié" },
-        { status: 401 }
-      );
-    }
-
-    const body = await request.json();
-
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/orders`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken}`,
-        },
-        body: JSON.stringify(body),
-      }
-    );
-
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({
-        message: "Erreur lors de la création de la commande",
-      }));
-      return NextResponse.json(error, { status: response.status });
-    }
-
-    const data = await response.json();
-    return NextResponse.json(data);
-  } catch (error) {
-    console.error("API route error:", error);
-    return NextResponse.json(
-      { error: "Erreur serveur" },
-      { status: 500 }
-    );
-  }
-}
-
 export async function GET(request: NextRequest) {
+  const token = request.cookies.get("access_token")?.value;
+
+  if (!token) {
+    return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
+  }
+
   try {
-    const accessToken = request.cookies.get("access_token")?.value;
-
-    if (!accessToken) {
-      return NextResponse.json(
-        { error: "Non authentifié" },
-        { status: 401 }
-      );
-    }
-
     const { searchParams } = new URL(request.url);
     const queryString = searchParams.toString();
 
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL?.includes('localhost') 
+      ? 'http://backend:3001' 
+      : process.env.NEXT_PUBLIC_API_URL;
+
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/orders${
-        queryString ? `?${queryString}` : ""
-      }`,
+      `${apiUrl}/orders${queryString ? `?${queryString}` : ""}`, 
       {
-        method: "GET",
         headers: {
+          Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken}`,
         },
       }
     );
 
     if (!response.ok) {
-      const error = await response.json().catch(() => ({
-        message: "Erreur lors de la récupération des commandes",
-      }));
-      return NextResponse.json(error, { status: response.status });
+      const errorText = await response.text();
+      return NextResponse.json(
+        { error: errorText || "Failed to fetch orders" },
+        { status: response.status }
+      );
     }
 
-    const data = await response.json();
-    return NextResponse.json(data);
+    const orders = await response.json();
+    return NextResponse.json(orders);
   } catch (error) {
-    console.error("API route error:", error);
-    return NextResponse.json(
-      { error: "Erreur serveur" },
-      { status: 500 }
-    );
+    console.error("Error in /api/orders GET:", error);
+    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }
 }
 
+export async function POST(request: NextRequest) {
+  const token = request.cookies.get("access_token")?.value;
+
+  if (!token) {
+    return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
+  }
+
+  try {
+    const body = await request.json();
+    
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL?.includes('localhost') 
+      ? 'http://backend:3001' 
+      : process.env.NEXT_PUBLIC_API_URL;
+
+    const response = await fetch(`${apiUrl}/orders`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(body),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      return NextResponse.json(
+        { error: data.message || "Failed to create order" },
+        { status: response.status }
+      );
+    }
+
+    return NextResponse.json(data);
+  } catch (error) {
+    console.error("Error in /api/orders POST:", error);
+    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
+  }
+}
