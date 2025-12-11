@@ -141,6 +141,9 @@ export class Item {
   @OneToMany(() => ItemPhoto, (photo) => photo.item, { cascade: true, eager: true })
   photos: ItemPhoto[];
 
+  @OneToMany(() => require('../../bids/entities/bid.entity').Bid, (bid) => bid.item)
+  bids: any[];
+
   @CreateDateColumn({ name: 'created_at' })
   created_at: Date;
 
