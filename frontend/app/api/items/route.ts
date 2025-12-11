@@ -1,13 +1,11 @@
+import { getBackendUrl } from "@/lib/api-url";
 import { NextRequest, NextResponse } from "next/server";
 
 // GET all items (public access)
 export async function GET(request: NextRequest) {
   try {
     const token = request.cookies.get("access_token")?.value;
-
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL?.includes("localhost")
-      ? "http://backend:3001"
-      : process.env.NEXT_PUBLIC_API_URL;
+    const apiUrl = getBackendUrl();
 
     // Forward query parameters
     const searchParams = request.nextUrl.searchParams;
@@ -47,10 +45,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL?.includes("localhost")
-      ? "http://backend:3001"
-      : process.env.NEXT_PUBLIC_API_URL;
+    const apiUrl = getBackendUrl();
 
     const response = await fetch(`${apiUrl}/items`, {
       method: "POST",

@@ -16,6 +16,16 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { ROUTES } from "@/helper/routes";
+import { useAuth, useLogout } from "@/hooks/useAuth";
+import { Bell, Menu, Search, User, X } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { ProNavbar } from "./ProNavbar";
+import { SellerNavbar } from "./SellerNavbar";
 import { CheckoutDialog } from "@/components/checkout/CheckoutDialog";
 
 interface DirectSaleCardProps {
@@ -96,6 +106,17 @@ export function DirectSaleCard({
   };
 
   const isOwner = user?.id === sellerId;
+
+  if (isLoading) {
+    return (
+      <div className="border-b border-border bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60 sticky top-0 z-50 h-16"></div>
+    );
+  }
+
+  // Don't show header on admin pages - admin has its own layout
+  if (pathname?.startsWith("/admin")) {
+    return null;
+  }
 
   return (
     <>
