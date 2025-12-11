@@ -66,6 +66,32 @@ export function ProductFilters({
         <div className="space-y-2">
           <div className="flex items-center space-x-2">
             <Checkbox
+              id="fixed"
+              checked={selectedSaleTypes.includes("fixed")}
+              onCheckedChange={() => handleSaleTypeToggle("fixed")}
+            />
+            <Label
+              htmlFor="fixed"
+              className="text-sm font-normal cursor-pointer"
+            >
+              Prix fixe
+            </Label>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="negotiable"
+              checked={selectedSaleTypes.includes("negotiable")}
+              onCheckedChange={() => handleSaleTypeToggle("negotiable")}
+            />
+            <Label
+              htmlFor="negotiable"
+              className="text-sm font-normal cursor-pointer"
+            >
+              Prix négociable
+            </Label>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Checkbox
               id="auction"
               checked={selectedSaleTypes.includes("auction")}
               onCheckedChange={() => handleSaleTypeToggle("auction")}
@@ -87,7 +113,7 @@ export function ProductFilters({
               htmlFor="fast"
               className="text-sm font-normal cursor-pointer"
             >
-              Vente directe
+              Vente rapide
             </Label>
           </div>
         </div>

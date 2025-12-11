@@ -22,12 +22,13 @@ export async function getItems(
   }
 
   const response = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/items?${queryParams.toString()}`,
+    `/api/items?${queryParams.toString()}`,
     {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
       },
+      credentials: "include",
     }
   );
 

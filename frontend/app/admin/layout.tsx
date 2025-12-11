@@ -91,8 +91,8 @@ export default function AdminLayout({
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-600"></div>
       </div>
     );
   }
@@ -100,27 +100,27 @@ export default function AdminLayout({
   // Access Denied for non-admin users
   if (accessDenied) {
     return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
-        <div className="bg-slate-800 border border-slate-700 rounded-2xl p-8 max-w-md text-center">
-          <div className="w-20 h-20 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
-            <AlertTriangle className="w-10 h-10 text-red-400" />
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 flex items-center justify-center p-4">
+        <div className="bg-white border border-gray-200 shadow-xl rounded-2xl p-8 max-w-md text-center">
+          <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            <AlertTriangle className="w-10 h-10 text-red-600" />
           </div>
-          <h1 className="text-2xl font-bold text-white mb-2">Accès Refusé</h1>
-          <p className="text-slate-400 mb-6">
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Accès Refusé</h1>
+          <p className="text-gray-600 mb-6">
             Seuls les administrateurs peuvent accéder à ce panneau. Votre compte
             ({user?.email}) a le rôle "{user?.role}".
           </p>
           <div className="flex flex-col gap-3">
             <Button
               onClick={() => router.push("/")}
-              className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
+              className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white"
             >
               Retour à l'accueil
             </Button>
             <Button
               variant="outline"
               onClick={handleLogout}
-              className="w-full bg-slate-700 border-slate-600 text-white hover:bg-slate-600"
+              className="w-full border-gray-300 text-gray-700 hover:bg-gray-100"
             >
               <LogOut className="w-4 h-4 mr-2" />
               Se connecter avec un autre compte
@@ -136,31 +136,31 @@ export default function AdminLayout({
   }
 
   return (
-    <div className="min-h-screen bg-slate-900">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50">
       {/* Mobile sidebar overlay */}
       {sidebarOpen && (
         <div
-          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 lg:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       )}
 
       {/* Sidebar */}
       <aside
-        className={`fixed top-0 left-0 z-50 h-full w-64 bg-slate-800 border-r border-slate-700 transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${
+        className={`fixed top-0 left-0 z-50 h-full w-64 bg-white border-r border-gray-200 shadow-lg transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
         {/* Logo */}
-        <div className="h-16 flex items-center justify-between px-6 border-b border-slate-700">
+        <div className="h-16 flex items-center justify-between px-6 border-b border-gray-200">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl flex items-center justify-center">
+            <div className="w-10 h-10 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-md">
               <Shield className="w-5 h-5 text-white" />
             </div>
-            <span className="font-bold text-white">Purple Dog</span>
+            <span className="font-bold text-gray-900">Purple Dog</span>
           </div>
           <button
-            className="lg:hidden text-slate-400 hover:text-white"
+            className="lg:hidden text-gray-500 hover:text-gray-900"
             onClick={() => setSidebarOpen(false)}
           >
             <X className="w-6 h-6" />
@@ -177,8 +177,8 @@ export default function AdminLayout({
                 href={item.href}
                 className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group ${
                   isActive
-                    ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-lg shadow-purple-500/25"
-                    : "text-slate-400 hover:text-white hover:bg-slate-700/50"
+                    ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-lg shadow-purple-500/30"
+                    : "text-gray-600 hover:text-purple-600 hover:bg-purple-50"
                 }`}
               >
                 <item.icon className="w-5 h-5" />
@@ -190,14 +190,14 @@ export default function AdminLayout({
         </nav>
 
         {/* User info & Logout */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-slate-700">
+        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200 bg-white">
           {user && (
             <div className="mb-4 px-2">
-              <p className="text-white font-medium text-sm truncate">
+              <p className="text-gray-900 font-medium text-sm truncate">
                 {user.first_name} {user.last_name}
               </p>
-              <p className="text-slate-400 text-xs truncate">{user.email}</p>
-              <span className="inline-flex items-center gap-1 mt-1 px-2 py-0.5 bg-red-500/20 text-red-400 rounded-full text-xs font-medium">
+              <p className="text-gray-500 text-xs truncate">{user.email}</p>
+              <span className="inline-flex items-center gap-1 mt-1 px-2 py-0.5 bg-purple-100 text-purple-700 rounded-full text-xs font-medium">
                 <Shield className="w-3 h-3" />
                 Admin
               </span>
@@ -206,7 +206,7 @@ export default function AdminLayout({
           <Button
             variant="ghost"
             onClick={handleLogout}
-            className="w-full justify-start gap-3 text-slate-400 hover:text-red-400 hover:bg-red-500/10"
+            className="w-full justify-start gap-3 text-gray-600 hover:text-red-600 hover:bg-red-50"
           >
             <LogOut className="w-5 h-5" />
             Déconnexion
@@ -217,15 +217,15 @@ export default function AdminLayout({
       {/* Main content */}
       <div className="lg:pl-64">
         {/* Top bar */}
-        <header className="h-16 bg-slate-800/50 backdrop-blur-xl border-b border-slate-700 flex items-center justify-between px-6 sticky top-0 z-30">
+        <header className="h-16 bg-white/80 backdrop-blur-xl border-b border-gray-200 shadow-sm flex items-center justify-between px-6 sticky top-0 z-30">
           <button
-            className="lg:hidden text-slate-400 hover:text-white"
+            className="lg:hidden text-gray-600 hover:text-gray-900"
             onClick={() => setSidebarOpen(true)}
           >
             <Menu className="w-6 h-6" />
           </button>
           <div className="flex items-center gap-4">
-            <span className="text-slate-400 text-sm hidden sm:block">
+            <span className="text-gray-600 text-sm hidden sm:block font-medium">
               Panneau d'administration
             </span>
           </div>

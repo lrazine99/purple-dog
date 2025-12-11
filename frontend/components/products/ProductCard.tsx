@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -62,15 +63,20 @@ export function ProductCard({ product }: ProductCardProps) {
     return `dans ${hours}h`;
   };
 
+  // Get primary photo or first photo
+  const primaryPhoto = product.photos?.find((p) => p.is_primary) || product.photos?.[0];
+
   return (
     <Link href={`/produits/${product.id}`}>
       <Card className="group overflow-hidden border-border hover:shadow-lg transition-all duration-300 cursor-pointer h-full flex flex-col">
         <div className="relative aspect-[3/4] overflow-hidden bg-muted">
-          {primaryPhotoUrl ? (
-            <img
-              src={primaryPhotoUrl}
+          {primaryPhoto ? (
+            <Image
+              src={primaryPhoto.url}
               alt={product.name}
-              className="w-full h-full object-cover"
+              fill
+              className="object-cover group-hover:scale-105 transition-transform duration-300"
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
             />
           ) : (
             <div className="absolute inset-0 flex items-center justify-center">
