@@ -1,3 +1,4 @@
+import { getBackendUrl } from "@/lib/api-url";
 import { NextRequest, NextResponse } from "next/server";
 
 // GET single item (public access)
@@ -8,10 +9,7 @@ export async function GET(
   try {
     const { id } = await params;
     const token = request.cookies.get("access_token")?.value;
-    
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL?.includes('localhost') 
-      ? 'http://backend:3001' 
-      : process.env.NEXT_PUBLIC_API_URL;
+    const apiUrl = getBackendUrl();
 
     const headers: HeadersInit = {};
     if (token) {
@@ -50,10 +48,7 @@ export async function PATCH(
   try {
     const { id } = await params;
     const body = await request.json();
-
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL?.includes("localhost")
-      ? "http://backend:3001"
-      : process.env.NEXT_PUBLIC_API_URL;
+    const apiUrl = getBackendUrl();
 
     const response = await fetch(`${apiUrl}/items/${id}`, {
       method: "PATCH",
@@ -93,10 +88,7 @@ export async function DELETE(
 
   try {
     const { id } = await params;
-
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL?.includes("localhost")
-      ? "http://backend:3001"
-      : process.env.NEXT_PUBLIC_API_URL;
+    const apiUrl = getBackendUrl();
 
     const response = await fetch(`${apiUrl}/items/${id}`, {
       method: "DELETE",

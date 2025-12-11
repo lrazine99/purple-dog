@@ -1,3 +1,4 @@
+import { getBackendUrl } from "@/lib/api-url";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(request: NextRequest) {
@@ -12,12 +13,10 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/auth/verify?token=${token}`,
-      {
-        method: "GET",
-      }
-    );
+    const apiUrl = getBackendUrl();
+    const response = await fetch(`${apiUrl}/auth/verify?token=${token}`, {
+      method: "GET",
+    });
 
     if (!response.ok) {
       let error;

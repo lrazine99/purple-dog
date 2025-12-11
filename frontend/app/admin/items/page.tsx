@@ -11,8 +11,6 @@ import {
   X,
   DollarSign,
   Tag,
-  Ruler,
-  Weight,
   User,
   FolderTree,
   Image,
@@ -21,7 +19,6 @@ import {
   Star,
   Loader2,
   Check,
-  ChevronDown,
   Eye,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -123,7 +120,7 @@ const STATUSES = [
   { value: "pending_expertise", label: "Attend expertise" },
 ];
 
-// Autocomplete component for user/seller search
+
 function UserAutocomplete({
   users,
   selectedUserId,
@@ -234,7 +231,6 @@ function UserAutocomplete({
   );
 }
 
-// Autocomplete component for category search
 function CategoryAutocomplete({
   categories,
   selectedCategoryId,
@@ -277,7 +273,6 @@ function CategoryAutocomplete({
     }
   };
 
-  // Get parent category name for display
   const getParentName = (parentId: number | null | undefined) => {
     if (!parentId) return null;
     const parent = categories.find((c) => c.id === parentId);
@@ -352,6 +347,7 @@ function CategoryAutocomplete({
     </div>
   );
 }
+
 
 export default function ItemsPage() {
   const router = useRouter();
@@ -505,7 +501,8 @@ export default function ItemsPage() {
         const formData = new FormData();
         formData.append("file", file);
 
-        const res = await fetch("/api/upload", {
+        // Standardized to use Env var or relative path consistently
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/upload`, {
           method: "POST",
           body: formData,
         });
@@ -648,7 +645,6 @@ export default function ItemsPage() {
         return;
       }
 
-      const token = localStorage.getItem("access_token");
       const isEdit = !!editingItem;
 
       const body: any = {

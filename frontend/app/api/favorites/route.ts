@@ -1,3 +1,4 @@
+import { getBackendUrl } from "@/lib/api-url";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(request: NextRequest) {
@@ -8,16 +9,14 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
     }
 
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/favorites`,
-      {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken}`,
-        },
-      }
-    );
+    const apiUrl = getBackendUrl();
+    const response = await fetch(`${apiUrl}/favorites`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
 
     if (!response.ok) {
       const error = await response.json();
@@ -27,6 +26,7 @@ export async function GET(request: NextRequest) {
     const data = await response.json();
     return NextResponse.json(data);
   } catch (error) {
+    console.error("Favorites GET error:", error);
     return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }
 }
@@ -40,18 +40,16 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
+    const apiUrl = getBackendUrl();
 
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/favorites`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken}`,
-        },
-        body: JSON.stringify(body),
-      }
-    );
+    const response = await fetch(`${apiUrl}/favorites`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify(body),
+    });
 
     if (!response.ok) {
       const error = await response.json();
@@ -61,7 +59,7 @@ export async function POST(request: NextRequest) {
     const data = await response.json();
     return NextResponse.json(data);
   } catch (error) {
-    console.error("API route error:", error);
+    console.error("Favorites POST error:", error);
     return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }
 }

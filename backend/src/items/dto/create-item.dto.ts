@@ -76,5 +76,11 @@ export class CreateItemDto {
   @IsDateString()
   @IsOptional()
   auction_end_date?: string;
+
+  @ApiProperty({ required: false })
+  @IsNumber()
+  @Min(0)
+  @IsOptional()
+  min_amount_bid?: number;
 }
 

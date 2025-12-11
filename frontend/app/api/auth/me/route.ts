@@ -1,10 +1,19 @@
-import { NextRequest } from "next/server";
+import { getBackendUrl } from "@/lib/api-url";
+import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(request: NextRequest) {
   try {
     const accessToken = request.cookies.get("access_token")?.value;
+    
+    if (!accessToken) {
+      return NextResponse.json(
+        { error: "Not authenticated" },
+        { status: 401 }
+      );
+    }
 
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/me`, {
+    const apiUrl = getBackendUrl();
+    const response = await fetch(`${apiUrl}/auth/me`, {
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${accessToken}`,
@@ -12,16 +21,16 @@ export async function GET(request: NextRequest) {
     });
 
     if (!response.ok) {
-      return Response.json(
+      return NextResponse.json(
         { error: "Not authenticated" },
         { status: response.status }
       );
     }
 
     const data = await response.json();
-    return Response.json(data);
+    return NextResponse.json(data);
   } catch (error) {
     console.error("Error fetching user:", error);
-    return Response.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

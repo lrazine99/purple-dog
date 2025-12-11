@@ -1,3 +1,4 @@
+import { getBackendUrl } from "@/lib/api-url";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
@@ -6,15 +7,13 @@ export async function GET(
 ) {
   try {
     const { itemId } = await params;
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/bids/items/${itemId}`,
-      {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
-    );
+    const apiUrl = getBackendUrl();
+    const response = await fetch(`${apiUrl}/bids/items/${itemId}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
 
     if (!response.ok) {
       const error = await response.json();
@@ -42,18 +41,16 @@ export async function POST(
     }
 
     const body = await request.json();
+    const apiUrl = getBackendUrl();
 
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/bids/items/${itemId}`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken}`,
-        },
-        body: JSON.stringify(body),
-      }
-    );
+    const response = await fetch(`${apiUrl}/bids/items/${itemId}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify(body),
+    });
 
     if (!response.ok) {
       const error = await response.json();
