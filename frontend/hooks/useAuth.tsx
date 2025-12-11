@@ -3,18 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 type AuthResponse = Pick<UserResponse, "id" | "email" | "role">;
 
-function getUserRoleFromCookie(): string | null {
-  if (typeof document === "undefined") return null;
-  const role = document.cookie
-    .split("; ")
-    .find((row) => row.startsWith("user_role="))
-    ?.split("=")[1];
-  return role ? decodeURIComponent(role) : null;
-}
-
 export function useAuth() {
-  const userRole = getUserRoleFromCookie();
-
   return useQuery<AuthResponse>({
     queryKey: ["auth", "me"],
     queryFn: async () => {
@@ -34,7 +23,6 @@ export function useAuth() {
         role: data.role,
       };
     },
-    enabled: !!userRole, // Ne faire la requête que si user_role existe
     refetchInterval: 10 * 60 * 1000, // Rafraîchir toutes les 10 minutes
     retry: false,
     staleTime: 5 * 60 * 1000, // 5 minutes

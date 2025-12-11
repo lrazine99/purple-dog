@@ -16,6 +16,7 @@ import { UserResponseDto } from './dto/user-response.dto';
 import { User } from './entities/user.entity';
 import { AuthService } from '../auth/auth.service';
 import { UploadsService } from '../uploads/uploads.service';
+import { SubscriptionsService } from '../subscriptions/subscriptions.service';
 
 @Injectable()
 export class UsersService {
@@ -25,7 +26,8 @@ export class UsersService {
     @Inject(forwardRef(() => AuthService))
     private readonly authService: AuthService,
     private readonly uploadsService: UploadsService,
-  ) { }
+    private readonly subscriptionsService: SubscriptionsService,
+  ) {}
 
   async create(
     createUserDto: CreateUserDto,
@@ -86,17 +88,13 @@ export class UsersService {
       try {
         official_document_url = await this.uploadsService.saveFile(file);
       } catch (error) {
-        throw new BadRequestException(
-          error.message || 'Failed to upload file',
-        );
+        throw new BadRequestException(error.message || 'Failed to upload file');
       }
     }
 
-    // Hash password
     const saltRounds = 10;
     const password_hash = await bcrypt.hash(createUserDto.password, saltRounds);
 
-    // Create user - utiliser spread conditionnel pour official_document_url
     const user = this.userRepository.create({
       ...createUserDto,
       password_hash,
@@ -105,9 +103,20 @@ export class UsersService {
     });
 
     const savedUser = await this.userRepository.save(user);
+
+    if (savedUser.role === 'professional') {
+      try {
+        await this.subscriptionsService.createTrialSubscription(savedUser.id);
+      } catch (error) {
+        console.error('Failed to create trial subscription:', error);
+      }
+    }
+
     try {
       await this.authService.sendVerification(savedUser.email);
-    } catch { }
+    } catch {
+      // Ignore email sending errors
+    }
     return this.toResponseDto(savedUser);
   }
 
@@ -117,7 +126,10 @@ export class UsersService {
   }
 
   async findOne(id: number): Promise<UserResponseDto> {
-    const user = await this.userRepository.findOne({ where: { id } });
+    const user = await this.userRepository.findOne({
+      where: { id },
+      relations: ['subscription'],
+    });
 
     if (!user) {
       throw new NotFoundException(`User with ID ${id} not found`);
@@ -161,9 +173,7 @@ export class UsersService {
         const newFileUrl = await this.uploadsService.saveFile(file);
         updateUserDto.official_document_url = newFileUrl;
       } catch (error) {
-        throw new BadRequestException(
-          error.message || 'Failed to upload file',
-        );
+        throw new BadRequestException(error.message || 'Failed to upload file');
       }
     }
 
@@ -206,7 +216,23 @@ export class UsersService {
 
   private toResponseDto(user: User): UserResponseDto {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { password_hash: _, ...userDto } = user;
-    return userDto as UserResponseDto;
+    const { password_hash: _, subscription, ...userDto } = user;
+    const response: UserResponseDto = userDto as UserResponseDto;
+
+    if (subscription) {
+      response.subscription = {
+        id: subscription.id,
+        plan_type: subscription.plan_type,
+        status: subscription.status,
+        price: Number(subscription.price),
+        trial_start_date: subscription.trial_start_date,
+        trial_end_date: subscription.trial_end_date,
+        next_billing_date: subscription.next_billing_date,
+        created_at: subscription.created_at,
+        updated_at: subscription.updated_at,
+      };
+    }
+
+    return response;
   }
 }

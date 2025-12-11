@@ -6,18 +6,31 @@ import {
   HttpStatus,
   Post,
   Query,
+  UseGuards,
+  Request,
 } from '@nestjs/common';
-import { ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBody,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
+import { AuthGuard } from '@nestjs/passport';
 import { LoginDto } from '../users/dto/login.dto';
 import { AuthService } from './auth.service';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { SendVerificationDto } from './dto/send-verification.dto';
 import { TokensDto } from './dto/tokens.dto';
+import { UsersService } from '../users/users.service';
 
 @ApiTags('auth')
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly usersService: UsersService,
+  ) {}
 
   @Post('login')
   @HttpCode(HttpStatus.OK)
@@ -39,7 +52,9 @@ export class AuthController {
   @ApiOperation({ summary: 'Refresh tokens' })
   @ApiBody({ type: RefreshTokenDto })
   @ApiResponse({ status: 200, description: 'New tokens', type: TokensDto })
-  async refresh(@Body() dto: RefreshTokenDto): Promise<TokensDto & { role: string }> {
+  async refresh(
+    @Body() dto: RefreshTokenDto,
+  ): Promise<TokensDto & { role: string }> {
     const tokens = await this.authService.refresh(dto.refresh_token);
     return {
       access_token: tokens.access_token,
@@ -64,6 +79,18 @@ export class AuthController {
   @ApiResponse({ status: 204, description: 'Verification email sent' })
   async sendVerification(@Body() dto: SendVerificationDto): Promise<void> {
     await this.authService.sendVerification(dto.email);
+  }
+
+  @Get('me')
+  @UseGuards(AuthGuard('jwt'))
+  @ApiBearerAuth()
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Get current authenticated user' })
+  @ApiResponse({ status: 200, description: 'User information' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  async getMe(@Request() req) {
+    const userId = req.user.sub;
+    return this.usersService.findOne(userId);
   }
 
   @Get('verify')
