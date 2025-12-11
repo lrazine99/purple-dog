@@ -1,3 +1,4 @@
+import { getBackendUrl } from "@/lib/api-url";
 import { NextRequest, NextResponse } from "next/server";
 
 // Proxy uploaded files from backend
@@ -8,10 +9,7 @@ export async function GET(
   try {
     const { path } = await params;
     const filePath = path.join("/");
-
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL?.includes("localhost")
-      ? "http://backend:3001"
-      : process.env.NEXT_PUBLIC_API_URL;
+    const apiUrl = getBackendUrl();
 
     const response = await fetch(`${apiUrl}/upload/${filePath}`);
 
@@ -36,4 +34,3 @@ export async function GET(
     return NextResponse.json({ error: "Failed to fetch file" }, { status: 500 });
   }
 }
-

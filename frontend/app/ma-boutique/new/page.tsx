@@ -5,7 +5,6 @@ import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import GenericHeader from "@/components/header/GenericHeader";
 import Footer from "@/components/homepage/footer";
 import { Upload, FolderTree, Star, Loader2 } from "lucide-react";
 import { ROUTES } from "@/helper/routes";
@@ -84,9 +83,8 @@ export default function NewItemPage() {
   useEffect(() => {
     const run = async () => {
       try {
-        const token = localStorage.getItem("access_token");
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/categories`, {
-          headers: { Authorization: `Bearer ${token}` },
+        const res = await fetch("/api/categories", {
+          credentials: "include",
         });
         if (!res.ok) return;
         setCategories(await res.json());
@@ -124,12 +122,12 @@ export default function NewItemPage() {
         const file = files[i];
         const formData = new FormData();
         formData.append("file", file);
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/upload`, { method: "POST", body: formData });
+        const res = await fetch("/api/upload", { method: "POST", body: formData, credentials: "include" });
         const data = await res.json();
         if (!res.ok) throw new Error(data.message || "Échec du téléchargement");
         const newPhoto: ItemPhoto = {
           id: Date.now() + i,
-          url: `${process.env.NEXT_PUBLIC_API_URL}${data.url}`,
+          url: data.url,
           position: photos.length + i,
           is_primary: photos.length === 0 && i === 0,
         };
@@ -153,10 +151,10 @@ export default function NewItemPage() {
         const file = files[i];
         const formData = new FormData();
         formData.append("file", file);
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/upload`, { method: "POST", body: formData });
+        const res = await fetch("/api/upload", { method: "POST", body: formData, credentials: "include" });
         const data = await res.json();
         if (!res.ok) throw new Error(data.message || "Échec du téléchargement");
-        setDocuments((prev) => [...prev, `${process.env.NEXT_PUBLIC_API_URL}${data.url}`]);
+        setDocuments((prev) => [...prev, data.url]);
       }
     } catch (err: any) {
       setError(err.message || "Échec du téléchargement");
@@ -192,8 +190,8 @@ export default function NewItemPage() {
         setSaving(false);
         return;
       }
-      const token = localStorage.getItem("access_token");
 
+      const priceMin = form.price_min ? parseFloat(form.price_min) : null;
       const body: any = {
         name: form.name,
         description: form.description,
@@ -205,10 +203,9 @@ export default function NewItemPage() {
         depth_cm: form.depth_cm ? parseFloat(form.depth_cm) : undefined,
         weight_kg: form.weight_kg ? parseFloat(form.weight_kg) : undefined,
         price_desired: form.price_desired ? parseFloat(form.price_desired) : undefined,
-        price_min: form.price_min ? parseFloat(form.price_min) : undefined,
+        price_min: priceMin && priceMin >= 0 ? priceMin : undefined,
         auction_start_price: form.auction_start_price ? parseFloat(form.auction_start_price) : undefined,
         auction_end_date: form.auction_end_date ? new Date(form.auction_end_date).toISOString() : undefined,
-        document_urls: documents.length ? documents : undefined,
         status: "draft",
       };
 
@@ -218,26 +215,29 @@ export default function NewItemPage() {
         body.auction_end_date = oneWeekLater.toISOString();
       }
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/items`, {
+      const res = await fetch("/api/items", {
         method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify(body),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Échec de la création");
 
       for (const photo of photos) {
-        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/items/${data.id}/photos`, {
+        await fetch(`/api/items/${data.id}/photos`, {
           method: "POST",
-          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
           body: JSON.stringify({ url: photo.url, is_primary: photo.is_primary }),
         });
       }
 
       if (selectedCategoryIds.size > 0) {
-        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/items/${data.id}/categories`, {
+        await fetch(`/api/items/${data.id}/categories`, {
           method: "PUT",
-          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
           body: JSON.stringify({ category_ids: Array.from(selectedCategoryIds) }),
         });
       }
@@ -247,7 +247,7 @@ export default function NewItemPage() {
       setDocuments([]);
       setSelectedCategoryIds(new Set());
       if (typeof window !== "undefined") {
-        window.location.href = ROUTES.MY_SHOP;
+        window.location.href = ROUTES.MA_BOUTIQUE;
       }
     } catch (err: any) {
       setError(err.message);
@@ -266,7 +266,6 @@ export default function NewItemPage() {
 
   return (
     <main className="min-h-screen">
-      <GenericHeader />
       <div className="container mx-auto px-4 py-6 space-y-8">
         <div className="flex items-center justify-between">
         <div>

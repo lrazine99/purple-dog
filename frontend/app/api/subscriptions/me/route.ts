@@ -1,12 +1,10 @@
+import { getBackendUrl } from "@/lib/api-url";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(request: NextRequest) {
   try {
     const accessToken = request.cookies.get("access_token")?.value;
-
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL?.includes("localhost")
-      ? "http://backend:3001"
-      : process.env.NEXT_PUBLIC_API_URL;
+    const apiUrl = getBackendUrl();
 
     const response = await fetch(`${apiUrl}/subscriptions/me`, {
       headers: {
