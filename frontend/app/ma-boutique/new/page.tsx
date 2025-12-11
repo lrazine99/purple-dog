@@ -5,6 +5,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import GenericHeader from "@/components/header/GenericHeader";
 import Footer from "@/components/homepage/footer";
 import { Upload, FolderTree, Star, Loader2 } from "lucide-react";
 import { ROUTES } from "@/helper/routes";
@@ -265,6 +266,7 @@ export default function NewItemPage() {
 
   return (
     <main className="min-h-screen">
+      <GenericHeader />
       <div className="container mx-auto px-4 py-6 space-y-8">
         <div className="flex items-center justify-between">
         <div>
