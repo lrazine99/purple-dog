@@ -48,7 +48,6 @@ export class CategoriesService {
         // Mark existing "Autre" as default
         existingAutre.is_default = true;
         defaultCategory = await this.categoryRepository.save(existingAutre);
-        console.log(`✅ Marked existing "${DEFAULT_CATEGORY_NAME}" category as default`);
       } else {
         // Create new default category
         defaultCategory = this.categoryRepository.create({
@@ -57,7 +56,6 @@ export class CategoriesService {
           parent_id: null,
         });
         defaultCategory = await this.categoryRepository.save(defaultCategory);
-        console.log(`✅ Created default category "${DEFAULT_CATEGORY_NAME}" with ID ${defaultCategory.id}`);
       }
     }
 
