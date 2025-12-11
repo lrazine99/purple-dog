@@ -80,20 +80,22 @@ export class ItemsService {
   }): Promise<ItemResponseDto[]> {
     const { categoryId, limit = 50, offset = 0 } = params || {};
 
-    const queryBuilder = this.itemRepository.createQueryBuilder('item');
+    const queryBuilder = this.itemRepository
+      .createQueryBuilder('item')
+      .leftJoinAndSelect('item.photos', 'photos')
+      .leftJoinAndSelect('item.itemCategories', 'itemCategories')
+      .leftJoinAndSelect('itemCategories.category', 'category');
 
     if (categoryId) {
       queryBuilder.where('item.category_id = :categoryId', { categoryId });
     }
 
-    queryBuilder.skip(offset).take(limit);
+    queryBuilder
+      .skip(offset)
+      .take(limit)
+      .orderBy('item.created_at', 'DESC');
 
-    queryBuilder.orderBy('item.created_at', 'DESC');
-
-    const items = await this.itemRepository.find({
-      relations: ['photos', 'itemCategories', 'itemCategories.category'],
-      order: { created_at: 'DESC' },
-    });
+    const items = await queryBuilder.getMany();
 
     return items.map((item) => this.toResponseDto(item));
   }
