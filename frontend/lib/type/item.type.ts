@@ -3,13 +3,17 @@ import { z } from "zod";
 export enum SaleMode {
   AUCTION = "auction",
   FAST = "fast",
+  FIXED = "fixed",
+  NEGOTIABLE = "negotiable",
 }
 
 export enum ItemStatus {
   DRAFT = "draft",
   FOR_SALE = "for_sale",
+  PUBLISHED = "published", // Added to match backend
   SOLD = "sold",
   PENDING = "pending",
+  PENDING_EXPERTISE = "pending_expertise", // Added to match backend
   APPROVED = "approved",
   CANCELLED = "cancelled",
   EXPIRED = "expired",
@@ -29,12 +33,19 @@ export const itemSchema = z.object({
   weight_kg: z.coerce.number(),
   price_desired: z.coerce.number(),
   price_min: z.coerce.number(),
-  sale_mode: z.enum([SaleMode.AUCTION, SaleMode.FAST]),
+  sale_mode: z.enum([
+    SaleMode.AUCTION, 
+    SaleMode.FAST,
+    SaleMode.FIXED,
+    SaleMode.NEGOTIABLE
+  ]),
   status: z.enum([
     ItemStatus.DRAFT,
     ItemStatus.FOR_SALE,
+    ItemStatus.PUBLISHED,
     ItemStatus.SOLD,
     ItemStatus.PENDING,
+    ItemStatus.PENDING_EXPERTISE,
     ItemStatus.APPROVED,
     ItemStatus.CANCELLED,
     ItemStatus.EXPIRED,

@@ -8,7 +8,9 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/me`, {
+    // Hardcode to backend container for Docker networking
+    // This runs server-side in the frontend container
+    const response = await fetch(`http://backend:3001/auth/me`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -20,7 +22,8 @@ export async function GET(request: NextRequest) {
 
     const user = await response.json();
     return NextResponse.json(user);
-  } catch {
+  } catch (error) {
+    console.error("Error in /api/auth/me:", error);
     return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }
 }
