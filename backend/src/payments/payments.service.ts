@@ -316,7 +316,8 @@ export class PaymentsService {
         if (session.payment_intent) {
           const pi = session.payment_intent as Stripe.PaymentIntent;
           // Si le payment_intent a échoué, c'est un vrai échec
-          if (pi.status === 'payment_failed' || pi.status === 'canceled') {
+          // Check for canceled status or last_payment_error (indicates failure)
+          if (pi.status === 'canceled' || pi.last_payment_error) {
             payment.status = PaymentStatus.FAILED;
             await this.paymentRepo.save(payment);
             return { verified: false, payment };
@@ -348,7 +349,8 @@ export class PaymentsService {
       // Cas 3 : Payment intent avec statut d'échec
       if (session.payment_intent) {
         const pi = session.payment_intent as Stripe.PaymentIntent;
-        if (pi.status === 'payment_failed' || pi.status === 'canceled') {
+        // Check for canceled status or last_payment_error (indicates failure)
+        if (pi.status === 'canceled' || pi.last_payment_error) {
           payment.status = PaymentStatus.FAILED;
           payment.stripe_payment_intent_id = pi.id;
           await this.paymentRepo.save(payment);
