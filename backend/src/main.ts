@@ -4,14 +4,14 @@ import { NestExpressApplication } from '@nestjs/platform-express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import cookieParser from 'cookie-parser';
 import { join } from 'path';
+import * as express from 'express';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
-  // ...
+  app.use('/payments/webhook', express.raw({ type: 'application/json' }));
 
-  // Enable validation globally
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -23,7 +23,7 @@ async function bootstrap() {
   app.use(cookieParser());
 
   app.enableCors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+    origin: process.env.FRONTEND_URL || 'http://localhost:3001',
     credentials: true,
   });
 
@@ -41,7 +41,6 @@ async function bootstrap() {
 
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
-
   await app.listen(process.env.PORT ?? 3000, '0.0.0.0');
 }
 bootstrap();

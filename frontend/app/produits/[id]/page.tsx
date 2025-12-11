@@ -231,7 +231,12 @@ export default async function ProduitPage({
                 createdAt={item.created_at}
               />
             ) : (
-              <DirectSaleCard itemId={item.id} sellerId={item.seller_id} price={item.price_desired} />
+              <DirectSaleCard
+                price={item.price_desired}
+                itemId={item.id}
+                sellerId={item.seller_id}
+                itemName={item.name}
+              />
             )}
 
             <section id="offres">

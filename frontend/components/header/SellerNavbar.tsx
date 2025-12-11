@@ -14,7 +14,7 @@ export function SellerNavbar({ onLinkClick, className = "" }: SellerNavbarProps)
   return (
     <>
       <Link
-        href={ROUTES.MA_BOUTIQUE}
+        href={ROUTES.MY_SHOP}
         className={linkClassName}
         onClick={onLinkClick}
       >

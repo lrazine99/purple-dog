@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 
-// GET all orders
 export async function GET(request: NextRequest) {
   const token = request.cookies.get("access_token")?.value;
 
@@ -9,15 +8,22 @@ export async function GET(request: NextRequest) {
   }
 
   try {
+    const { searchParams } = new URL(request.url);
+    const queryString = searchParams.toString();
+
     const apiUrl = process.env.NEXT_PUBLIC_API_URL?.includes('localhost') 
       ? 'http://backend:3001' 
       : process.env.NEXT_PUBLIC_API_URL;
 
-    const response = await fetch(`${apiUrl}/orders`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    const response = await fetch(
+      `${apiUrl}/orders${queryString ? `?${queryString}` : ""}`, 
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
 
     if (!response.ok) {
       const errorText = await response.text();
@@ -35,7 +41,6 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST - Create new order
 export async function POST(request: NextRequest) {
   const token = request.cookies.get("access_token")?.value;
 
@@ -74,4 +79,3 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }
 }
-
