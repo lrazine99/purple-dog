@@ -121,7 +121,6 @@ export default function UsersPage() {
       });
       if (res.ok) {
         const data = await res.json();
-        console.log("Users API Response:", data);
         if (Array.isArray(data)) {
             setUsers(data);
         } else {

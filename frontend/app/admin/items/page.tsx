@@ -201,7 +201,10 @@ function UserAutocomplete({
             <button
               key={user.id}
               type="button"
-              onClick={() => handleSelect(user)}
+              onMouseDown={(e) => {
+                e.preventDefault();
+                handleSelect(user);
+              }}
               className={`w-full px-4 py-3 text-left hover:bg-slate-700/50 transition-colors ${
                 index === highlightedIndex ? "bg-slate-700/50" : ""
               } ${selectedUserId === user.id ? "bg-purple-500/20" : ""}`}
@@ -312,7 +315,10 @@ function CategoryAutocomplete({
               <button
                 key={category.id}
                 type="button"
-                onClick={() => handleSelect(category)}
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  handleSelect(category);
+                }}
                 className={`w-full px-4 py-3 text-left hover:bg-slate-700/50 transition-colors ${
                   index === highlightedIndex ? "bg-slate-700/50" : ""
                 } ${selectedCategoryId === category.id ? "bg-orange-500/20" : ""}`}
@@ -507,7 +513,7 @@ export default function ItemsPage() {
 
         const newPhoto: ItemPhoto = {
           id: Date.now() + i, // Temporary ID for new photos
-          url: `${process.env.NEXT_PUBLIC_API_URL}${data.url}`,
+          url: data.url,
           position: photos.length + i,
           is_primary: photos.length === 0 && i === 0,
         };
@@ -516,15 +522,14 @@ export default function ItemsPage() {
 
         // If editing, add photo to item immediately
         if (editingItem) {
-          const token = localStorage.getItem("access_token");
-          await fetch(`${process.env.NEXT_PUBLIC_API_URL}/items/${editingItem.id}/photos`, {
+          await fetch(`/api/items/${editingItem.id}/photos`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
             },
+            credentials: "include",
             body: JSON.stringify({
-              url: `${process.env.NEXT_PUBLIC_API_URL}${data.url}`,
+              url: data.url,
               is_primary: photos.length === 0 && i === 0,
             }),
           });
@@ -539,14 +544,18 @@ export default function ItemsPage() {
   };
 
   const handleRemovePhoto = async (photo: ItemPhoto, index: number) => {
-    if (editingItem && photo.id > 1000000) {
-      // Real photo from DB
+    // Real photo from DB has small ID; temporary photos have Date.now() IDs (large numbers)
+    const isRealDbPhoto = editingItem && photo.id < 1000000000;
+    
+    if (isRealDbPhoto) {
       try {
-        const token = localStorage.getItem("access_token");
-        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/items/${editingItem.id}/photos/${photo.id}`, {
+        const res = await fetch(`/api/items/${editingItem.id}/photos/${photo.id}`, {
           method: "DELETE",
-          headers: { Authorization: `Bearer ${token}` },
+          credentials: "include",
         });
+        if (!res.ok) {
+          console.error("Failed to delete photo:", await res.text());
+        }
       } catch (err) {
         console.error("Failed to delete photo:", err);
       }
@@ -564,13 +573,13 @@ export default function ItemsPage() {
 
   const handleSetPrimary = async (index: number) => {
     const photo = photos[index];
-    
-    if (editingItem && photo.id > 1000000) {
+    const isRealDbPhoto = editingItem && photo.id < 1000000000;
+
+    if (isRealDbPhoto) {
       try {
-        const token = localStorage.getItem("access_token");
-        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/items/${editingItem.id}/photos/${photo.id}/primary`, {
+        await fetch(`/api/items/${editingItem.id}/photos/${photo.id}/primary`, {
           method: "PATCH",
-          headers: { Authorization: `Bearer ${token}` },
+          credentials: "include",
         });
       } catch (err) {
         console.error("Failed to set primary:", err);
@@ -590,7 +599,6 @@ export default function ItemsPage() {
     setSaving(true);
 
     try {
-      const token = localStorage.getItem("access_token");
       const isEdit = !!editingItem;
 
       const body: any = {
@@ -611,34 +619,32 @@ export default function ItemsPage() {
       if (form.auction_start_price) body.auction_start_price = parseFloat(form.auction_start_price);
       if (form.auction_end_date) body.auction_end_date = new Date(form.auction_end_date).toISOString();
 
-      const url = isEdit
-        ? `${process.env.NEXT_PUBLIC_API_URL}/items/${editingItem.id}`
-        : `${process.env.NEXT_PUBLIC_API_URL}/items`;
+      const url = isEdit ? `/api/items/${editingItem.id}` : `/api/items`;
 
       const res = await fetch(url, {
         method: isEdit ? "PATCH" : "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
+        credentials: "include",
         body: JSON.stringify(body),
       });
 
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.message || "Échec de l'enregistrement");
+        throw new Error(data.message || data.error || "Échec de l'enregistrement");
       }
 
       // If creating, add photos to the new item
       if (!isEdit && photos.length > 0) {
         for (const photo of photos) {
-          await fetch(`${process.env.NEXT_PUBLIC_API_URL}/items/${data.id}/photos`, {
+          await fetch(`/api/items/${data.id}/photos`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
             },
+            credentials: "include",
             body: JSON.stringify({
               url: photo.url,
               is_primary: photo.is_primary,
@@ -651,12 +657,12 @@ export default function ItemsPage() {
       const itemId = isEdit ? editingItem.id : data.id;
       if (selectedCategoryIds.size > 0) {
         // Use PUT to replace all categories
-        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/items/${itemId}/categories`, {
+        await fetch(`/api/items/${itemId}/categories`, {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
           },
+          credentials: "include",
           body: JSON.stringify({
             category_ids: Array.from(selectedCategoryIds),
           }),

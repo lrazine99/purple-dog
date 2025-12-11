@@ -7,16 +7,23 @@ import { useAuth, useLogout } from "@/hooks/useAuth";
 import { Menu, Search, User, X } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { ProNavbar } from "./ProNavbar";
 import { SellerNavbar } from "./SellerNavbar";
 
 export const GenericHeader = () => {
+  const pathname = usePathname();
   const { data: user, isLoading } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const logoutMutation = useLogout();
 
   const role = user?.role || null;
+
+  // Don't show header on admin pages - admin has its own layout
+  if (pathname?.startsWith("/admin")) {
+    return null;
+  }
 
   if (isLoading)
     return (
