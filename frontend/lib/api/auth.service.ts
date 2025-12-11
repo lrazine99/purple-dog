@@ -155,8 +155,6 @@ export async function login(
 }
 
 export async function loginWithCookies(email: string, password: string) {
-  console.log('loginWithCookies', email, password);
-  
   const response = await fetch("/api/auth/login", {
     method: "POST",
     headers: {
