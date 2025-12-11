@@ -53,7 +53,15 @@ export function DirectSaleCard({
 
   // Gestion de l'ouverture du modal d'offre
   const handleMakeOffer = () => {
-    // TODO: Implement make offer
+    if (!user) {
+      alert("Veuillez vous connecter pour faire une offre.");
+      return;
+    }
+    if (user.id === sellerId) {
+      return;
+    }
+    setOfferOpen(true);
+  };
 
   // Envoi de l'offre à l'API
   const handleSubmitOffer = async () => {
@@ -89,37 +97,29 @@ export function DirectSaleCard({
     }
   };
 
-    const handleSubmitOffer = async () => {
-      if (!user) return;
-      const amt = Number(amount);
-      if (isNaN(amt) || amt <= 0) {
-        alert("Montant invalide");
-        return;
+  // Gestion de l'ajout aux favoris
+  const handleAddToFavorites = async () => {
+    if (!user) {
+      alert("Veuillez vous connecter pour ajouter aux favoris.");
+      return;
+    }
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/favorites`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+        },
+        body: JSON.stringify({ item_id: itemId }),
+      });
+      if (!res.ok) {
+        throw new Error("Échec de l'ajout aux favoris");
       }
-      setIsSubmitting(true);
-      try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/offers`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            item_id: itemId,
-            buyer_id: user.id,
-            amount: amt,
-            message: message || undefined,
-          }),
-        });
-        if (!res.ok) {
-          const err = await res.json().catch(() => ({}));
-          throw new Error(err.message || "Échec de la création de l'offre");
-        }
-        setOfferOpen(false);
-        setMessage("");
-      } catch (e: any) {
-        alert(e.message || "Erreur lors de l'envoi de l'offre");
-      } finally {
-        setIsSubmitting(false);
-      }
-    };
+      alert("Ajouté aux favoris !");
+    } catch (e: any) {
+      alert(e.message || "Erreur lors de l'ajout aux favoris");
+    }
+  };
 
   const isOwner = user?.id === sellerId;
 

@@ -23,7 +23,7 @@ export function ItemOffersSection({ itemId, sellerId }: { itemId: number; seller
   async function load() {
     setLoading(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/offers/item/${itemId}`);
+      const res = await fetch(`/api/offers/item/${itemId}`);
       const data = res.ok ? await res.json() : [];
       setOffers(Array.isArray(data) ? data : []);
     } finally {
@@ -38,9 +38,10 @@ export function ItemOffersSection({ itemId, sellerId }: { itemId: number; seller
   if (!user || user.id !== sellerId) return null;
 
   async function updateStatus(id: number, status: "accepted" | "rejected") {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/offers/${id}/status`, {
+    const res = await fetch(`/api/offers/${id}/status`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
+      credentials: "include",
       body: JSON.stringify({ status }),
     });
     if (res.ok) {
