@@ -49,7 +49,7 @@ export const stripePaymentIntentSchema = z.object({
     })
     .nullable(),
   created: z.number(),
-  metadata: z.record(z.string()).optional(),
+  metadata: z.record(z.string(), z.string()).optional(),
 });
 
 export type StripePaymentIntent = z.infer<typeof stripePaymentIntentSchema>;

@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
+import { Loader2 } from "lucide-react";
 import PaymentVerificationView from "@/components/payments/PaymentVerificationView";
 import { paymentService } from "@/lib/api/payment.service";
 
-export default function PaymentVerificationPage() {
+function PaymentVerificationContent() {
   const searchParams = useSearchParams();
   const checkoutSessionId = searchParams.get("checkout_session_id");
   const [isVerified, setIsVerified] = useState(false);
@@ -66,6 +67,25 @@ export default function PaymentVerificationPage() {
         <PaymentVerificationView isVerified={isVerified} message={message} />
       </div>
     </div>
+  );
+}
+
+export default function PaymentVerificationPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="container mx-auto px-4 py-8">
+          <div className="max-w-4xl mx-auto">
+            <h1 className="text-2xl font-bold mb-6">Vérification du paiement</h1>
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+          </div>
+        </div>
+      }
+    >
+      <PaymentVerificationContent />
+    </Suspense>
   );
 }
 
