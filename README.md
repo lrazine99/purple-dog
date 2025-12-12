@@ -1,5 +1,5 @@
-#pour demarrer le projet 
+## Pour démarrer le projet 
 
 renommer le fichier .env.example => .env
 
-docker compose -f docker-compose.dev.yml up --build
+cli : docker compose -f docker-compose.dev.yml up --build
