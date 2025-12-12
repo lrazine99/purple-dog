@@ -21,6 +21,8 @@ export interface User {
   official_document_url?: string;
   cgv_accepted: boolean;
   is_verified: boolean;
+  subscription_tier?: string;
+  subscription_end_date?: string;
   created_at: string;
   updated_at: string;
 }

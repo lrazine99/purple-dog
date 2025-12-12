@@ -16,8 +16,6 @@ export const ROUTES = {
 
   AUTH_VERIFY: "/auth/verify",
 
-  PRODUITS: "/produits",
-
   MON_COMPTE: "/mon-compte",
   FAVORIS: "/favoris",
   PAIEMENTS: "/paiements",
@@ -26,7 +24,7 @@ export const ROUTES = {
 
   MA_BOUTIQUE: "/ma-boutique",
   MES_ENCHERES: "/mes-encheres",
-  PRODUITS: "/produits",
+  MES_ACHATS: "/mes-achats",
   ADMIN: "/admin",
   ADMIN_USERS: "/admin/users",
   ADMIN_ITEMS: "/admin/items",
@@ -57,6 +55,7 @@ export const PROTECTED_ROUTES = [
   ROUTES.MON_COMPTE,
   ROUTES.FAVORIS,
   ROUTES.MES_ENCHERES,
+  ROUTES.MES_ACHATS,
   ROUTES.MA_BOUTIQUE,
   ...ADMIN_ROUTES,
 ] as const;

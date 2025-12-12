@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Heart, CreditCard } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/useToast";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -32,6 +33,7 @@ export function DirectSaleCard({
   itemName,
 }: DirectSaleCardProps) {
   const { data: user } = useAuth();
+  const { toast } = useToast();
   
   // États pour le paiement (Stripe)
   const [showCheckout, setShowCheckout] = useState(false);
@@ -45,7 +47,11 @@ export function DirectSaleCard({
   // Gestion de l'achat immédiat
   const handleBuyNow = () => {
     if (!user) {
-      alert("Veuillez vous connecter pour acheter cet article.");
+      toast({
+        variant: "error",
+        message: "Connexion requise",
+        description: "Veuillez vous connecter pour acheter cet article.",
+      });
       return;
     }
     setShowCheckout(true);
@@ -54,7 +60,11 @@ export function DirectSaleCard({
   // Gestion de l'ouverture du modal d'offre
   const handleMakeOffer = () => {
     if (!user) {
-      alert("Veuillez vous connecter pour faire une offre.");
+      toast({
+        variant: "error",
+        message: "Connexion requise",
+        description: "Veuillez vous connecter pour faire une offre.",
+      });
       return;
     }
     if (user.id === sellerId) {
@@ -68,14 +78,19 @@ export function DirectSaleCard({
     if (!user) return;
     const amt = Number(amount);
     if (isNaN(amt) || amt <= 0) {
-      alert("Montant invalide");
+      toast({
+        variant: "error",
+        message: "Montant invalide",
+        description: "Veuillez entrer un montant valide.",
+      });
       return;
     }
     setIsSubmitting(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/offers`, {
+      const res = await fetch("/api/offers", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({
           item_id: itemId,
           buyer_id: user.id,
@@ -89,9 +104,17 @@ export function DirectSaleCard({
       }
       setOfferOpen(false);
       setMessage("");
-      alert("Offre envoyée avec succès !");
+      toast({
+        variant: "success",
+        message: "Offre envoyée",
+        description: "Votre offre a été envoyée avec succès !",
+      });
     } catch (e: any) {
-      alert(e.message || "Erreur lors de l'envoi de l'offre");
+      toast({
+        variant: "error",
+        message: "Erreur",
+        description: e.message || "Erreur lors de l'envoi de l'offre",
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -100,24 +123,36 @@ export function DirectSaleCard({
   // Gestion de l'ajout aux favoris
   const handleAddToFavorites = async () => {
     if (!user) {
-      alert("Veuillez vous connecter pour ajouter aux favoris.");
+      toast({
+        variant: "error",
+        message: "Connexion requise",
+        description: "Veuillez vous connecter pour ajouter aux favoris.",
+      });
       return;
     }
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/favorites`, {
+      const res = await fetch("/api/favorites", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
         },
+        credentials: "include",
         body: JSON.stringify({ item_id: itemId }),
       });
       if (!res.ok) {
         throw new Error("Échec de l'ajout aux favoris");
       }
-      alert("Ajouté aux favoris !");
+      toast({
+        variant: "success",
+        message: "Ajouté aux favoris",
+        description: "L'article a été ajouté à vos favoris !",
+      });
     } catch (e: any) {
-      alert(e.message || "Erreur lors de l'ajout aux favoris");
+      toast({
+        variant: "error",
+        message: "Erreur",
+        description: e.message || "Erreur lors de l'ajout aux favoris",
+      });
     }
   };
 

@@ -1,9 +1,10 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { Header } from "@/components/header";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { useOfferCheckout } from "@/hooks/useOfferCheckout";
+import { Loader2, CreditCard } from "lucide-react";
 
 type Offer = {
   id: number;
@@ -17,35 +18,26 @@ type Offer = {
   buyer?: { id: number; first_name?: string; last_name?: string };
 };
 
-async function getOffer(id: string): Promise<Offer | null> {
-  try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/offers/${id}`, { cache: "no-store" });
-    if (!res.ok) return null;
-    return res.json();
-  } catch {
-    return null;
-  }
-}
-
 function PayButton({ offerId }: { offerId: number }) {
-  "use client";
-  const handlePay = async () => {
-    try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/offers/${offerId}/checkout`, { method: "POST" });
-      const data = await res.json();
-      if (data?.url) {
-        window.location.href = data.url;
-      } else {
-        alert("Lien de paiement indisponible pour le moment.");
-      }
-    } catch {
-      alert("Erreur lors de l'initialisation du paiement.");
-    }
-  };
+  const checkoutMutation = useOfferCheckout(offerId);
 
   return (
-    <Button size="lg" onClick={handlePay}>
-      Procéder au paiement
+    <Button
+      size="lg"
+      onClick={() => checkoutMutation.mutate()}
+      disabled={checkoutMutation.isPending}
+    >
+      {checkoutMutation.isPending ? (
+        <>
+          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+          Redirection...
+        </>
+      ) : (
+        <>
+          <CreditCard className="h-4 w-4 mr-2" />
+          Procéder au paiement
+        </>
+      )}
     </Button>
   );
 }
@@ -59,9 +51,10 @@ export default function PaiementOffrePage() {
     async function load() {
       setLoading(true);
       try {
-        const token = typeof window !== "undefined" ? localStorage.getItem("access_token") : null;
-        const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/offers/${id}`, { cache: "no-store", headers });
+        const res = await fetch(`/api/offers/${id}`, {
+          cache: "no-store",
+          credentials: "include",
+        });
         if (res.ok) {
           const data = await res.json();
           setOffer(data);
@@ -83,7 +76,6 @@ export default function PaiementOffrePage() {
 
   return (
     <div className="min-h-screen">
-      <Header />
       <main className="container mx-auto px-4 py-6">
         <h1 className="font-serif text-2xl md:text-3xl font-bold mb-4">Confirmation de paiement</h1>
         {loading ? (

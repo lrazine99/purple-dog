@@ -5,7 +5,6 @@ import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import GenericHeader from "@/components/header/GenericHeader";
 import Footer from "@/components/homepage/footer";
 import { Upload, FolderTree, Star, Loader2 } from "lucide-react";
 import { ROUTES } from "@/helper/routes";
@@ -207,7 +206,7 @@ export default function NewItemPage() {
         price_min: priceMin && priceMin >= 0 ? priceMin : undefined,
         auction_start_price: form.auction_start_price ? parseFloat(form.auction_start_price) : undefined,
         auction_end_date: form.auction_end_date ? new Date(form.auction_end_date).toISOString() : undefined,
-        status: "draft",
+        status: "published",
       };
 
       if (body.sale_mode === "auction" && !body.auction_end_date) {
@@ -267,7 +266,6 @@ export default function NewItemPage() {
 
   return (
     <main className="min-h-screen">
-      <GenericHeader />
       <div className="container mx-auto px-4 py-6 space-y-8">
         <div className="flex items-center justify-between">
         <div>

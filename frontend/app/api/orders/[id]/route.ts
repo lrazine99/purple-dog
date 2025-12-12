@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getBackendUrl } from "@/lib/api-url";
 
 // PATCH - Update order
 export async function PATCH(
@@ -15,9 +16,7 @@ export async function PATCH(
     const { id } = await params;
     const body = await request.json();
     
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL?.includes('localhost') 
-      ? 'http://backend:3001' 
-      : process.env.NEXT_PUBLIC_API_URL;
+    const apiUrl = getBackendUrl();
 
     const response = await fetch(`${apiUrl}/orders/${id}`, {
       method: "PATCH",
@@ -58,9 +57,7 @@ export async function DELETE(
   try {
     const { id } = await params;
     
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL?.includes('localhost') 
-      ? 'http://backend:3001' 
-      : process.env.NEXT_PUBLIC_API_URL;
+    const apiUrl = getBackendUrl();
 
     const response = await fetch(`${apiUrl}/orders/${id}`, {
       method: "DELETE",

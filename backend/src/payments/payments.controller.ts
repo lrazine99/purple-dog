@@ -192,7 +192,7 @@ export class PaymentsController {
     try {
       // Verify webhook signature using Stripe
       const stripe = new Stripe(this.config.get<string>('STRIPE_SECRET_KEY')!, {
-        apiVersion: '2025-11-17.clover',
+        apiVersion: '2024-06-20' as any,
       });
       event = stripe.webhooks.constructEvent(
         req.rawBody,

@@ -57,6 +57,18 @@ export class OrdersController {
     return this.ordersService.findAll();
   }
 
+  @UseGuards(AuthGuard('jwt'))
+  @Get('my-orders')
+  @ApiOperation({ summary: 'Get current user orders (purchases)' })
+  @ApiResponse({ status: 200, description: 'List of user orders', type: [OrderResponseDto] })
+  async getMyOrders(@Req() req: RequestWithUser): Promise<Order[]> {
+    const userId = req.user?.id || req.user?.sub;
+    if (!userId) {
+      throw new BadRequestException('User ID not found in request');
+    }
+    return this.ordersService.findByBuyer(userId);
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Get order by ID' })
   @ApiParam({ name: 'id', type: 'number', description: 'Order ID' })

@@ -79,6 +79,14 @@ export class OrdersService {
     });
   }
 
+  async findByBuyer(buyerId: number): Promise<Order[]> {
+    return this.orderRepo.find({
+      where: { buyer_id: buyerId },
+      relations: ['items', 'items.item', 'buyer', 'seller'],
+      order: { created_at: 'DESC' },
+    });
+  }
+
   async findOne(id: number): Promise<Order> {
     const order = await this.orderRepo.findOne({
       where: { id },
@@ -156,6 +164,50 @@ export class OrdersService {
     const saved = await this.orderRepo.save(order);
 
     // Créer l'OrderItem avec le montant de l'enchère
+    const orderItem = this.orderItemRepo.create({
+      order_id: saved.id,
+      item_id: dto.item_id,
+      qty: 1,
+      unit_price: dto.amount.toFixed(2),
+    });
+    await this.orderItemRepo.save(orderItem);
+
+    const result = await this.orderRepo.findOne({
+      where: { id: saved.id },
+      relations: ['items', 'items.item', 'buyer', 'seller'],
+    });
+    if (!result) {
+      throw new NotFoundException(`Order ${saved.id} not found`);
+    }
+    return result;
+  }
+
+  /**
+   * Crée une commande depuis une offre payée
+   */
+  async createOrderFromOffer(dto: {
+    buyer_id: number;
+    seller_id: number;
+    item_id: number;
+    amount: number;
+    offer_id: number;
+  }): Promise<Order> {
+    const item = await this.itemRepo.findOne({ where: { id: dto.item_id } });
+    if (!item) {
+      throw new NotFoundException(`Item ${dto.item_id} not found`);
+    }
+
+    const order = this.orderRepo.create({
+      buyer_id: dto.buyer_id,
+      seller_id: dto.seller_id,
+      total_amount: dto.amount.toFixed(2),
+      currency: 'EUR',
+      status: OrderStatus.PAID_ESCROW, // Already paid via offer
+    });
+
+    const saved = await this.orderRepo.save(order);
+
+    // Créer l'OrderItem avec le montant de l'offre
     const orderItem = this.orderItemRepo.create({
       order_id: saved.id,
       item_id: dto.item_id,
