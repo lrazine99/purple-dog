@@ -14,10 +14,7 @@ export class PaymentService {
   private readonly baseUrl: string;
 
   constructor() {
-    this.baseUrl = process.env.NEXT_PUBLIC_API_URL || "";
-    if (!this.baseUrl) {
-      throw new Error("NEXT_PUBLIC_API_URL is not defined");
-    }
+    this.baseUrl = "api";
   }
 
   /**
@@ -89,7 +86,7 @@ export class PaymentService {
     order_id: number;
     success_url?: string;
     cancel_url?: string;
-    payment_method_type?: 'card' | 'sepa_debit' | 'both';
+    payment_method_type?: "card" | "sepa_debit" | "both";
   }): Promise<Payment & { checkout_url?: string }> {
     // Use the API proxy route instead of direct backend call
     const response = await fetch("/api/payments", {
