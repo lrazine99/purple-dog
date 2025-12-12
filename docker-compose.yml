@@ -40,7 +40,6 @@ services:
       JWT_REFRESH_EXPIRES_IN: 604800
       JWT_PRIVATE_KEY_PATH: /app/secrets/jwt_private.pem
       JWT_PUBLIC_KEY_PATH: /app/secrets/jwt_public.pem
-      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
       SMTP_HOST: ${SMTP_HOST:-smtp.gmail.com}
       SMTP_PORT: ${SMTP_PORT:-587}
       SMTP_USER: ${SMTP_USER:-}
@@ -49,6 +48,7 @@ services:
       APP_BASE_URL: ${APP_BASE_URL:-http://164.90.193.254:3000/}
       EMAIL_VERIFICATION_EXPIRES_IN: ${EMAIL_VERIFICATION_EXPIRES_IN:-86400}
       STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-sk_test_51SPqrfLXGgs4W2Jk4exEX9t0Ip7dMUiEsCTYodZdl5Q582309MKzp8q4OGsQHJ13uut9VMcdFAIy4F2Rlp84Q1up009mJsOqU3}
+      STRIPE_PRICE_ID: ${STRIPE_PRICE_ID:-price_1Sd9tBLXGgs4W2JkzQaCgMnZ}
       STRIPE_ALLOW_LOCAL_TEST: ${STRIPE_ALLOW_LOCAL_TEST:-true}
     volumes:
       - ./backend/secrets:/app/secrets:ro
