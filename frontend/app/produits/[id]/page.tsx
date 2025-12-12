@@ -229,6 +229,7 @@ export default async function ProduitPage({
                 startingPrice={item.auction_start_price || item.price_min || 0}
                 priceMin={item.price_min || 0}
                 createdAt={item.created_at}
+                minAmountBid={item.min_amount_bid ?? null}
               />
             ) : (
               <DirectSaleCard

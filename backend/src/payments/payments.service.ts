@@ -17,7 +17,7 @@ import { User } from '../users/entities/user.entity';
 
 @Injectable()
 export class PaymentsService {
-  private stripe: Stripe;
+  private stripe: Stripe | null = null;
 
   constructor(
     @InjectRepository(Payment)
@@ -30,12 +30,11 @@ export class PaymentsService {
     private readonly ordersService: OrdersService,
   ) {
     const secretKey = this.config.get<string>('STRIPE_SECRET_KEY');
-    if (!secretKey) {
-      throw new Error('STRIPE_SECRET_KEY is not configured');
+    if (secretKey) {
+      this.stripe = new Stripe(secretKey, {
+        apiVersion: '2024-06-20' as any,
+      });
     }
-    this.stripe = new Stripe(secretKey, {
-      apiVersion: '2024-06-20' as any,
-    });
   }
 
   async createCheckoutSession(
@@ -94,6 +93,13 @@ export class PaymentsService {
       if (previousPayment?.stripe_customer_id) {
         stripeCustomerId = previousPayment.stripe_customer_id;
       }
+    }
+
+    // Vérifier que Stripe est configuré
+    if (!this.stripe) {
+      throw new BadRequestException(
+        'STRIPE_SECRET_KEY is not configured. Please set the STRIPE_SECRET_KEY environment variable.',
+      );
     }
 
     // Créer un client Stripe si nécessaire
@@ -247,6 +253,13 @@ export class PaymentsService {
     dto: VerifyPaymentDto,
     userId: number,
   ): Promise<{ verified: boolean; payment: Payment }> {
+    // Vérifier que Stripe est configuré
+    if (!this.stripe) {
+      throw new BadRequestException(
+        'STRIPE_SECRET_KEY is not configured. Please set the STRIPE_SECRET_KEY environment variable.',
+      );
+    }
+
     // Récupérer la session Stripe
     const session = await this.stripe.checkout.sessions.retrieve(
       dto.checkout_session_id,
@@ -481,7 +494,7 @@ export class PaymentsService {
 
   async getCheckoutUrl(paymentId: number, userId: number): Promise<string | null> {
     const payment = await this.findOne(paymentId, userId);
-    if (!payment || !payment.stripe_checkout_session_id) {
+    if (!payment || !payment.stripe_checkout_session_id || !this.stripe) {
       return null;
     }
 

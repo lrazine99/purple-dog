@@ -66,7 +66,7 @@ export default function ProductsPage() {
     if (selectedSubCategories.length > 0) {
       filtered = filtered.filter(
         (item) =>
-          item.category_id !== null &&
+          item.category_id != null &&
           selectedSubCategories.includes(item.category_id)
       );
     }

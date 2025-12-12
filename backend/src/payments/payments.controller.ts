@@ -191,7 +191,11 @@ export class PaymentsController {
 
     try {
       // Verify webhook signature using Stripe
-      const stripe = new Stripe(this.config.get<string>('STRIPE_SECRET_KEY')!, {
+      const secretKey = this.config.get<string>('STRIPE_SECRET_KEY');
+      if (!secretKey) {
+        throw new Error('STRIPE_SECRET_KEY is not configured');
+      }
+      const stripe = new Stripe(secretKey, {
         apiVersion: '2024-06-20' as any,
       });
       event = stripe.webhooks.constructEvent(

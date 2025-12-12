@@ -17,40 +17,13 @@ import {
   Loader2,
 } from "lucide-react";
 import { ROUTES } from "@/helper/routes";
-
-interface ItemPhoto {
-  id: number;
-  url: string;
-  position: number;
-  is_primary: boolean;
-}
+import { Item, ItemPhoto } from "@/lib/type/item.type";
 
 interface Category {
   id: number;
   name: string;
   parent_id?: number | null;
   is_default?: boolean;
-}
-
-interface Item {
-  id: number;
-  name: string;
-  description: string;
-  seller_id: number;
-  category_id: number;
-  width_cm: number;
-  height_cm: number;
-  depth_cm: number;
-  weight_kg: number;
-  price_desired: number;
-  price_min?: number;
-  sale_mode: "auction" | "fast";
-  status: string;
-  auction_start_price?: number | null;
-  auction_end_date?: string | null;
-  photos?: ItemPhoto[];
-  created_at: string;
-  updated_at: string;
 }
 
 interface ItemForm {

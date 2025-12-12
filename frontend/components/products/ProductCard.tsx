@@ -11,11 +11,8 @@ import { useFavoriteMutation } from "@/hooks/useFavoriteMutation";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useMemo } from "react";
 
-type ProductWithPhotos = Item & {
-  photos?: { url: string; is_primary: boolean }[];
-};
 interface ProductCardProps {
-  product: ProductWithPhotos;
+  product: Item;
 }
 
 export function ProductCard({ product }: ProductCardProps) {

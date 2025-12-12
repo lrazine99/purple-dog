@@ -42,14 +42,6 @@ export interface CreateOrderInput {
  * Handles order creation and management
  */
 export class OrderService {
-  private readonly baseUrl: string;
-
-  constructor() {
-    this.baseUrl = process.env.NEXT_PUBLIC_API_URL || "";
-    if (!this.baseUrl) {
-      throw new Error("NEXT_PUBLIC_API_URL is not defined");
-    }
-  }
 
   /**
    * Create a new order
@@ -70,7 +62,9 @@ export class OrderService {
       const error = await response.json().catch(() => ({
         message: "Erreur lors de la création de la commande",
       }));
-      throw new Error(error.message || "Erreur lors de la création de la commande");
+      throw new Error(
+        error.message || "Erreur lors de la création de la commande"
+      );
     }
 
     const rawData = await response.json();
@@ -89,4 +83,3 @@ export class OrderService {
 
 // Export singleton instance
 export const orderService = new OrderService();
-

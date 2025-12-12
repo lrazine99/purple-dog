@@ -22,19 +22,18 @@ import { SubscriptionResponseDto } from './dto/subscription-response.dto';
 @ApiTags('subscriptions')
 @Controller('subscriptions')
 export class SubscriptionsController {
-  private stripe: Stripe;
+  private stripe: Stripe | null = null;
 
   constructor(
     private readonly subscriptionsService: SubscriptionsService,
     private readonly config: ConfigService,
   ) {
     const secretKey = this.config.get<string>('STRIPE_SECRET_KEY');
-    if (!secretKey) {
-      throw new Error('STRIPE_SECRET_KEY is not configured');
+    if (secretKey) {
+      this.stripe = new Stripe(secretKey, {
+        apiVersion: '2024-06-20' as any,
+      });
     }
-    this.stripe = new Stripe(secretKey, {
-      apiVersion: '2024-06-20' as any,
-    });
   }
 
   @Get('me')
@@ -115,6 +114,10 @@ export class SubscriptionsController {
 
     if (!sessionId) {
       return { success: false, message: 'Session ID is required' };
+    }
+
+    if (!this.stripe) {
+      return { success: false, message: 'STRIPE_SECRET_KEY is not configured' };
     }
 
     try {
