@@ -1,5 +1,6 @@
 import { setAuthCookies } from "@/lib/auth/cookies";
 import { decodeJWTPayload } from "@/lib/jwt";
+import { getBackendUrl } from "@/lib/api-url";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
@@ -13,8 +14,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const apiUrl = getBackendUrl();
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/auth/refresh`,
+      `${apiUrl}/auth/refresh`,
       {
         method: "POST",
         headers: {

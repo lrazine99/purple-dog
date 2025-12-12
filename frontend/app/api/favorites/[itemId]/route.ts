@@ -1,3 +1,4 @@
+import { getBackendUrl } from "@/lib/api-url";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function DELETE(
@@ -12,17 +13,15 @@ export async function DELETE(
     }
 
     const { itemId } = await params;
+    const apiUrl = getBackendUrl();
 
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/favorites/${itemId}`,
-      {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken}`,
-        },
-      }
-    );
+    const response = await fetch(`${apiUrl}/favorites/${itemId}`, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
 
     if (!response.ok) {
       const error = await response.json();
@@ -31,7 +30,7 @@ export async function DELETE(
 
     return new NextResponse(null, { status: 204 });
   } catch (error) {
-    console.error("API route error:", error);
+    console.error("Favorites DELETE error:", error);
     return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }
 }

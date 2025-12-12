@@ -11,16 +11,14 @@ import {
   X,
   DollarSign,
   Tag,
-  Ruler,
-  Weight,
   User,
   FolderTree,
   Image,
   Upload,
+  FileText,
   Star,
   Loader2,
   Check,
-  ChevronDown,
   Eye,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -104,16 +102,15 @@ const initialForm: ItemForm = {
   weight_kg: "",
   price_desired: "",
   price_min: "",
-  sale_mode: "fixed",
+  sale_mode: "fast",
   status: "draft",
   auction_start_price: "",
   auction_end_date: "",
 };
 
 const SALE_MODES = [
-  { value: "fixed", label: "Prix fixe" },
+  { value: "fast", label: "Vente rapide" },
   { value: "auction", label: "Enchères" },
-  { value: "negotiable", label: "Négociable" },
 ];
 
 const STATUSES = [
@@ -123,7 +120,7 @@ const STATUSES = [
   { value: "pending_expertise", label: "Attend expertise" },
 ];
 
-// Autocomplete component for user/seller search
+
 function UserAutocomplete({
   users,
   selectedUserId,
@@ -234,7 +231,6 @@ function UserAutocomplete({
   );
 }
 
-// Autocomplete component for category search
 function CategoryAutocomplete({
   categories,
   selectedCategoryId,
@@ -277,7 +273,6 @@ function CategoryAutocomplete({
     }
   };
 
-  // Get parent category name for display
   const getParentName = (parentId: number | null | undefined) => {
     if (!parentId) return null;
     const parent = categories.find((c) => c.id === parentId);
@@ -353,6 +348,7 @@ function CategoryAutocomplete({
   );
 }
 
+
 export default function ItemsPage() {
   const router = useRouter();
   const [items, setItems] = useState<Item[]>([]);
@@ -369,6 +365,10 @@ export default function ItemsPage() {
   // Photos state
   const [photos, setPhotos] = useState<ItemPhoto[]>([]);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
+
+  // Documents state
+  const [documents, setDocuments] = useState<string[]>([]);
+  const [uploadingDocument, setUploadingDocument] = useState(false);
   
   // Multiple categories state
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<Set<number>>(new Set());
@@ -428,6 +428,7 @@ export default function ItemsPage() {
     setEditingItem(null);
     setForm(initialForm);
     setPhotos([]);
+    setDocuments([]);
     setSelectedCategoryIds(new Set());
     setError("");
     setShowModal(true);
@@ -500,7 +501,8 @@ export default function ItemsPage() {
         const formData = new FormData();
         formData.append("file", file);
 
-        const res = await fetch("/api/upload", {
+        // Standardized to use Env var or relative path consistently
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/upload`, {
           method: "POST",
           body: formData,
         });
@@ -541,6 +543,44 @@ export default function ItemsPage() {
       setUploadingPhoto(false);
       e.target.value = "";
     }
+  };
+
+  const handleDocumentUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setUploadingDocument(true);
+    setError("");
+
+    try {
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const formData = new FormData();
+        formData.append("file", file);
+
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/upload`, {
+          method: "POST",
+          body: formData,
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.message || "Échec du téléchargement");
+        }
+
+        setDocuments((prev) => [...prev, `${process.env.NEXT_PUBLIC_API_URL}${data.url}`]);
+      }
+    } catch (err: any) {
+      setError(err.message || "Échec du téléchargement");
+    } finally {
+      setUploadingDocument(false);
+      e.target.value = "";
+    }
+  };
+
+  const handleRemoveDocument = (index: number) => {
+    setDocuments((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleRemovePhoto = async (photo: ItemPhoto, index: number) => {
@@ -599,6 +639,12 @@ export default function ItemsPage() {
     setSaving(true);
 
     try {
+      if (photos.length < 10) {
+        setError("Veuillez ajouter au moins 10 photos (avant, arrière, dessus, dessous, signature, tranches, etc.)");
+        setSaving(false);
+        return;
+      }
+
       const isEdit = !!editingItem;
 
       const body: any = {
@@ -607,6 +653,8 @@ export default function ItemsPage() {
         sale_mode: form.sale_mode,
         status: form.status,
       };
+
+      if (documents.length > 0) body.document_urls = documents;
 
       if (form.seller_id) body.seller_id = parseInt(form.seller_id);
       if (form.category_id) body.category_id = parseInt(form.category_id);
@@ -922,7 +970,7 @@ export default function ItemsPage() {
               <div className="space-y-4">
                 <h3 className="text-sm font-medium text-slate-300 border-b border-slate-700 pb-2 flex items-center gap-2">
                   <Image className="w-4 h-4" />
-                  Photos (1-10)
+                  Photos (10 minimum)
                 </h3>
                 
                 <div className="grid grid-cols-5 gap-3">
@@ -989,8 +1037,46 @@ export default function ItemsPage() {
                   )}
                 </div>
                 <p className="text-slate-500 text-xs">
-                  {photos.length}/10 photos • Cliquez sur ⭐ pour définir la photo principale
+                  {photos.length}/10 photos • Minimum 10 • Cliquez sur ⭐ pour définir la photo principale
                 </p>
+              </div>
+
+              {/* Documents Section */}
+              <div className="space-y-4">
+                <h3 className="text-sm font-medium text-slate-300 border-b border-slate-700 pb-2 flex items-center gap-2">
+                  <FileText className="w-4 h-4" />
+                  Déposer des documents (certificat, preuve d’achat...)
+                </h3>
+                <div className="grid grid-cols-3 gap-3">
+                  {documents.map((doc, index) => (
+                    <div key={index} className="flex items-center justify-between p-3 bg-slate-900/50 border border-slate-700 rounded-lg">
+                      <a href={doc} target="_blank" rel="noreferrer" className="text-slate-300 text-sm truncate mr-2">{doc}</a>
+                      <button onClick={() => handleRemoveDocument(index)} className="p-1 rounded bg-red-500/80 text-white">
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
+
+                  <label className="relative col-span-1 rounded-xl border-2 border-dashed border-slate-600 hover:border-purple-500 cursor-pointer flex flex-col items-center justify-center gap-1 transition-colors">
+                    <input
+                      type="file"
+                      accept=".pdf,.jpg,.jpeg,.png,.gif,.webp"
+                      multiple
+                      onChange={handleDocumentUpload}
+                      className="absolute inset-0 opacity-0 cursor-pointer"
+                      disabled={uploadingDocument}
+                    />
+                    {uploadingDocument ? (
+                      <Loader2 className="w-6 h-6 text-purple-400 animate-spin" />
+                    ) : (
+                      <>
+                        <Upload className="w-6 h-6 text-slate-500" />
+                        <span className="text-slate-500 text-xs">Ajouter</span>
+                      </>
+                    )}
+                  </label>
+                </div>
+                <p className="text-slate-500 text-xs">Formats acceptés: PDF, JPG, PNG (max 10Mo)</p>
               </div>
 
               {/* Basic Info */}

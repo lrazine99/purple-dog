@@ -1,25 +1,18 @@
+"use client";
+
 import { ROUTES } from "@/helper/routes";
 import Link from "next/link";
 
-interface ProNavbarProps {
+export interface ProNavbarProps {
   onLinkClick?: () => void;
+  className?: string;
 }
 
-export function ProNavbar({ onLinkClick }: ProNavbarProps) {
-  const linkClassName = "relative text-foreground hover:text-primary transition-colors font-medium pb-1 group";
-  const mobileLinkClassName = "relative text-foreground hover:text-primary transition-colors font-medium pb-1 group py-2";
+export function ProNavbar({ onLinkClick, className = "" }: ProNavbarProps) {
+  const linkClassName = `relative text-foreground hover:text-primary transition-colors font-medium pb-1 group ${className}`;
 
   return (
     <>
-      <Link
-        href={ROUTES.PRODUITS}
-        className={linkClassName}
-        onClick={onLinkClick}
-      >
-        Produits
-        <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-primary transition-all duration-300 group-hover:w-full"></span>
-      </Link>
-
       <Link
         href={ROUTES.FAVORIS}
         className={linkClassName}

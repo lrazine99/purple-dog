@@ -1,12 +1,10 @@
+import { getBackendUrl } from "@/lib/api-url";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(request: NextRequest) {
   try {
     const accessToken = request.cookies.get("access_token")?.value;
-
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL?.includes("localhost")
-      ? "http://backend:3001"
-      : process.env.NEXT_PUBLIC_API_URL;
+    const apiUrl = getBackendUrl();
 
     const response = await fetch(`${apiUrl}/subscriptions/me`, {
       headers: {
@@ -14,7 +12,7 @@ export async function GET(request: NextRequest) {
         Authorization: `Bearer ${accessToken}`,
       },
     });
-
+console.log("response", response);
     if (response.status === 404) {
       return NextResponse.json(null, { status: 404 });
     }
@@ -27,9 +25,16 @@ export async function GET(request: NextRequest) {
     }
 
     const data = await response.json();
+    console.log("data", data);
+    
     return NextResponse.json(data);
+    
   } catch (error) {
     console.error("Error fetching subscription:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
   }
 }

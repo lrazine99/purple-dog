@@ -27,6 +27,12 @@ export function ProductCard({ product }: ProductCardProps) {
     return favorites.some((fav) => fav.item_id === product.id);
   }, [favorites, product.id]);
 
+  const primaryPhotoUrl = useMemo(() => {
+    if (!product.photos || product.photos.length === 0) return null;
+    const primary = product.photos.find((p) => p.is_primary) || product.photos[0];
+    return primary.url;
+  }, [product.photos]);
+
   const handleFavoriteClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -127,7 +133,7 @@ export function ProductCard({ product }: ProductCardProps) {
                 {isAuction
                   ? (
                       product.auction_start_price || product.price_min
-                    ).toLocaleString("fr-FR")
+                    )?.toLocaleString("fr-FR")
                   : product.price_desired.toLocaleString("fr-FR")}{" "}
                 €
               </span>

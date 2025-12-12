@@ -1,7 +1,9 @@
+"use client";
+
 import { ROUTES } from "@/helper/routes";
 import Link from "next/link";
 
-interface SellerNavbarProps {
+export interface SellerNavbarProps {
   onLinkClick?: () => void;
   className?: string;
 }
@@ -12,7 +14,7 @@ export function SellerNavbar({ onLinkClick, className = "" }: SellerNavbarProps)
   return (
     <>
       <Link
-        href={ROUTES.MA_BOUTIQUE}
+        href={ROUTES.MY_SHOP}
         className={linkClassName}
         onClick={onLinkClick}
       >

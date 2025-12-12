@@ -1,17 +1,14 @@
 import { setAuthCookies } from "@/lib/auth/cookies";
 import { decodeJWTPayload } from "@/lib/jwt";
+import { getBackendUrl } from "@/lib/api-url";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
   try {
     const { email, password } = await request.json();
+    const apiUrl = getBackendUrl();
 
-    // Use backend hostname for server-side API calls (Docker network)
-    // NEXT_PUBLIC_API_URL is often http://localhost:3001 which doesn't work inside Docker
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL?.includes("localhost")
-      ? "http://backend:3001"
-      : process.env.NEXT_PUBLIC_API_URL;
-
+    console.log("apiUrl", apiUrl);
     const response = await fetch(
       `${apiUrl}/auth/login`,
       {
@@ -78,7 +75,7 @@ export async function POST(request: NextRequest) {
       role: data.role,
       user: userData,
     });
-    setAuthCookies(res, data)
+    setAuthCookies(res, data);
 
     return res;
   } catch (error) {

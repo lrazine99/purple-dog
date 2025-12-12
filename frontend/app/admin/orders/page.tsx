@@ -83,7 +83,7 @@ interface Item {
 const ORDER_STATUSES = [
   { value: "draft", label: "Brouillon", color: "bg-slate-500/20 text-gray-600", icon: Clock },
   { value: "pending_payment", label: "En attente paiement", color: "bg-amber-500/20 text-amber-400", icon: CreditCard },
-  { value: "paid_escrow", label: "Payé (séquestre)", color: "bg-blue-500/20 text-blue-400", icon: CreditCard },
+  { value: "paid_escrow", label: "Payé", color: "bg-blue-500/20 text-blue-400", icon: CreditCard },
   { value: "pickup_scheduled", label: "Retrait programmé", color: "bg-purple-500/20 text-purple-400", icon: Calendar },
   { value: "in_transit", label: "En transit", color: "bg-indigo-500/20 text-indigo-400", icon: Truck },
   { value: "delivered", label: "Livré", color: "bg-cyan-500/20 text-cyan-400", icon: Package },

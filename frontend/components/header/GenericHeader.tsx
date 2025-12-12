@@ -9,29 +9,32 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { ProNavbar } from "./ProNavbar";
 import { SellerNavbar } from "./SellerNavbar";
 
-export const GenericHeader = () => {
-  const pathname = usePathname();
+export default function GenericHeader() {
   const { data: user, isLoading } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const logoutMutation = useLogout();
+  const pathname = usePathname();
 
+  const isAuthenticated = !isLoading && !!user;
   const role = user?.role || null;
+
+  if (isLoading) {
+    return (
+      <div className="border-b border-border bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60 sticky top-0 z-50 h-16"></div>
+    );
+  }
 
   // Don't show header on admin pages - admin has its own layout
   if (pathname?.startsWith("/admin")) {
     return null;
   }
 
-  if (isLoading)
-    return (
-      <div className="border-b border-border bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60 sticky top-0 z-50 h-16"></div>
-    );
-
   return (
-    <header className="border-b border-border bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60 sticky top-0 z-50">
+    <header className="border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
           <div className="flex items-center gap-8">
@@ -50,7 +53,14 @@ export const GenericHeader = () => {
             </Link>
             {/* Navigation - responsive avec classes Tailwind */}
             <nav className="hidden md:flex items-center gap-6">
-              {user && (
+              <Link
+                href={ROUTES.PRODUITS}
+                className="relative text-foreground hover:text-primary transition-colors font-medium pb-1 group"
+              >
+                Produits
+                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-primary transition-all duration-300 group-hover:w-full"></span>
+              </Link>
+              {isAuthenticated && (
                 <>
                   {role === "particular" && <SellerNavbar />}
                   {role === "professional" && (
@@ -76,7 +86,7 @@ export const GenericHeader = () => {
             </div>
 
             <div className="hidden md:flex items-center gap-3">
-              {user ? (
+              {isAuthenticated ? (
                 <>
                   <Button asChild variant="default">
                     <Link
@@ -87,6 +97,13 @@ export const GenericHeader = () => {
                       Mon compte
                     </Link>
                   </Button>
+                  {user?.id && (
+                    <NotificationBell
+                      userId={user.id}
+                      role={role || ""}
+                      isLoading={isLoading}
+                    />
+                  )}
                   <Button
                     variant="ghost"
                     onClick={() => logoutMutation.mutate()}
@@ -131,18 +148,18 @@ export const GenericHeader = () => {
               {isAuthenticated && (
                 <div className="flex flex-col gap-3">
                   {role === "particular" && (
-                    <SellerNavbar 
+                    <SellerNavbar
                       onLinkClick={() => setMobileMenuOpen(false)}
                       className="py-2"
                     />
                   )}
                   {role === "professional" && (
                     <>
-                      <ProNavbar 
+                      <ProNavbar
                         onLinkClick={() => setMobileMenuOpen(false)}
                         className="py-2"
                       />
-                      <SellerNavbar 
+                      <SellerNavbar
                         onLinkClick={() => setMobileMenuOpen(false)}
                         className="py-2"
                       />
@@ -164,7 +181,7 @@ export const GenericHeader = () => {
 
               {/* Boutons d'authentification mobile */}
               <div className="flex flex-col gap-2 pt-2">
-                {user ? (
+                {isAuthenticated ? (
                   <>
                     <Button asChild variant="default" className="w-full">
                       <Link
@@ -215,6 +232,4 @@ export const GenericHeader = () => {
       </div>
     </header>
   );
-};
-
-export default GenericHeader;
+}

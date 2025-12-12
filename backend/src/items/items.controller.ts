@@ -157,6 +157,13 @@ export class ItemsController {
   }
 
   // Photo endpoints
+  @Get(':id/photos')
+  @ApiOperation({ summary: 'List photos for an item' })
+  @ApiParam({ name: 'id', type: 'number', description: 'Item ID' })
+  async listPhotos(@Param('id', ParseIntPipe) id: number) {
+    return this.itemsService.listPhotos(id);
+  }
+
   @Post(':id/photos')
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Add a photo to an item' })
