@@ -13,19 +13,22 @@ export class EmailService {
     const user = this.config.get<string>('SMTP_USER');
     const pass = this.config.get<string>('SMTP_PASS');
 
-    if (host) {
+    if (host && user && pass) {
       this.transporter = nodemailer.createTransport({
         host,
         port,
         secure: port === 465,
-        auth: user ? { user, pass } : undefined,
+        auth: { user, pass },
+        connectionTimeout: 5000, // 5 secondes timeout
+        greetingTimeout: 5000,
       });
+      // Vérifier la connexion SMTP de manière asynchrone sans bloquer
       this.transporter.verify()
         .then(() => this.logger.log('SMTP transport prêt'))
-        .catch((err) => this.logger.error(`SMTP verify échoué: ${err?.message || err}`));
+        .catch((err) => this.logger.warn(`SMTP verify échoué (emails peuvent ne pas fonctionner): ${err?.message || err}`));
     } else {
       this.transporter = nodemailer.createTransport({ jsonTransport: true });
-      this.logger.warn('SMTP non configuré, mode jsonTransport activé');
+      this.logger.warn('SMTP non configuré (SMTP_USER ou SMTP_PASS manquants), mode jsonTransport activé');
     }
   }
 
