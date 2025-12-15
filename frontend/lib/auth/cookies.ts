@@ -10,9 +10,12 @@ export function setAuthCookies(
   response: NextResponse,
   tokens: AuthTokens
 ): NextResponse {
+  // Désactiver secure pour permettre les cookies en HTTP
+  const useSecure = false;
+
   response.cookies.set("access_token", tokens.access_token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: useSecure,
     sameSite: "lax",
     maxAge: 900, // 15 minutes (synchronisé avec la durée du token)
     path: "/",
@@ -20,7 +23,7 @@ export function setAuthCookies(
 
   response.cookies.set("refresh_token", tokens.refresh_token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: useSecure,
     sameSite: "lax",
     maxAge: 60 * 60 * 24 * 7, // 7 days (synchronisé avec la durée du refresh token)
     path: "/",
@@ -30,7 +33,7 @@ export function setAuthCookies(
   if (tokens.role) {
     response.cookies.set("user_role", tokens.role, {
       httpOnly: false, // Accessible côté client
-      secure: process.env.NODE_ENV === "production",
+      secure: useSecure,
       sameSite: "lax",
       maxAge: 60 * 60 * 24 * 7, // 7 days (synchronisé avec la durée du refresh token)
       path: "/",
