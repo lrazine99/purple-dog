@@ -1,7 +1,7 @@
 import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
-import { DataSource } from 'typeorm';
 import * as bcrypt from 'bcrypt';
+import { DataSource } from 'typeorm';
+import { AppModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.createApplicationContext(AppModule);
@@ -62,6 +62,19 @@ async function bootstrap() {
       console.log('✅ Created seller: Thomas Design (Pro)');
     } else {
       console.log('✅ Found seller: Thomas Design (Pro)');
+    }
+
+    // Create admin user
+    let [admin] = await dataSource.query(`SELECT id FROM users WHERE email = $1`, ['admin@purpledog.com']);
+    if (!admin) {
+      [admin] = await dataSource.query(`
+        INSERT INTO users (email, password_hash, first_name, last_name, role, address_line, city, postal_code, country, is_verified, rgpd_accepted)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+        RETURNING id
+      `, ['admin@purpledog.com', hashedPassword, 'Admin', 'PurpleDog', 'admin', '1 Place de la République', 'Paris', '75003', 'France', true, true]);
+      console.log('✅ Created admin: Admin PurpleDog');
+    } else {
+      console.log('✅ Found admin: Admin PurpleDog');
     }
 
     // 2. Find or create categories
@@ -303,13 +316,14 @@ async function bootstrap() {
 
     console.log('\n✅ Database seeded successfully!');
     console.log('\n📊 Summary:');
-    console.log(`   - 4 users created (2 buyers, 2 sellers)`);
+    console.log(`   - 5 users created (2 buyers, 2 sellers, 1 admin)`);
     console.log(`   - 4 categories ensured`);
     console.log(`   - 17 items created (4 Mode, 4 Art, 5 Décoration, 4 Joaillerie)`);
     console.log(`   - 3 orders created`);
     console.log('\n🔑 Login credentials for all users:');
     console.log('   Email: marie.dupont@example.com or lucas.martin@example.com (buyers)');
     console.log('   Email: sophie.vintage@example.com or thomas.design@example.com (sellers)');
+    console.log('   Email: admin@purpledog.com (admin)');
     console.log('   Password: password123');
 
   } catch (error) {
