@@ -50,6 +50,8 @@ services:
       STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-sk_test_51SPqrfLXGgs4W2Jk4exEX9t0Ip7dMUiEsCTYodZdl5Q582309MKzp8q4OGsQHJ13uut9VMcdFAIy4F2Rlp84Q1up009mJsOqU3}
       STRIPE_PRICE_ID: ${STRIPE_PRICE_ID:-price_1Sd9tBLXGgs4W2JkzQaCgMnZ}
       STRIPE_ALLOW_LOCAL_TEST: ${STRIPE_ALLOW_LOCAL_TEST:-true}
+      INIT_DB: ${INIT_DB:-true}
+      RUN_SEED: ${RUN_SEED:-true}
     volumes:
       - ./backend/secrets:/app/secrets:ro
       - backend_uploads:/app/uploads
