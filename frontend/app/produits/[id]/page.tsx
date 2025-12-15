@@ -92,7 +92,7 @@ export default async function ProduitPage({
   // Obtenir l'URL de base depuis les headers
   const headersList = await headers();
   const host = headersList.get("host") || "localhost:3000";
-  const protocol = process.env.NODE_ENV === "production" ? "https" : "http";
+  const protocol = "http";
   const baseUrl = `${protocol}://${host}`;
 
   const item = await getItem(id, baseUrl);
